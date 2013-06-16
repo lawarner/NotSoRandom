@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal|top"
-        android:text="harder / softer"
+        android:text="softer / harder"
         android:singleLine="true"
         android:textAlignment="center"
         android:layout_alignParentRight="true"
@@ -29,5 +29,23 @@
             android:layout_alignParentLeft="true"
             android:layout_marginTop="57dp"
             android:gravity="fill_vertical"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" --"
+            android:id="@+id/current_song"
+            android:layout_alignParentBottom="true"
+            android:layout_alignLeft="@+id/row_label"
+            android:layout_marginLeft="16dp"
+            android:layout_alignRight="@+id/column_label"/>
+
+    <MediaController
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/controller"
+            android:layout_above="@+id/current_song"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentLeft="true"/>
 
 </RelativeLayout>

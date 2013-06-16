@@ -4,6 +4,7 @@ import java.util.Locale;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -15,10 +16,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class MusicPlayer extends FragmentActivity implements ActionBar.TabListener {
+public class MusicPlayer extends FragmentActivity implements ActionBar.TabListener,
+        MediaController.MediaPlayerControl {
+    private static final String TAG = "MusicPlayer";
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -28,12 +32,18 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
      * intensive, it may be best to switch to a
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
-    SectionsPagerAdapter mSectionsPagerAdapter;
+    private SectionsPagerAdapter mSectionsPagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
      */
-    ViewPager mViewPager;
+    private ViewPager mViewPager;
+
+    private View playerView_;
+    private View queueView_;
+    private static TextView status_;
+    private MusicMapView musicMapView_;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +83,7 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
+
     }
 
     @Override
@@ -81,7 +92,31 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
         getMenuInflater().inflate(R.menu.music_player, menu);
         return true;
     }
-    
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (playerView_ != null) {
+            MediaController mc = (MediaController) playerView_.findViewById(R.id.controller);
+            mc.setMediaPlayer(this);
+            mc.show();
+        }
+
+        Log.d(TAG, "Going to show shuffle list of songs now.");
+        View vw = mSectionsPagerAdapter.getView(0);
+        musicMapView_ = (MusicMapView) vw.findViewById(R.id.music_map);
+        if (musicMapView_ != null) {
+            Log.d(TAG, "shuffle list not null");
+            int songs[] = musicMapView_.getShuffleList();
+            for (int song : songs) {
+                status_.append(musicMapView_.getFilename(song) + "\n");
+            }
+        }
+        else
+            Log.d(TAG, " View to shuffle list is null");
+
+    }
+
     @Override
     public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
         // When the given tab is selected, switch to the corresponding page in
@@ -97,11 +132,64 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
     public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
     }
 
+    @Override
+    public void start() {
+
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public int getDuration() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        return 0;
+    }
+
+    @Override
+    public void seekTo(int i) {
+
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return false;
+    }
+
+    @Override
+    public int getBufferPercentage() {
+        return 0;
+    }
+
+    @Override
+    public boolean canPause() {
+        return false;
+    }
+
+    @Override
+    public boolean canSeekBackward() {
+        return false;
+    }
+
+    @Override
+    public boolean canSeekForward() {
+        return false;
+    }
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
+
+        private View view1_;
+        private View view2_;
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -112,7 +200,12 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
             // getItem is called to instantiate the fragment for the given page.
             // Return a DummySectionFragment (defined as a static inner class
             // below) with the page number as its lone argument.
-            Fragment fragment = new DummySectionFragment(position + 1);
+            DummySectionFragment fragment = new DummySectionFragment(position + 1);
+            if (position == 0)
+                view1_ = fragment.getView();
+            else
+                view2_ = fragment.getView();
+
             return fragment;
         }
 
@@ -120,6 +213,13 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
         public int getCount() {
             // total nr of pages.
             return 2;
+        }
+
+        public View getView(int idx) {
+            if (idx == 0)
+                return view1_;
+            else
+                return view2_;
         }
 
         @Override
@@ -139,7 +239,7 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
      * A dummy fragment representing a section of the app, but that simply
      * displays dummy text.
      */
-    public static class DummySectionFragment extends Fragment {
+    public class DummySectionFragment extends Fragment {
 
         public DummySectionFragment(int page) {
             page_ = page;
@@ -153,22 +253,35 @@ public class MusicPlayer extends FragmentActivity implements ActionBar.TabListen
             switch (page_) {
                 case 1:
                     view_ = inflater.inflate(R.layout.fragment_music_player, container, false);
-                    //TODO rotate row_label
+                    // rotate row_label
                     TextView tvrl = (TextView) view_.findViewById(R.id.row_label);
                     tvrl.setRotation(-90);
-                    tvrl.setTranslationX(-32);
+                    tvrl.setTranslationX(-40);
                     RelativeLayout rl = (RelativeLayout) view_.findViewById(R.id.player_layout);
-                    rl.addView(new MusicMapView(container.getContext()));
+                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(480, 480);
+                    lp.addRule(RelativeLayout.BELOW, R.id.column_label);
+                    lp.addRule(RelativeLayout.RIGHT_OF, R.id.row_label);
+
+                    musicMapView_ = new MusicMapView(rl.getContext());
+                    rl.addView(musicMapView_, lp);
+                    musicMapView_.setId(R.id.music_map);
+                    musicMapView_.setTranslationX(-60);
+
+                    playerView_ = view_;
                     break;
                 case 2:
                     view_ = inflater.inflate(R.layout.fragment_music_status, container, false);
-                    TextView tv = (TextView) view_.findViewById(R.id.section_label);
-                    tv.setText("This is page " + page_);
+                    status_ = (TextView) view_.findViewById(R.id.section_label);
+                    queueView_ = view_;
                     break;
                 default:
                     Log.e(getTag(), "Error invalid tab page number " + page_);
             }
 //            dummyTextView.setText(Integer.toString(page_));
+            return view_;
+        }
+
+        public View getView() {
             return view_;
         }
 
