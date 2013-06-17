@@ -44,8 +44,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/controller"
-            android:layout_above="@+id/current_song"
             android:layout_alignParentRight="true"
-            android:layout_alignParentLeft="true"/>
+            android:layout_alignParentLeft="true"
+            android:layout_above="@+id/current_song"
+            android:layout_alignParentTop="false"
+            android:layout_below="@+id/row_label"/>
+
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Play"
+            android:id="@+id/playButton"
+            android:layout_alignBottom="@+id/controller"
+            android:layout_alignRight="@+id/controller"
+            android:layout_marginRight="14dp"
+            android:layout_marginBottom="27dp"/>
 
 </RelativeLayout>
