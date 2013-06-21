@@ -38,26 +38,16 @@
             android:layout_alignParentBottom="true"
             android:layout_alignLeft="@+id/row_label"
             android:layout_marginLeft="16dp"
-            android:layout_alignRight="@+id/column_label"/>
+            android:layout_alignRight="@+id/column_label"
+            android:layout_marginBottom="8dp"/>
 
-    <MediaController
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/controller"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentLeft="true"
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
             android:layout_above="@+id/current_song"
-            android:layout_alignParentTop="false"
-            android:layout_below="@+id/row_label"/>
-
-    <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Play"
-            android:id="@+id/playButton"
-            android:layout_alignBottom="@+id/controller"
-            android:layout_alignRight="@+id/controller"
-            android:layout_marginRight="14dp"
-            android:layout_marginBottom="27dp"/>
+            android:id="@+id/controlView"
+            >
+    </LinearLayout>
 
 </RelativeLayout>

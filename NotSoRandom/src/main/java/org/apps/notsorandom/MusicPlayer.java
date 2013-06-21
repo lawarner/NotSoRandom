@@ -13,17 +13,32 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TabHost;
 
 import java.util.Locale;
 
 
-public class MusicPlayer extends FragmentActivity implements PlayerFragment.OnPlayerListener /*implements ActionBar.TabListener*/ {
+public class MusicPlayer extends FragmentActivity
+        implements PlayerFragment.OnPlayerListener, TabHost.OnTabChangeListener {
     private static final String TAG = "MusicPlayer";
 
+    private MediaLibraryNSR library_ = new MediaLibraryNSR();
+
     private FragmentTabHost tabHost_;
+
+    // Probably don't need these, but each fragment will have a static section
+    // for persistent data.
     private PlayerFragment player_ = null;
-    private QueueFragment  queue_  = null;
     private StatusFragment status_ = null;
+
+
+    public void log(String msg) {
+        Log.d(TAG, "log: " + msg);
+        if (status_ != null && status_.isInLayout())
+            status_._log(msg);
+        else
+            StatusFragment.log(msg);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,34 +47,46 @@ public class MusicPlayer extends FragmentActivity implements PlayerFragment.OnPl
 
         tabHost_ = (FragmentTabHost) findViewById(R.id.mytabHost);
         if (tabHost_ != null && savedInstanceState == null) {
-            FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
-        tabHost_.setup(this, getSupportFragmentManager(), R.id.realTabContent);
+            tabHost_.setId(R.id.mytabHost);
+            tabHost_.setup(this, getSupportFragmentManager(), R.id.realTabContent);
 
-        // Manually add the fragments as tabs
-        String restr = getString(R.string.title_section1);
-        tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), PlayerFragment.class, null);
-        restr = getString(R.string.title_section2);
-        tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), QueueFragment.class, null);
-        restr = getString(R.string.title_section3);
-        tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), StatusFragment.class, null);
-
-            trans.commit();
+            // Manually add the fragments as tabs
+            String restr = getString(R.string.title_section1);
+            tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), PlayerFragment.class, null);
+            restr = getString(R.string.title_section2);
+            tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), QueueFragment.class, null);
+            restr = getString(R.string.title_section3);
+            tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), StatusFragment.class, null);
+            tabHost_.setOnTabChangedListener(this);
         }
+
+        library_.scanForMedia("/mnt/sdcard", true);
+        QueueFragment.clearQueue();
+        int[] qsongs = PlayerFragment.getShuffleList();
+        for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
+            QueueFragment.addToQueue(song);
+        }
+
+        log("Player has initialized.\n");
     }
 
     @Override
     public void onAttachFragment(Fragment fragment) {
         super.onAttachFragment(fragment);
+
         Log.d(TAG, "onAttachFragment is called.");
         if (fragment instanceof PlayerFragment)
             player_ = (PlayerFragment) fragment;
-        else if (fragment instanceof QueueFragment)
-            queue_ = (QueueFragment) fragment;
         else if (fragment instanceof StatusFragment) {
             Log.d(TAG, "-attach status fragment: " + fragment);
             status_ = (StatusFragment) fragment;
         }
-        blog("This message from onAttachFragment override.\n");
+//        log("This message from onAttachFragment override.\n");
+    }
+
+    @Override
+    public void onTabChanged(String s) {
+        Log.d(TAG, "onTabChanged called with " + s);
     }
 
     @Override
@@ -72,39 +99,29 @@ public class MusicPlayer extends FragmentActivity implements PlayerFragment.OnPl
     @Override
     protected void onResume() {
         super.onResume();
-        blog("I wrote this message in my onResume override.\n");
-        Log.d(TAG, "This Message means activity onResume is called and log happened.");
+        log("I wrote this message in my onResume override.\n");
     }
 
 
-    public void blog(String msg) {
-        if (status_ != null && status_.isInLayout()) {
-            Log.d(TAG, "write log: " + msg);
-            status_.log(msg);
-        }
-//        StatusFragment sf = (StatusFragment) getSupportFragmentManager().findFragmentByTag(R.layout.fragment_music_status);
-//        FrameLayout fl = (FrameLayout) findViewById(R.id.realTabContent);
-/***
-        StatusFragment sf = (StatusFragment) getSupportFragmentManager().findFragmentById(R.id.mytabHost)
-                .getChildFragmentManager().findFragmentById(R.layout.fragment_music_status);
-
-        Log.d(TAG, "blog got status fragment.");
-        if (sf == null) Log.d(TAG, "StatusFragment is null\n");
-        else {
-            if (sf.isDetached()) Log.d(TAG, "StatusFragment is Detached\n");
-            if (sf.isAdded()) Log.d(TAG, "StatusFragment is Added\n");
-            if (sf.isInLayout()) Log.d(TAG, "StatusFragment is in Layout\n");
-        }
-        if (sf != null && !sf.isDetached()) {
-            sf.log(msg);
-        }
-***/
+    // -----------------------------------------------------------------
+    @Override
+    public SongInfo getSongInfo(int ii) {
+        return QueueFragment.getItem(ii);
     }
 
     @Override
-    public void onNewSong(String song) {
-        Log.d(TAG, "Got call from Player fragment onNewSong = " + song);
-        queue_.addToQueue(song);
+    public SongInfo getNextSong(boolean first)
+    {
+        SongInfo song = QueueFragment.getNextItem(first);
+        if (song != null)
+            log("getNextSong returns " + song.getTitle());
+
+        return song;
+    }
+
+    @Override
+    public void onNewSong(SongInfo song) {
+        log("Got call from Player fragment onNewSong = " + song.getTitle() + "\n");
 
     }
 }

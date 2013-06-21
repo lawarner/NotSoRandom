@@ -18,9 +18,14 @@
             android:layout_alignParentRight="true">
 
         <TextView
-            android:id="@+id/status_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Text"
+                android:id="@+id/statusText"
+                android:typeface="monospace"
+                android:textStyle="normal"
+                android:textIsSelectable="true"
+                android:textSize="9sp"/>
     </ScrollView>
 
 </RelativeLayout>

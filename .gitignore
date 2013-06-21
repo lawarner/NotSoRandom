@@ -13,6 +13,8 @@
 bin/
 gen/
 build/
+build.log
+build-log.xml
 
 # Local configuration file (sdk path, etc)
 local.properties
