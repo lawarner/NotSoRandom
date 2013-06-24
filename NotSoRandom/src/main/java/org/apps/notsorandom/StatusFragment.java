@@ -19,6 +19,8 @@ public class StatusFragment extends Fragment {
 
     public static void log(String msg) {
         statusStr_ += msg;
+        if (!msg.endsWith("\n"))
+            statusStr_ += "\n";
     }
 
     public static void clear() {
@@ -67,6 +69,7 @@ public class StatusFragment extends Fragment {
     public void _log(String msg) {
         if (getView() == null) {
             Log.d("MusicStatus", "getView is null");
+            log(msg);
             return;
         }
         TextView tv = (TextView) getView().findViewById(R.id.statusText);
@@ -82,6 +85,8 @@ public class StatusFragment extends Fragment {
             TextView tv = (TextView) getView().findViewById(R.id.statusText);
             tv.setText(msg);
         }
+        else
+            set(msg);
     }
 
 }

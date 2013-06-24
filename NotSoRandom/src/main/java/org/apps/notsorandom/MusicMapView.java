@@ -5,7 +5,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,16 +30,20 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private static MusicMap musicMap_ = new MusicMap();
     // 3 + 3*8
     private static int randomPoint_ = 27;   // Mid point at first.
+    private static PointF calc_ = new PointF(8f/473f, 8f/480f);
+    private static RectF  boxDraw_ = new RectF(238f - 40f, 240 - 40f, 238f + 40f, 240 + 40f);
 
     private Bitmap bitmap_;
     private Paint  paint_;
 
     private PointF origin_ = new PointF();
     private float  radius_;
-    private PointF calc_ = new PointF(7f/420f,7f/420f);
 
     // ------------------------------------------------------------------------
-
+    private static float indexToPixel(int idx) {
+        float fpix = Math.round((float) idx / calc_.x);
+        return fpix;
+    }
     /**
      * Get the order of song indices in the shufflelist.
      * Public interface to this view's data model.
@@ -48,8 +55,15 @@ public class MusicMapView extends View implements View.OnTouchListener {
         if (reshuffle || !musicMap_.isShuffled()) {
             if (randomPoint_ < 0)
                 return musicMap_.randomShuffle();
-            else
-                return musicMap_.puddleShuffle(randomPoint_);
+            else {
+                int[] mm = musicMap_.boxShuffle(randomPoint_, new Point(4,4));
+                Rect rc = musicMap_.getBox();
+                boxDraw_.set(indexToPixel(rc.left), indexToPixel(rc.top),
+                             indexToPixel(rc.right), indexToPixel(rc.bottom));
+
+                return mm;
+            }
+//                return musicMap_.puddleShuffle(randomPoint_);
         }
 
         return musicMap_.getShuffled();
@@ -97,15 +111,19 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
         canvas.drawBitmap(bitmap_, 0, 0, paint_);
 
-        paint_.setColor(Color.YELLOW);
-        canvas.drawCircle(origin_.x, origin_.y, radius_, paint_);
+        paint_.setColor(Color.BLUE);
+        paint_.setStrokeWidth(0f);
+        paint_.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(boxDraw_, paint_);
+        paint_.setStyle(Paint.Style.FILL);
+        canvas.drawCircle(origin_.x, origin_.y, 1f, paint_);
 
         paint_.setColor(colors_[currColor_]);
         int[] shuffles = getShuffleList(false);
         for (int i = 0; i < 12; i++) {
-            float x = Math.round((shuffles[i] % 8) / calc_.x);
-            float y = Math.round((shuffles[i] / 8) / calc_.y);
-            canvas.drawCircle(x, y, radius_/2f, paint_);
+            float x = 24f + indexToPixel(shuffles[i] % 8);
+            float y = 24f + indexToPixel(shuffles[i] / 8);
+            canvas.drawCircle(x, y, radius_ / 2f, paint_);
         }
     }
 
@@ -128,19 +146,13 @@ public class MusicMapView extends View implements View.OnTouchListener {
         setOrigin(motionEvent.getX(), motionEvent.getY());
         getShuffleList(true);   // Reshuffle
 
-        /* ----------
+        /* ---------- color cycler
         currColor_++;
         currColor_ = currColor_ >= colors.length ? 0 : currColor_;
         bitmap_.eraseColor(colors[currColor_]);
         ------------- */
         invalidate();
 /* -----
-        for (int i = 0; i < 64; i++) {
-            float x = Math.round((i % 8) / calc_.x);
-            float y = Math.round((i / 8) / calc_.y);
-            Log.d(TAG, "Cvt: " + i + " to (" + x + "," + y + ")");
-        }
------- */
         Log.d(TAG, " WHOLE MAP AREA IS " + getWidth() + ", " + getHeight());
         for (int x = 0; x < getWidth(); x += (getWidth() / 8)) {
             for (int y = 0; y < getHeight(); y += (getHeight() / 8)) {
@@ -150,7 +162,12 @@ public class MusicMapView extends View implements View.OnTouchListener {
                 Log.d(TAG, "RC:  (" + x + "," + y + ") ==> " + ival + " : (" + cx + "," + cy + ")");
             }
         }
-
+        for (int i = 0; i < 64; i++) {
+            float x = Math.round((i % 8) / calc_.x);
+            float y = Math.round((i / 8) / calc_.y);
+            Log.d(TAG, "Cvt: " + i + " to (" + x + "," + y + ")");
+        }
+------ */
         return true;
     }
 

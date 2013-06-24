@@ -1,6 +1,7 @@
 package org.apps.notsorandom;
 
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -16,10 +17,13 @@ public class MusicMap {
     private int senseValues_[];
     private int shuffled_[];
     private int puddle_[];
+    private Rect box_ = new Rect();
 
     public static final int MAPWIDTH  = 8;   // matrix width
     public static final int MAPHEIGHT = 8;   // matrix height
     public static final int MAPSIZE = MAPWIDTH * MAPHEIGHT;
+
+    //private class MapEntry
 
     public MusicMap() {
         puddle_ = new int[MAPSIZE];
@@ -32,6 +36,10 @@ public class MusicMap {
             puddle_[i] = 0;
 //            Log.d(TAG, "Value: " + Integer.toHexString(j));
         }
+    }
+
+    public Rect getBox() {
+        return box_;
     }
 
     public int getSize() {
@@ -68,6 +76,63 @@ public class MusicMap {
         return senseValues_[idx];
     }
 
+    public int[] boxShuffle(int center, Point size) {
+        // size covers whole map, so just random shuffle
+        if (size.x > MAPWIDTH && size.y > MAPHEIGHT)
+            return randomShuffle();
+
+        int halfX = Math.min(1, (size.x + 1) / 2);
+        int halfY = Math.min(1, (size.y + 1) / 2);
+
+        Random rnd = new Random();
+
+        int[] used = new int[MAPSIZE];
+        for (int i = 0; i < used.length; i++)
+            used[i] = -1;
+
+        Point pt = new Point(center % MAPWIDTH, center / MAPWIDTH);
+        int left   = Math.min(MAPWIDTH - size.x,  Math.max(0, pt.x - halfX));
+        int top    = Math.min(MAPHEIGHT - size.y, Math.max(0, pt.y - halfY));
+        int boxOrigin = left + top * MAPWIDTH;
+        int right  = Math.min(MAPWIDTH, left + size.x);
+        int bottom = Math.min(MAPHEIGHT, top + size.y);
+        box_ = new Rect(left, top, right, bottom);
+        int boxCapacity = box_.width() * box_.height();
+        if (boxCapacity >= MAPSIZE)
+            return randomShuffle();
+
+        MusicPlayer.log(TAG, "START BOX SHUFFLE AT:  " + center + ", pt=" + pt.toString()
+                             + " size=" + size.toString());
+        MusicPlayer.log(TAG, "Box is " + box_.toString() + " capacity=" + boxCapacity + " starting at " + boxOrigin);
+        MusicPlayer.log(TAG, "Box does " + (box_.contains(3,3) ? "" : "not ") + "contain 3,3.");
+        int ii = 0;
+        int iters = 0;
+        while (ii < boxCapacity) {
+            iters++;
+            int xval = box_.left + rnd.nextInt(box_.width());
+            int yval = box_.top  + rnd.nextInt(box_.height());
+            int ival = xval + yval * MAPWIDTH;
+            if (used[ival] == -1) {
+                shuffled_[ii] = ival;
+                used[ival] = ii;
+                ii++;
+            }
+        }
+        MusicPlayer.log(TAG, "box filled " + ii + ", iterations=" + iters);
+        while (ii < shuffled_.length) {
+            iters++;
+            int ival = rnd.nextInt(shuffled_.length);
+            if (used[ival] == -1) {
+                shuffled_[ii] = ival;
+                used[ival] = ii;
+                ii++;
+            }
+        }
+        MusicPlayer.log(TAG, "map filled " + ii + ", iterations=" + iters);
+
+        return shuffled_;
+    }
+
     public int[] puddleShuffle(int center) {
         Random rnd = new Random();
 
@@ -79,14 +144,14 @@ public class MusicMap {
 
         Point pt1 = new Point(center % 8, center / 8);
         Point zpt = new Point();
-        Log.d(TAG, "START SHUFFLE AT: " + center + ", pt=" + pt1.toString());
+        MusicPlayer.log(TAG, "START PUDDLE SHUFFLE AT: " + center + ", pt=" + pt1.toString());
         int ii = 0;
         while (ii < shuffled_.length) {
-            int ival = rnd.nextInt(63);
+            int ival = rnd.nextInt(shuffled_.length);
 
             zpt.set(ival % 8, ival / 8);
             int dist = (zpt.x - pt1.x) * (zpt.x - pt1.x)
-                     + (zpt.y - pt1.y) * (zpt.y - pt1.y);
+                    + (zpt.y - pt1.y) * (zpt.y - pt1.y);
 
             if (dist > 16 && ii < 12)
                 continue;   // Cutoff -- too far away
@@ -102,6 +167,8 @@ public class MusicMap {
     }
 
     public int[] randomShuffle() {
+        MusicPlayer.log(TAG, "START RANDOM SHUFFLE");
+
         Random rnd = new Random();
 
         for (int i = 0; i < shuffled_.length; i++)
@@ -116,7 +183,7 @@ public class MusicMap {
                 shuffled_[ji] = ii++;
             }
         }
-/*
+/* ---- note can make a bell curve, like so:
         for (int i = 0; i < 64; i++) {
             Log.d(TAG, "LOG " + i + " " + (i * i / 63));
         }

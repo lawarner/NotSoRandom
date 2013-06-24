@@ -32,12 +32,14 @@ public class MusicPlayer extends FragmentActivity
     private StatusFragment status_ = null;
 
 
-    public void log(String msg) {
-        Log.d(TAG, "log: " + msg);
-        if (status_ != null && status_.isInLayout())
-            status_._log(msg);
-        else
-            StatusFragment.log(msg);
+    public static void log(String tag, String msg) {
+        Log.d(tag, msg);
+        StatusFragment.log(msg);
+    }
+
+
+    public static void log(String msg) {
+        log(TAG, msg);
     }
 
     @Override
@@ -99,7 +101,7 @@ public class MusicPlayer extends FragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
-        log("I wrote this message in my onResume override.\n");
+        log("MusicPlayer.onResume called.\n");
     }
 
 
