@@ -12,11 +12,7 @@ public class MediaLibraryNSR {
     }
 
     public int scanForMedia(String folder, boolean subFolders) {
-        songs_.add(new SongInfo("All I Want To Do...", "/mnt/sdcard/test1.mp3", 0x0101));
-        songs_.add(new SongInfo("Get On Outch Ere", "/mnt/sdcard/test2.mp3", 0x0202));
-        songs_.add(new SongInfo("Iggy Pop? Uh, I forget :)", "/mnt/sdcard/test3.mp3", 0x0303));
-
-        return 3;
+        return 0;
     }
 
     public SongInfo getFirstSong() {
@@ -31,10 +27,6 @@ public class MediaLibraryNSR {
         return null;
     }
 
-    public int getNumberSongs() {
-        return songs_.size();
-    }
-
     public SongInfo getSong(int idx) {
         if (idx >= songs_.size())
             return null;
@@ -42,6 +34,19 @@ public class MediaLibraryNSR {
         return songs_.get(idx);
     }
 
-    private ArrayList<SongInfo> songs_;
-    private Iterator<SongInfo> iter_;
+    public int getSongCount() {
+        return songs_.size();
+    }
+
+    /**
+     * Make sure all the songs with the same sense value are grouped together.
+     * The songs do not have to be strictly in order, as long as sense values are
+     * grouped contiguous together.
+     */
+    public void sortSongs() {
+
+    }
+
+    protected ArrayList<SongInfo> songs_;
+    protected Iterator<SongInfo> iter_;
 }

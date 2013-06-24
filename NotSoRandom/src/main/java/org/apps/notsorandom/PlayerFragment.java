@@ -61,6 +61,8 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
          */
         public SongInfo getSongInfo(int ii);
 
+        public MediaLibraryNSR getLibrary();
+
         /**
          * Called to retrieve the next song to play.
          * TODO: rewrite this to Iterator interface.
@@ -151,6 +153,9 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, "onActivityCreated in PlayerFragment");
+
+        musicMapView_.setLibrary(callback_.getLibrary());
+        musicMapView_.initLibrary();
 
         SongInfo song = callback_.getNextSong(true);
         controlView_ = (View) getView().findViewById(R.id.controlView);

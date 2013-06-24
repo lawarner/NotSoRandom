@@ -22,7 +22,7 @@ public class MusicPlayer extends FragmentActivity
         implements PlayerFragment.OnPlayerListener, TabHost.OnTabChangeListener {
     private static final String TAG = "MusicPlayer";
 
-    private MediaLibraryNSR library_ = new MediaLibraryNSR();
+    private MediaLibraryNSR library_ = new TestMediaLibrary();
 
     private FragmentTabHost tabHost_;
 
@@ -63,8 +63,10 @@ public class MusicPlayer extends FragmentActivity
         }
 
         library_.scanForMedia("/mnt/sdcard", true);
+        library_.sortSongs();
+
         QueueFragment.clearQueue();
-        int[] qsongs = PlayerFragment.getShuffleList();
+//        int[] qsongs = PlayerFragment.getShuffleList();
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
             QueueFragment.addToQueue(song);
         }
@@ -109,6 +111,11 @@ public class MusicPlayer extends FragmentActivity
     @Override
     public SongInfo getSongInfo(int ii) {
         return QueueFragment.getItem(ii);
+    }
+
+    @Override
+    public MediaLibraryNSR getLibrary() {
+        return library_;
     }
 
     @Override

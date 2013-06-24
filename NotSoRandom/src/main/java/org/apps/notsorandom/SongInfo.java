@@ -22,6 +22,11 @@ public class SongInfo {
         return fileName_;
     }
 
+    public int getSenseIndex() {
+        int ret = (senseValue_ & 0xf0) >> 1 | (senseValue_ & 0x0f);
+        return ret;
+    }
+
     public int getSenseValue() {
         return senseValue_;
     }

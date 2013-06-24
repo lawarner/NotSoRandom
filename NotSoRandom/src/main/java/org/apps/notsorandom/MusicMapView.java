@@ -39,6 +39,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private PointF origin_ = new PointF();
     private float  radius_;
 
+
     // ------------------------------------------------------------------------
     private static float indexToPixel(int idx) {
         float fpix = Math.round((float) idx / calc_.x);
@@ -79,6 +80,14 @@ public class MusicMapView extends View implements View.OnTouchListener {
         setOnTouchListener(this);
     }
 
+
+    public boolean initLibrary() {
+        return musicMap_.initLibrary();
+    }
+
+    public void setLibrary(MediaLibraryNSR library) {
+        musicMap_.setLibrary(library);
+    }
 
     public void setOrigin(float x, float y) {
         origin_.set(x, y);

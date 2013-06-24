@@ -14,26 +14,63 @@ import java.util.Random;
 public class MusicMap {
     private static final String TAG = "MusicMap";
 
-    private int senseValues_[];
-    private int shuffled_[];
-    private int puddle_[];
-    private Rect box_ = new Rect();
-
     public static final int MAPWIDTH  = 8;   // matrix width
     public static final int MAPHEIGHT = 8;   // matrix height
     public static final int MAPSIZE = MAPWIDTH * MAPHEIGHT;
 
-    //private class MapEntry
+    private int senseValues_[];
+    private int shuffled_[];
+    private int puddle_[];
+    private MapEntry mapEntries_[];
+    private Rect box_ = new Rect();
+
+    private MediaLibraryNSR library_;
+
+
+    private class MapEntry {
+        private int start_;
+        private int count_;
+
+        public MapEntry() {
+            this(-1, 0);
+        }
+
+        public MapEntry(int start, int count) {
+            start_ = start;
+            count_ = count;
+        }
+
+        public void addEntry() {
+            count_++;
+        }
+
+        public void set(int start, int count) {
+            start_ = start;
+            count_ = count;
+        }
+
+        public int getStart() {
+            return start_;
+        }
+
+        public int getCount() {
+            return count_;
+        }
+    }
+
 
     public MusicMap() {
         puddle_ = new int[MAPSIZE];
         senseValues_ = new int[MAPSIZE];
         shuffled_ = new int[MAPSIZE];
+        mapEntries_ = new MapEntry[MAPSIZE];
+
         for (int i = 0; i < MAPSIZE; i++) {
             int j = (i % 8) | (( i / 8) << 4);
             senseValues_[i] = j;
             shuffled_[i] = -1;
             puddle_[i] = 0;
+            mapEntries_[i].set(-1, 0);
 //            Log.d(TAG, "Value: " + Integer.toHexString(j));
         }
     }
@@ -74,6 +111,44 @@ public class MusicMap {
 
     public int senseValue(int idx) {
         return senseValues_[idx];
+    }
+
+    public boolean initLibrary() {
+        if (library_ == null)
+            return false;
+
+        int lastIndex = -1;
+        int mostDups  = -1;
+//        for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
+        for (int idx = 0; idx < library_.getSongCount(); idx++) {
+            SongInfo song = library_.getSong(idx);
+            int ii = song.getSenseIndex();
+            if (ii < 0 || ii >= MAPSIZE) {
+                MusicPlayer.log(TAG, "Sense index " + ii + " out of range for " + song.getFileName());
+                continue;
+            }
+
+            int cnt = mapEntries_[ii].getCount();
+            if (cnt == -1) {
+                mapEntries_[ii].set(idx, 1);
+                lastIndex = ii;
+                mostDups = Math.max(mostDups, 1);
+            } else if (lastIndex == ii) {
+                mapEntries_[ii].addEntry();
+                mostDups = Math.max(mostDups, cnt + 1);
+            } else {
+                MusicPlayer.log(TAG, "Map entries not contiguous in library.");
+                lastIndex = -1;
+            }
+        }
+
+        MusicPlayer.log(TAG, "Song entries added from library, most dups = " + mostDups);
+
+        return true;
+    }
+
+    public void setLibrary(MediaLibraryNSR library) {
+        library_ = library;
     }
 
     public int[] boxShuffle(int center, Point size) {
