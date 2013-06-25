@@ -28,10 +28,11 @@ public class QueueFragment extends Fragment {
      */
     public static void addToQueue(SongInfo song) {
         qArrSongs_.add(song);
+        String str = song.getSenseString() + " " + song.getTitle() + " | " + song.getFileName();
         if (qArray_ == null) {
-            qArrList_.add(song.getFileName());
+            qArrList_.add(str);
         } else {
-            qArray_.add(song.getFileName());
+            qArray_.add(str);
             qArray_.notifyDataSetChanged();
         }
     }

@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -13,8 +12,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
+//TODO make sure this does not recalc the musicmap when reactivating the fragment view.
 /**
  * Custom view that handles rendering and drawing of the Music Map.
  */
@@ -28,17 +26,18 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private int currColor_ = 0;
 
     private static MusicMap musicMap_ = new MusicMap();
-    // 3 + 3*8
-    private static int randomPoint_ = 27;   // Mid point at first.
+
     private static PointF calc_ = new PointF(8f/473f, 8f/480f);
-    private static RectF  boxDraw_ = new RectF(238f - 40f, 240 - 40f, 238f + 40f, 240 + 40f);
+    private static RectF  boxDraw_ = new RectF();
+    private static Rect newbox_ = new Rect();
 
     private Bitmap bitmap_;
     private Paint  paint_;
 
-    private PointF origin_ = new PointF();
+    private PointF center_ = new PointF();
+    private PointF start_  = new PointF();
+    private PointF stop_   = new PointF();
     private float  radius_;
-
 
     // ------------------------------------------------------------------------
     private static float indexToPixel(int idx) {
@@ -52,12 +51,13 @@ public class MusicMapView extends View implements View.OnTouchListener {
      * @return list of songs indices. Can be used as parameter to getSongInfo()
      *         to retrieve the song information.
      */
-    public static int[] getShuffleList(boolean reshuffle) {
+    private static MusicMap.MapEntry[] getShuffleList(boolean reshuffle) {
         if (reshuffle || !musicMap_.isShuffled()) {
-            if (randomPoint_ < 0)
-                return musicMap_.randomShuffle();
-            else {
-                int[] mm = musicMap_.boxShuffle(randomPoint_, new Point(4,4));
+            if (newbox_.isEmpty()) {
+                boxDraw_.setEmpty();
+                return musicMap_.randomShuffle(20);
+            } else {
+                MusicMap.MapEntry[] mm = musicMap_.boxShuffle(newbox_);
                 Rect rc = musicMap_.getBox();
                 boxDraw_.set(indexToPixel(rc.left), indexToPixel(rc.top),
                              indexToPixel(rc.right), indexToPixel(rc.bottom));
@@ -67,7 +67,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
 //                return musicMap_.puddleShuffle(randomPoint_);
         }
 
-        return musicMap_.getShuffled();
+        return musicMap_.getShuffleEntries();
     }
 
     // ------------------------------------------------------------------------
@@ -82,21 +82,35 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
 
     public boolean initLibrary() {
-        return musicMap_.initLibrary();
+        return musicMap_.fillLibEntries();
     }
 
-    public void setLibrary(MediaLibraryNSR library) {
+    public void setLibrary(NSRMediaLibrary library) {
         musicMap_.setLibrary(library);
     }
 
-    public void setOrigin(float x, float y) {
-        origin_.set(x, y);
+    public void setStart(float x, float y) {
+        start_.set(x, y);
+    }
 
-        int cx = (int) Math.floor(x * calc_.x);
-        int cy = (int) Math.floor(y * calc_.y);
+    public void setStop(float x, float y) {
+        stop_.set(x, y);
+
+        RectF rc = new RectF(start_.x, start_.y, stop_.x, stop_.y);
+        rc.sort();
+        float fx = rc.centerX();
+        float fy = rc.centerY();
+        int cx = (int) Math.round(fx * calc_.x);
+        int cy = (int) Math.round(fy * calc_.y);
         Log.d(TAG, "SET SHUFFLE ORIGIN TO (" + cx + "," + cy + ")");
 
-        randomPoint_ = cx + cy * 8;
+        cx = (int) Math.floor(rc.left * calc_.x);
+        cy = (int) Math.floor(rc.top  * calc_.y);
+        int ix = (int) Math.ceil(rc.right * calc_.x);
+        int iy = (int) Math.ceil(rc.bottom * calc_.y);
+        newbox_.set(cx, cy, ix, iy);
+        newbox_.sort();
+        center_.set(fx, fy);     // Now, set the center
     }
 
 
@@ -111,7 +125,9 @@ public class MusicMapView extends View implements View.OnTouchListener {
         calc_.x = 8f / w;
         calc_.y = 8f / h;
 
-        setOrigin(w / 2, h / 2);
+        //setStart(w / 4, h / 4);
+        //setStop(w * 3 / 4, h * 3 / 4);
+        newbox_.setEmpty();
         getShuffleList(true);   // Reshuffle
     }
 
@@ -119,65 +135,90 @@ public class MusicMapView extends View implements View.OnTouchListener {
     protected void onDraw(Canvas canvas) {
 
         canvas.drawBitmap(bitmap_, 0, 0, paint_);
-
-        paint_.setColor(Color.BLUE);
         paint_.setStrokeWidth(0f);
-        paint_.setStyle(Paint.Style.STROKE);
-        canvas.drawRect(boxDraw_, paint_);
-        paint_.setStyle(Paint.Style.FILL);
-        canvas.drawCircle(origin_.x, origin_.y, 1f, paint_);
 
+        if (!boxDraw_.isEmpty()) {
+            paint_.setColor(Color.BLUE);
+            paint_.setStyle(Paint.Style.STROKE);
+            canvas.drawRect(boxDraw_, paint_);
+            paint_.setStyle(Paint.Style.FILL);
+            canvas.drawCircle(center_.x, center_.y, 1f, paint_);
+        }
+
+        // The library map
+        paint_.setColor(Color.YELLOW);
+        MusicMap.MapEntry[] me = musicMap_.getLibEntries();
+        for (int ii = 0; ii < me.length; ii++) {
+            int cnt = me[ii].getCount();
+            if (cnt > 0) {
+                float x = 24f + indexToPixel(ii % 8);
+                float y = 24f + indexToPixel(ii / 8);
+                canvas.drawCircle(x, y, 2f * cnt, paint_);
+            }
+        }
+
+        // The shuffle map
         paint_.setColor(colors_[currColor_]);
-        int[] shuffles = getShuffleList(false);
-        for (int i = 0; i < 12; i++) {
-            float x = 24f + indexToPixel(shuffles[i] % 8);
-            float y = 24f + indexToPixel(shuffles[i] / 8);
-            canvas.drawCircle(x, y, radius_ / 2f, paint_);
+        me = getShuffleList(false);
+        for (int ii = 0; ii < me.length; ii++) {
+            int cnt = me[ii].getCount();
+            if (cnt > 0) {
+                float x = 24f + indexToPixel(ii % 8);
+                float y = 24f + indexToPixel(ii / 8);
+                canvas.drawCircle(x, y, 2f * cnt, paint_);
+            }
         }
     }
+
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         int action = motionEvent.getActionMasked();
-        Log.d(TAG, "Action onTouch == " + action);
         if (action == MotionEvent.ACTION_DOWN ||
-            action == MotionEvent.ACTION_POINTER_DOWN)
+            action == MotionEvent.ACTION_POINTER_DOWN) {
+            Log.d(TAG, "Action onTouch == ACTION_DOWN " + action);
+            setStart(motionEvent.getX(), motionEvent.getY());
             return true;
+        }
         if (action != MotionEvent.ACTION_UP &&
             action != MotionEvent.ACTION_POINTER_UP)
             return false;
         if (motionEvent.getPointerCount() < 1)
             return false;
+        Log.d(TAG, "Action onTouch == ACTION_UP " + action);
 
         calc_.x = 8f / getWidth();
         calc_.y = 8f / getHeight();
 
-        setOrigin(motionEvent.getX(), motionEvent.getY());
+        setStop(motionEvent.getX(), motionEvent.getY());
         getShuffleList(true);   // Reshuffle
 
-        /* ---------- color cycler
-        currColor_++;
-        currColor_ = currColor_ >= colors.length ? 0 : currColor_;
-        bitmap_.eraseColor(colors[currColor_]);
-        ------------- */
         invalidate();
-/* -----
-        Log.d(TAG, " WHOLE MAP AREA IS " + getWidth() + ", " + getHeight());
+
+        return true;
+    }
+
+/*        MusicPlayer.log(TAG, " WHOLE MAP AREA IS " + getWidth() + ", " + getHeight());
         for (int x = 0; x < getWidth(); x += (getWidth() / 8)) {
             for (int y = 0; y < getHeight(); y += (getHeight() / 8)) {
                 int cx = (int) Math.floor(x * calc_.x);
                 int cy = (int) Math.floor(y * calc_.y);
                 int ival = cx + cy * 8;
-                Log.d(TAG, "RC:  (" + x + "," + y + ") ==> " + ival + " : (" + cx + "," + cy + ")");
+                MusicPlayer.log(TAG, "RC:  (" + x + "," + y + ") ==> " + ival + " : (" + cx + "," + cy + ")");
             }
         }
         for (int i = 0; i < 64; i++) {
             float x = Math.round((i % 8) / calc_.x);
             float y = Math.round((i / 8) / calc_.y);
-            Log.d(TAG, "Cvt: " + i + " to (" + x + "," + y + ")");
+            MusicPlayer.log(TAG, "Cvt: " + i + " to (" + x + "," + y + ")");
         }
------- */
-        return true;
-    }
+        for (int y = 0; y < getHeight(); y += (getHeight() / 8)) {
+            for (int x = 0; x < getWidth(); x += (getWidth() / 8)) {
+                int cx = (int) Math.floor(pt.x * calc_.x + 0.49);
+                int cy = (int) Math.floor(pt.y * calc_.y + 0.49);
+                MusicPlayer.log(TAG, "Convert Pixel:  (" + x + "," + y +
+                                     ") ==> (" + pt.x + "," + cy + ")");
+            }
+        } */
 
 }

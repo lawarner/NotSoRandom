@@ -1,28 +1,19 @@
 package org.apps.notsorandom;
 
-import android.app.ActionBar;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTabHost;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
-import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.TabHost;
-
-import java.util.Locale;
 
 
 public class MusicPlayer extends FragmentActivity
         implements PlayerFragment.OnPlayerListener, TabHost.OnTabChangeListener {
     private static final String TAG = "MusicPlayer";
 
-    private MediaLibraryNSR library_ = new TestMediaLibrary();
+    private MediaLibraryBaseImpl library_ = new MediaLibraryTest();
 
     private FragmentTabHost tabHost_;
 
@@ -62,11 +53,12 @@ public class MusicPlayer extends FragmentActivity
             tabHost_.setOnTabChangedListener(this);
         }
 
-        library_.scanForMedia("/mnt/sdcard", true);
+//        library_.scanForMedia("/mnt/sdcard", true);
+        library_.scanForMedia("RANDOM", true);
         library_.sortSongs();
 
+        // Start with the whole library in the queue
         QueueFragment.clearQueue();
-//        int[] qsongs = PlayerFragment.getShuffleList();
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
             QueueFragment.addToQueue(song);
         }
@@ -114,7 +106,7 @@ public class MusicPlayer extends FragmentActivity
     }
 
     @Override
-    public MediaLibraryNSR getLibrary() {
+    public NSRMediaLibrary getLibrary() {
         return library_;
     }
 

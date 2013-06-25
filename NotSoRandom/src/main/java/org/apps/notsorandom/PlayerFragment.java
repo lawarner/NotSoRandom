@@ -44,10 +44,10 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
      * The activity can call this to get a list of indices into the shuffled
      * list of songs.
      * @return array of song indices.
-     */
     public static int[] getShuffleList() {
         return musicMapView_.getShuffleList(true);
     }
+     */
 
     /**
      * Interface that an Activity must implement in order to attach this Fragment.
@@ -61,7 +61,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
          */
         public SongInfo getSongInfo(int ii);
 
-        public MediaLibraryNSR getLibrary();
+        public NSRMediaLibrary getLibrary();
 
         /**
          * Called to retrieve the next song to play.
@@ -171,8 +171,8 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         super.onDestroyView();
         Log.d(TAG, "onDestroyView in PlayerFragment");
         ((MyMediaController) controller_).hide_();
-        if (player_.isPlaying())    // Maybe want to keep playing in background?
-            player_.stop();
+//        if (player_.isPlaying())    // Maybe want to keep playing in background?
+//            player_.stop();
         player_.release();
     }
 
