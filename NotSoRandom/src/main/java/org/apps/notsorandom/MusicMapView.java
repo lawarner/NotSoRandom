@@ -100,8 +100,8 @@ public class MusicMapView extends View implements View.OnTouchListener {
         rc.sort();
         float fx = rc.centerX();
         float fy = rc.centerY();
-        int cx = (int) Math.round(fx * calc_.x);
-        int cy = (int) Math.round(fy * calc_.y);
+        int cx = Math.round(fx * calc_.x);
+        int cy = Math.round(fy * calc_.y);
         Log.d(TAG, "SET SHUFFLE ORIGIN TO (" + cx + "," + cy + ")");
 
         cx = (int) Math.floor(rc.left * calc_.x);

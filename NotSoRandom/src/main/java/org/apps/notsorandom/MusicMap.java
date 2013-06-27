@@ -21,7 +21,6 @@ public class MusicMap {
     private static Rect box_ = new Rect();
 
     private int senseValues_[];
-    private int shuffled_[];
     private int puddle_[];
     private MapEntry libEntries_[];
     private MapEntry shuffleEntries_[];
@@ -72,7 +71,6 @@ public class MusicMap {
     public MusicMap() {
         puddle_ = new int[MAPSIZE];
         senseValues_ = new int[MAPSIZE];
-        shuffled_ = new int[MAPSIZE];
         libEntries_ = new MapEntry[MAPSIZE];
         shuffleEntries_ = new MapEntry[MAPSIZE];
         totalLibEntries_ = 0;
@@ -82,7 +80,6 @@ public class MusicMap {
         for (int i = 0; i < MAPSIZE; i++) {
             int j = (i % 8) | (( i / 8) << 4);
             senseValues_[i] = j;
-            shuffled_[i] = -1;
             puddle_[i] = 0;
             libEntries_[i] = new MapEntry(-1, 0);
             shuffleEntries_[i] = new MapEntry(-1, 0);
@@ -117,9 +114,13 @@ public class MusicMap {
 
     public void resetShuffle() {
         totalShuffleEntries_ = 0;
-        for (MapEntry entry : shuffleEntries_) {
-            entry.set(-1, 0);
+        for (int i = 0; i < shuffleEntries_.length; i++) {
+            shuffleEntries_[i].set(-1, 0);
         }
+/*        for (MapEntry entry : shuffleEntries_) {
+            entry.set(-1, 0);
+        } */
+        MusicPlayer.log(TAG, "resetShuffle shuffled is " + isShuffled());
     }
 
     /**
@@ -211,6 +212,8 @@ public class MusicMap {
     }
 
     public MapEntry[] boxShuffle(Rect box) {
+        MusicPlayer.log(TAG, "START BOX SHUFFLE");
+
         // Sanitize and set box
         int left   = Math.min(MAPWIDTH,  Math.max(0, box.left));
         int top    = Math.min(MAPHEIGHT, Math.max(0, box.top));
@@ -221,8 +224,10 @@ public class MusicMap {
         Point center = new Point(box_.centerX(), box_.centerY());
 
         // size covers whole map, so just random shuffle
-        if (box_.width() >= MAPWIDTH && box_.height() >= MAPHEIGHT)
+        if (box_.width() >= MAPWIDTH && box_.height() >= MAPHEIGHT) {
+            MusicPlayer.log(TAG, "box is whole library -- go to random shuffle");
             return randomShuffle(library_.getSongCount());
+        }
 
         // Find out total songs in the box
         fillLibEntries();
@@ -235,7 +240,7 @@ public class MusicMap {
             }
         }
 
-        MusicPlayer.log(TAG, "START BOX SHUFFLE AT:  " + box_.toString() + ", center=" + center.toString());
+        MusicPlayer.log(TAG, " + BOX SHUFFLE AT:  " + box_.toString() + ", center=" + center.toString());
         MusicPlayer.log(TAG, "Library size = " + library_.getSongCount() + ", in box=" + songsInBox_);
 
         // If box is whole library, then just copy libEntries to shuffleEntries
@@ -286,20 +291,27 @@ public class MusicMap {
         Random rnd = new Random();
 
         int totalSongs = library_.getSongCount();
-        if (count > totalLibEntries_)
-            count = totalLibEntries_;
+        if (count > totalSongs)
+            count = totalSongs;
+
+        MusicPlayer.log(TAG, " + RANDOM SHUFFLE of " + count);
 
         int i = 0;
+        int iters = 0;      // prevent endless loop
         while (i < count ) {
+            iters++;
             int idx = rnd.nextInt(totalSongs);
             SongInfo song = library_.getSong(idx);
             int ii = song.getSenseIndex();
             if (shuffleEntries_[ii].getCount() < libEntries_[ii].getCount()) {
+                MusicPlayer.log(TAG, "Add to entry " + ii + ", count=" + shuffleEntries_[ii].getCount());
                 shuffleEntries_[ii].set(libEntries_[ii].getStart());
                 shuffleEntries_[ii].addEntry();
                 i++;
-            }
-            else
+            } else if (iters > 50) {
+                MusicPlayer.log(TAG, "Too many iterations");
+                break;
+            } else
                 MusicPlayer.log(TAG, " === count too big " + shuffleEntries_[ii].getCount() + " at " + ii);
         }
         MusicPlayer.log(TAG, "+-+ random songs " + i + " fill from total " + totalLibEntries_);

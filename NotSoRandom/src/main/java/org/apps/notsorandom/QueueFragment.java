@@ -79,17 +79,31 @@ public class QueueFragment extends Fragment {
         if (idx >= qArrSongs_.size())
             return null;
 
+        currItem_ = idx;
+
+//        qArray_.getView(currItem_, getView(), )
+
         return qArrSongs_.get(idx);
+    }
+
+    public static SongInfo getPrevItem(boolean last) {
+        if (last)
+            currItem_ = qArrSongs_.size();
+
+        if (currItem_ <= 0)
+            return null;
+
+        return getItem(--currItem_);
     }
 
     public static SongInfo getNextItem(boolean first) {
         if (first)
             currItem_ = -1;
 
-        if (++currItem_ >= qArrSongs_.size())
+        if ((currItem_ + 1) >= qArrSongs_.size())
             return null;
 
-        return getItem(currItem_);
+        return getItem(++currItem_);
     }
 
 

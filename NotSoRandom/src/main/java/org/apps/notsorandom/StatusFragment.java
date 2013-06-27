@@ -10,7 +10,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
- * Created by andy on 6/16/13.
+ * Show status of player.
  */
 public class StatusFragment extends Fragment {
     private static final String TAG = "MusicStatusFragment";
@@ -34,20 +34,20 @@ public class StatusFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-//        Log.d(TAG, "====== onCreateView Status Fragment");
+        Log.d(TAG, "====== onCreateView Status Fragment " + statusStr_.length());
         View view = inflater.inflate(R.layout.fragment_music_status, container, false);
 
         TextView tv = (TextView) view.findViewById(R.id.statusText);
-        tv.setText(statusStr_);
+        tv.setText(statusStr_, TextView.BufferType.EDITABLE);
 
         return view;
     }
 
     @Override
     public void onDestroyView() {
-//        Log.d(TAG, "====== onDestroyView of StatusFragment called.");
+        Log.d(TAG, "====== onDestroyView of StatusFragment called.");
         TextView tv = (TextView) getView().findViewById(R.id.statusText);
-        statusStr_ = tv.getText().toString();
+//        statusStr_ = tv.getText().toString();
 
         super.onDestroyView();
     }
@@ -57,6 +57,9 @@ public class StatusFragment extends Fragment {
         super.onResume();
         Log.d(TAG, "====== onResume Status Fragment");
 //        _log("Status Fragment started.\n");
+
+        TextView tv = (TextView) getView().findViewById(R.id.statusText);
+        tv.setText(statusStr_, TextView.BufferType.EDITABLE);
     }
 
 
@@ -66,7 +69,7 @@ public class StatusFragment extends Fragment {
      * class.
      * @param msg The message to write to the status log.
      */
-    public void _log(String msg) {
+    private void _log(String msg) {
         if (getView() == null) {
             Log.d("MusicStatus", "getView is null");
             log(msg);
@@ -76,14 +79,14 @@ public class StatusFragment extends Fragment {
         tv.append(msg);
     }
 
-    public void _clear() {
+    private void _clear() {
         _set("");
     }
 
-    public void _set(String msg) {
+    private void _set(String msg) {
         if (getView() != null) {
             TextView tv = (TextView) getView().findViewById(R.id.statusText);
-            tv.setText(msg);
+            tv.setText(msg, TextView.BufferType.EDITABLE);
         }
         else
             set(msg);

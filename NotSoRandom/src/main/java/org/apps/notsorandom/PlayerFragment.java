@@ -34,7 +34,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     private OnPlayerListener callback_ = null;
 
     private MediaController controller_ = null;
-    private MediaPlayer player_;
+    private MediaPlayer player_ = null;
     private View controlView_ = null;
 
     private Handler handler_ = new Handler();
@@ -62,6 +62,15 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         public SongInfo getSongInfo(int ii);
 
         public NSRMediaLibrary getLibrary();
+
+        /**
+         * Called to retrieve the previous song to play.
+         * TODO: rewrite this to Iterator interface.
+         * @param first If true will return the last song in list
+         * @return Info of next song to play. The implementation should
+         *     return null when no more songs are in the queue.
+         */
+        public SongInfo getPrevSong(boolean first);
 
         /**
          * Called to retrieve the next song to play.
@@ -143,8 +152,23 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         alv.add(musicMapView_);
         view.addTouchables(alv);
 
-        controlView_ = (View) view.findViewById(R.id.controlView);
+        controlView_ = view.findViewById(R.id.controlView);
         controller_  = new MyMediaController(getActivity());
+        View.OnClickListener prev = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SongInfo song = callback_.getPrevSong(false);
+                playSong(song);
+            }
+        };
+        View.OnClickListener next = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SongInfo song = callback_.getNextSong(false);
+                playSong(song);
+            }
+        };
+        controller_.setPrevNextListeners(prev, next);
 
         return view;
     }
@@ -158,7 +182,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         musicMapView_.initLibrary();
 
         SongInfo song = callback_.getNextSong(true);
-        controlView_ = (View) getView().findViewById(R.id.controlView);
+        controlView_ = getView().findViewById(R.id.controlView);
         if (queueSong(song)) {
             TextView tv = (TextView) getView().findViewById(R.id.current_song);
             tv.setText("Next " + song.getTitle() + " ...");
@@ -171,13 +195,39 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         super.onDestroyView();
         Log.d(TAG, "onDestroyView in PlayerFragment");
         ((MyMediaController) controller_).hide_();
-//        if (player_.isPlaying())    // Maybe want to keep playing in background?
-//            player_.stop();
-        player_.release();
+
+        if (player_ != null) {
+            try {
+                if (player_.isPlaying()) {    // Maybe want to keep playing in background?
+                    player_.stop();
+                    player_.release();
+                }
+            } catch (Exception ex) {
+                //
+            }
+        }
     }
 
     public boolean playSong(SongInfo song) {
-        if (queueSong(song) == false)
+        if (player_ != null) {
+            try {
+                controller_.setEnabled(false);
+                controller_.setMediaPlayer(null);
+                MusicPlayer.log(TAG, "check isPlaying");
+                if (player_.isPlaying()) {
+                    MusicPlayer.log(TAG, "reset player");
+                    player_.reset();
+                    MusicPlayer.log(TAG, "stop player");
+                    player_.stop();
+                    MusicPlayer.log(TAG, "release player");
+                    player_.release();
+                }
+            } catch (Exception ex) {
+                // at least I tried...
+            }
+        }
+
+        if (!queueSong(song))
             return false;
 
         TextView tv = (TextView) getView().findViewById(R.id.current_song);
@@ -197,11 +247,12 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         player_.setOnPreparedListener(this);
         player_.setOnCompletionListener(this);
 
-//        controller_.setMediaPlayer(this);
+        controller_.setMediaPlayer(this);
 
         try {
             player_.setDataSource(song.getFileName());
             player_.prepare();
+            controller_.setEnabled(true);
 //            player_.start();
         } catch (Exception ex) {
             Log.e(TAG, "Exception: " + ex.getMessage());
@@ -227,7 +278,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.d(TAG, "onPrepared in PlayerFragment");
-        controlView_ = (View) getView().findViewById(R.id.controlView);
+        controlView_ = getView().findViewById(R.id.controlView);
         controller_.setMediaPlayer(this);
         controller_.setAnchorView(controlView_);
 

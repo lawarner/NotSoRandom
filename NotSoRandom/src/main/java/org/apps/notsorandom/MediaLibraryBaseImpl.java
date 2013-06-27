@@ -1,6 +1,7 @@
 package org.apps.notsorandom;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -9,6 +10,12 @@ import java.util.Iterator;
  * Common implementation of the media library, regardless of data sources.
  */
 public class MediaLibraryBaseImpl implements NSRMediaLibrary {
+    protected ArrayList<SongInfo> songs_;
+    protected Iterator<SongInfo> iter_;
+
+    protected  OnLibraryChangedListener listener_;
+
+
     MediaLibraryBaseImpl() {
         songs_ = new ArrayList<SongInfo>(10);
         listener_ = null;
@@ -49,6 +56,11 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     }
 
     @Override
+    public ArrayList<SongInfo> getAllSongs() {
+        return songs_;
+    }
+
+    @Override
     public int scanForMedia(String folder, boolean subFolders) {
         return 0;
     }
@@ -69,8 +81,4 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
         });
     }
 
-    protected ArrayList<SongInfo> songs_;
-    protected Iterator<SongInfo> iter_;
-
-    protected  OnLibraryChangedListener listener_;
 }
