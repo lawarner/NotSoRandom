@@ -28,26 +28,39 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
                                                         MediaPlayer.OnPreparedListener {
     private static final String TAG = "MusicPlayerFragment";
 
-    private static MusicMapView musicMapView_;
+    private static MusicMapView musicMapView_ = null;
 
-    // Used to call back the attached Activity
+    private static MediaController controller_ = null;
+
+    private static MediaPlayer player_ = null;
+
+    // Used to call back the Activity that attached us.
     private OnPlayerListener callback_ = null;
 
-    private MediaController controller_ = null;
-    private MediaPlayer player_ = null;
+    // Place in layout to attach (floating) media controller
     private View controlView_ = null;
+
+    private TextView title_ = null;
 
     private Handler handler_ = new Handler();
 
+    private boolean isFirstTime_;
+
+
+    public static void fillQueue(int count) {
+        if (musicMapView_ != null) {
+            musicMapView_.fillQueue(count);
+        }
+    }
 
     /**
      * The activity can call this to get a list of indices into the shuffled
      * list of songs.
      * @return array of song indices.
-    public static int[] getShuffleList() {
-        return musicMapView_.getShuffleList(true);
-    }
      */
+    public static MusicMap.MapEntry[] getShuffleList(boolean shuffle) {
+        return musicMapView_.getShuffleList(shuffle);
+    }
 
     /**
      * Interface that an Activity must implement in order to attach this Fragment.
@@ -62,6 +75,13 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         public SongInfo getSongInfo(int ii);
 
         public NSRMediaLibrary getLibrary();
+
+        /**
+         * Called to retrieve the current song to play.
+         * @return Info of next song to play. The implementation should
+         *     return null when no more songs are in the queue.
+         */
+        public SongInfo getCurrSong();
 
         /**
          * Called to retrieve the previous song to play.
@@ -130,7 +150,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView in PlayerFragment");
+        MusicPlayer.log(TAG, " onCreateView in PlayerFragment");
         View view = inflater.inflate(R.layout.fragment_music_player, container, false);
 
         // Deal with the column labels around the music map
@@ -153,22 +173,30 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         view.addTouchables(alv);
 
         controlView_ = view.findViewById(R.id.controlView);
-        controller_  = new MyMediaController(getActivity());
-        View.OnClickListener prev = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SongInfo song = callback_.getPrevSong(false);
-                playSong(song);
-            }
-        };
-        View.OnClickListener next = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SongInfo song = callback_.getNextSong(false);
-                playSong(song);
-            }
-        };
-        controller_.setPrevNextListeners(prev, next);
+        if (controller_ == null) {
+            isFirstTime_ = true;
+            controller_  = new MyMediaController(getActivity());
+            View.OnClickListener prev = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // TODO if current seek position > 2 secs, go to beginning of current song
+                    SongInfo song = callback_.getPrevSong(false);
+                    playSong(song);
+                }
+            };
+            View.OnClickListener next = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    SongInfo song = callback_.getNextSong(false);
+                    playSong(song);
+                }
+            };
+            controller_.setPrevNextListeners(next, prev);
+        } else {
+            isFirstTime_ = false;
+            controller_.setAnchorView(controlView_);
+        }
+        controller_.setMediaPlayer(this);
 
         return view;
     }
@@ -178,16 +206,36 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         super.onActivityCreated(savedInstanceState);
         Log.d(TAG, "onActivityCreated in PlayerFragment");
 
+        controlView_ = getView().findViewById(R.id.controlView);
+        title_ = (TextView) getView().findViewById(R.id.current_song);
+
         musicMapView_.setLibrary(callback_.getLibrary());
         musicMapView_.initLibrary();
 
-        SongInfo song = callback_.getNextSong(true);
-        controlView_ = getView().findViewById(R.id.controlView);
-        if (queueSong(song)) {
-            TextView tv = (TextView) getView().findViewById(R.id.current_song);
-            tv.setText("Next " + song.getTitle() + " ...");
+        if (player_ == null) {
+            player_ = new MediaPlayer();
+            player_.setOnPreparedListener(this);
+            player_.setOnCompletionListener(this);
+            MusicPlayer.log(TAG, "Created new MediaPlayer");
         }
 
+        if (isFirstTime_) {
+            getShuffleList(true);
+            fillQueue(30);
+            SongInfo song = callback_.getNextSong(true);
+            MusicPlayer.log(TAG, " getNextSong = " + song);
+            if (queueSong(song)) {
+                title_.setText("Next " + song.getTitle() + " ...");
+//                controller_.show(0);
+            }
+        } else {
+            SongInfo song = callback_.getCurrSong();
+            MusicPlayer.log(TAG, " getCurrSong = " + song);
+            if (queueSong(song)) {
+                title_.setText("Resuming " + song.getTitle() + " ...");
+                controller_.show(0);
+            }
+        }
     }
 
     @Override
@@ -195,7 +243,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         super.onDestroyView();
         Log.d(TAG, "onDestroyView in PlayerFragment");
         ((MyMediaController) controller_).hide_();
-
+/*
         if (player_ != null) {
             try {
                 if (player_.isPlaying()) {    // Maybe want to keep playing in background?
@@ -206,21 +254,17 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
                 //
             }
         }
+*/
     }
 
     public boolean playSong(SongInfo song) {
         if (player_ != null) {
             try {
-                controller_.setEnabled(false);
-                controller_.setMediaPlayer(null);
-                MusicPlayer.log(TAG, "check isPlaying");
                 if (player_.isPlaying()) {
-                    MusicPlayer.log(TAG, "reset player");
-                    player_.reset();
                     MusicPlayer.log(TAG, "stop player");
                     player_.stop();
-                    MusicPlayer.log(TAG, "release player");
-                    player_.release();
+                    MusicPlayer.log(TAG, "reset player");
+                    player_.reset();
                 }
             } catch (Exception ex) {
                 // at least I tried...
@@ -230,8 +274,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         if (!queueSong(song))
             return false;
 
-        TextView tv = (TextView) getView().findViewById(R.id.current_song);
-        tv.setText("Now playing " + song.getTitle() + " ...");
+        title_.setText("Now playing " + song.getTitle() + " ...");
 
         callback_.onNewSong(song);
 
@@ -243,11 +286,13 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     public boolean queueSong(SongInfo song) {
         if (song == null) return false;
 
-        player_ = new MediaPlayer();
-        player_.setOnPreparedListener(this);
-        player_.setOnCompletionListener(this);
-
-        controller_.setMediaPlayer(this);
+        if (player_ == null) {
+            MusicPlayer.log(TAG, "In queueSong, player_ is STILL null!");
+            player_ = new MediaPlayer();
+            player_.setOnPreparedListener(this);
+            player_.setOnCompletionListener(this);
+            controller_.setMediaPlayer(this);
+        }
 
         try {
             player_.setDataSource(song.getFileName());
@@ -258,13 +303,13 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
             Log.e(TAG, "Exception: " + ex.getMessage());
         }
 
+        MusicPlayer.log(TAG, " -+ end of queueSong");
         return true;
     }
 
     public void stopSong() {
         pause();
-        TextView tv = (TextView) getView().findViewById(R.id.current_song);
-        tv.setText("Stopped.");
+        title_.setText("Stopped.");
     }
 /*
     public void showPlaylist() {
@@ -278,8 +323,8 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.d(TAG, "onPrepared in PlayerFragment");
-        controlView_ = getView().findViewById(R.id.controlView);
         controller_.setMediaPlayer(this);
+        controlView_ = getView().findViewById(R.id.controlView);
         controller_.setAnchorView(controlView_);
 
         handler_.post(new Runnable() {

@@ -114,13 +114,9 @@ public class MusicMap {
 
     public void resetShuffle() {
         totalShuffleEntries_ = 0;
-        for (int i = 0; i < shuffleEntries_.length; i++) {
-            shuffleEntries_[i].set(-1, 0);
-        }
-/*        for (MapEntry entry : shuffleEntries_) {
+        for (MapEntry entry : shuffleEntries_) {
             entry.set(-1, 0);
-        } */
-        MusicPlayer.log(TAG, "resetShuffle shuffled is " + isShuffled());
+        }
     }
 
     /**
@@ -135,7 +131,7 @@ public class MusicMap {
 
         library_.sortSongs();
 
-        for (int i = 0; i < MAPSIZE; i++) {
+        for (int i = 0; i < libEntries_.length; i++) {
             libEntries_[i].set(-1, 0);
         }
 
@@ -245,7 +241,9 @@ public class MusicMap {
 
         // If box is whole library, then just copy libEntries to shuffleEntries
         if (songsInBox_ == library_.getSongCount()) {
-            System.arraycopy(libEntries_, 0, shuffleEntries_, 0, shuffleEntries_.length);
+            for (int i = 0; i < MAPSIZE; i++) {
+                shuffleEntries_[i].set(libEntries_[i].getStart(), libEntries_[i].getCount());
+            }
             totalShuffleEntries_ = totalLibEntries_;
             fillQueue(Math.min(20, totalShuffleEntries_));
             MusicPlayer.log(TAG, "box filled with whole library ");
@@ -283,18 +281,16 @@ public class MusicMap {
     }
 
     public MapEntry[] randomShuffle(int count) {
-        MusicPlayer.log(TAG, "START RANDOM SHUFFLE");
+        int totalSongs = library_.getSongCount();
+        if (count > totalSongs)
+            count = totalSongs;
+
+        MusicPlayer.log(TAG, " RANDOM SHUFFLE of " + count);
 
         resetShuffle();
         fillLibEntries();
 
         Random rnd = new Random();
-
-        int totalSongs = library_.getSongCount();
-        if (count > totalSongs)
-            count = totalSongs;
-
-        MusicPlayer.log(TAG, " + RANDOM SHUFFLE of " + count);
 
         int i = 0;
         int iters = 0;      // prevent endless loop
@@ -307,6 +303,7 @@ public class MusicMap {
                 MusicPlayer.log(TAG, "Add to entry " + ii + ", count=" + shuffleEntries_[ii].getCount());
                 shuffleEntries_[ii].set(libEntries_[ii].getStart());
                 shuffleEntries_[ii].addEntry();
+                iters = 0;
                 i++;
             } else if (iters > 50) {
                 MusicPlayer.log(TAG, "Too many iterations");

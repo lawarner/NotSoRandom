@@ -3,6 +3,7 @@ package org.apps.notsorandom;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.media.MediaMetadataRetriever;
@@ -44,8 +45,11 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             values.put(COL_TITLE, song.getTitle());
             values.put(COL_FILE, song.getFileName());
             values.put(COL_SENSE, song.getSenseValue());
-
-            db.insert(DB_TABLE_SONGS, null, values);
+            try {   //TODO change to insertWithOnConflict()
+                db.insert(DB_TABLE_SONGS, null, values);
+            } catch (SQLiteConstraintException ce) {
+                // Probably record already exists.
+            }
             db.close(); // Close database connection
         }
 
@@ -76,6 +80,18 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             cursor.close();
 
             return cursor.getCount();
+        }
+
+        public void updateSense(String file, int sense) {
+            SQLiteDatabase db = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            String where = COL_FILE + " = " + file;
+            values.put(COL_SENSE, sense);
+            try {
+                db.update(DB_TABLE_SONGS, values, where, null);
+            } catch (SQLiteConstraintException ce) {
+                //
+            }
         }
 
 

@@ -16,10 +16,12 @@ import java.util.ArrayList;
  * This fragment contains the music queue of items playing.
  */
 public class QueueFragment extends Fragment {
+    private static final String TAG = "MusicQueue";
+
     private static ArrayAdapter<String> qArray_ = null;
     private static ArrayList<String> qArrList_ = new ArrayList<String>();
     private static ArrayList<SongInfo> qArrSongs_ = new ArrayList<SongInfo>();
-    private static int currItem_ = -1;
+    private static int currItem_;
 
     /**
      * Add a song to the queue
@@ -28,7 +30,7 @@ public class QueueFragment extends Fragment {
      */
     public static void addToQueue(SongInfo song) {
         qArrSongs_.add(song);
-        String str = song.getSenseString() + " " + song.getTitle() + " | " + song.getFileName();
+        String str = song.getSenseString() + " " + song.getTitle() + " (" + song.getBaseFileName() + ")";
         if (qArray_ == null) {
             qArrList_.add(str);
         } else {
@@ -38,6 +40,7 @@ public class QueueFragment extends Fragment {
     }
 
     public static void clearQueue() {
+        MusicPlayer.log(TAG, " clearQueue called");
         if (qArray_ == null)
             qArrList_.clear();
         else
@@ -52,38 +55,23 @@ public class QueueFragment extends Fragment {
         return qArrSongs_;
     }
 
-/*
-    public static ArrayList<String> getQueue() {
-        ArrayList<String> as;
 
-        if (qArray_ == null) {
-            int qSize = qArrList_.size();
-            as = new ArrayList<String>(qSize);
-            ArrayList<String> al;
-            for (int i = 0; i < qSize; i++) {
-                as.add(qArrList_.get(i));
-            }
-        } else {
-            int qSize = qArray_.getCount();
-            as = new ArrayList<String>(qSize);
-
-            for (int i = 0; i < qSize; i++) {
-                as.add(qArray_.getItem(i));
-            }
-        }
-
-        return as;
-    }
-*/
     public static SongInfo getItem(int idx) {
-        if (idx >= qArrSongs_.size())
+        if (idx < 0 || idx >= qArrSongs_.size())
             return null;
 
         currItem_ = idx;
-
-//        qArray_.getView(currItem_, getView(), )
+        MusicPlayer.log(TAG, "+ getItem set currItem_=" + currItem_);
 
         return qArrSongs_.get(idx);
+    }
+
+    public static SongInfo getCurrItem() {
+        MusicPlayer.log(TAG, "+getCurrItem=" + currItem_ + " size=" + qArrSongs_.size());
+        if (currItem_ < 0 || currItem_ >= qArrSongs_.size())
+            return null;
+
+        return getItem(currItem_);
     }
 
     public static SongInfo getPrevItem(boolean last) {
@@ -97,6 +85,7 @@ public class QueueFragment extends Fragment {
     }
 
     public static SongInfo getNextItem(boolean first) {
+        MusicPlayer.log(TAG, "+getNextItem=" + currItem_ + " size=" + qArrSongs_.size());
         if (first)
             currItem_ = -1;
 

@@ -37,13 +37,13 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private PointF center_ = new PointF();
     private PointF start_  = new PointF();
     private PointF stop_   = new PointF();
-    private float  radius_;
 
     // ------------------------------------------------------------------------
     private static float indexToPixel(int idx) {
         float fpix = Math.round((float) idx / calc_.x);
         return fpix;
     }
+
     /**
      * Get the order of song indices in the shufflelist.
      * Public interface to this view's data model.
@@ -51,7 +51,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
      * @return list of songs indices. Can be used as parameter to getSongInfo()
      *         to retrieve the song information.
      */
-    private static MusicMap.MapEntry[] getShuffleList(boolean reshuffle) {
+    public static MusicMap.MapEntry[] getShuffleList(boolean reshuffle) {
         if (reshuffle || !musicMap_.isShuffled()) {
             if (newbox_.isEmpty()) {
                 boxDraw_.setEmpty();
@@ -68,6 +68,12 @@ public class MusicMapView extends View implements View.OnTouchListener {
         }
 
         return musicMap_.getShuffleEntries();
+    }
+
+    public static void fillQueue(int count) {
+        if (musicMap_ != null) {
+            musicMap_.fillQueue(count);
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -117,18 +123,16 @@ public class MusicMapView extends View implements View.OnTouchListener {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        MusicPlayer.log(TAG, "MMV MMV onSizeChanged to (" + w + "," + h + ") from (" + oldw + "," + oldh + ")");
         bitmap_ = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         bitmap_.eraseColor(Color.BLACK);
 //        canvas_ = new Canvas(bitmap_);
 
-        radius_ = (float) Math.max(6, w >> 4);
         calc_.x = 8f / w;
         calc_.y = 8f / h;
 
-        //setStart(w / 4, h / 4);
-        //setStop(w * 3 / 4, h * 3 / 4);
         newbox_.setEmpty();
-        getShuffleList(true);   // Reshuffle
+        boxDraw_.setEmpty();
     }
 
     @Override

@@ -1,5 +1,7 @@
 package org.apps.notsorandom;
 
+import android.os.Environment;
+
 /**
  * Created by andy on 6/22/13.
  *
@@ -22,6 +24,26 @@ public class SongInfo {
 
     public String getFileName() {
         return fileName_;
+    }
+
+    public String getBaseFileName() {
+        int endPath = fileName_.lastIndexOf('/');
+        if (endPath >= 0)
+            return fileName_.substring(endPath + 1);
+        return fileName_;
+    }
+
+    public String getRelativeFileName(String rootPath) {
+        String root;
+        if (rootPath == null || rootPath.isEmpty())
+            root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        else
+            root = rootPath;
+
+        if (fileName_.startsWith(root))
+            return fileName_.substring(root.length());
+
+        return null;    // Error, not the right prefix
     }
 
     public int getSenseIndex() {

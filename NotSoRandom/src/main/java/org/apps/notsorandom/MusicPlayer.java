@@ -1,6 +1,7 @@
 package org.apps.notsorandom;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
@@ -10,24 +11,18 @@ import android.widget.TabHost;
 
 
 public class MusicPlayer extends FragmentActivity
-        implements PlayerFragment.OnPlayerListener, TabHost.OnTabChangeListener {
+        implements PlayerFragment.OnPlayerListener {
     private static final String TAG = "MusicPlayer";
 
     private MediaLibraryBaseImpl library_;
 
     private FragmentTabHost tabHost_;
 
-    // Probably don't need these, but each fragment will have a static section
-    // for persistent data.
-    private PlayerFragment player_ = null;
-    private StatusFragment status_ = null;
-
 
     public static void log(String tag, String msg) {
         Log.d(tag, msg);
         StatusFragment.log(msg);
     }
-
 
     public static void log(String msg) {
         log(TAG, msg);
@@ -50,20 +45,21 @@ public class MusicPlayer extends FragmentActivity
             tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), QueueFragment.class, null);
             restr = getString(R.string.title_section3);
             tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), StatusFragment.class, null);
-            tabHost_.setOnTabChangedListener(this);
+//            tabHost_.addTab(tabHost_.newTabSpec("library").setIndicator(getString(R.string.title_section4)), LibraryFragment.class, null);
         }
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
-        library_.scanForMedia("/mnt/sdcard", true);
+        library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 //        library_.scanForMedia("RANDOM", true);
         library_.getAllSongs();
         library_.sortSongs();
 
         // Start with the whole library in the queue
-        QueueFragment.clearQueue();
+        PlayerFragment.fillQueue(library_.getSongCount());
+/*        QueueFragment.clearQueue();
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
             QueueFragment.addToQueue(song);
-        }
+        } */
 
         log("Player has initialized.\n");
     }
@@ -73,18 +69,7 @@ public class MusicPlayer extends FragmentActivity
         super.onAttachFragment(fragment);
 
         Log.d(TAG, "onAttachFragment is called.");
-        if (fragment instanceof PlayerFragment)
-            player_ = (PlayerFragment) fragment;
-        else if (fragment instanceof StatusFragment) {
-            Log.d(TAG, "-attach status fragment: " + fragment);
-            status_ = (StatusFragment) fragment;
-        }
-//        log("This message from onAttachFragment override.\n");
-    }
-
-    @Override
-    public void onTabChanged(String s) {
-        Log.d(TAG, "onTabChanged called with " + s);
+//        if (fragment instanceof PlayerFragment)
     }
 
     @Override
@@ -110,6 +95,15 @@ public class MusicPlayer extends FragmentActivity
     @Override
     public NSRMediaLibrary getLibrary() {
         return library_;
+    }
+
+    @Override
+    public SongInfo getCurrSong() {
+        SongInfo song = QueueFragment.getCurrItem();
+        if (song != null)
+            log("getCurrSong returns " + song.getTitle());
+
+        return song;
     }
 
     @Override
