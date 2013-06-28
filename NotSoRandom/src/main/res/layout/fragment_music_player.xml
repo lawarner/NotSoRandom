@@ -39,7 +39,7 @@
             android:layout_alignLeft="@+id/row_label"
             android:layout_marginLeft="16dp"
             android:layout_alignRight="@+id/column_label"
-            android:layout_marginBottom="8dp"/>
+            />
 
     <LinearLayout
             android:orientation="vertical"

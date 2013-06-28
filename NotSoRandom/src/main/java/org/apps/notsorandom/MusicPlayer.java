@@ -49,6 +49,7 @@ public class MusicPlayer extends FragmentActivity
         }
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
+        library_.initialize();
         library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 //        library_.scanForMedia("RANDOM", true);
         library_.getAllSongs();

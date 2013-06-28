@@ -22,6 +22,11 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     }
 
     @Override
+    public void initialize() {
+
+    }
+
+    @Override
     public SongInfo getFirstSong() {
         iter_ = songs_.iterator();
         return getNextSong();

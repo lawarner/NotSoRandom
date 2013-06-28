@@ -10,6 +10,8 @@ public interface NSRMediaLibrary {
         void libraryUpdated(NSRMediaLibrary library);
     }
 
+    public void initialize();
+
     public SongInfo getFirstSong();
 
     public SongInfo getNextSong();
