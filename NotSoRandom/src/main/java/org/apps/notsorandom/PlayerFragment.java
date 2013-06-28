@@ -41,6 +41,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     private View controlView_ = null;
 
     private TextView title_ = null;
+    private TextView trackCounter_ = null;
 
     private Handler handler_ = new Handler();
 
@@ -68,13 +69,11 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
      */
     public interface OnPlayerListener {
         /**
-         * Retrieve the song info at index
-         * @param ii song index
-         * @return song info
+         * Gives the current numeric position in the queue as well as the queue length
+         * @param outta array of 2 int's: queue position / total in queue
+         * @return True if the current position is known, otherwise false.
          */
-        public SongInfo getSongInfo(int ii);
-
-        public NSRMediaLibrary getLibrary();
+        public boolean getCurrQueuePos(int[] outta);
 
         /**
          * Called to retrieve the current song to play.
@@ -82,6 +81,17 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
          *     return null when no more songs are in the queue.
          */
         public SongInfo getCurrSong();
+
+        public NSRMediaLibrary getLibrary();
+
+        /**
+         * Called to retrieve the next song to play.
+         * TODO: rewrite this to Iterator interface.
+         * @param first If true will return the the first in list
+         * @return Info of next song to play. The implementation should
+         *     return null when no more songs are in the queue.
+         */
+        public SongInfo getNextSong(boolean first);
 
         /**
          * Called to retrieve the previous song to play.
@@ -93,13 +103,11 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
         public SongInfo getPrevSong(boolean first);
 
         /**
-         * Called to retrieve the next song to play.
-         * TODO: rewrite this to Iterator interface.
-         * @param first If true will return the the first in list
-         * @return Info of next song to play. The implementation should
-         *     return null when no more songs are in the queue.
+         * Retrieve the song info at index
+         * @param ii song index
+         * @return song info
          */
-        public SongInfo getNextSong(boolean first);
+        public SongInfo getSongInfo(int ii);
 
         /**
          * Called when a new song starts playing
@@ -208,6 +216,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
 
         controlView_ = getView().findViewById(R.id.controlView);
         title_ = (TextView) getView().findViewById(R.id.current_song);
+        trackCounter_ = (TextView) getView().findViewById(R.id.track_counter);
 
         musicMapView_.setLibrary(callback_.getLibrary());
         musicMapView_.initLibrary();
@@ -298,6 +307,9 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
             player_.setDataSource(song.getFileName());
             player_.prepare();
             controller_.setEnabled(true);
+            int[] qpos = new int[2];
+            if (callback_.getCurrQueuePos(qpos))
+                trackCounter_.setText("" + qpos[0] + "/" + qpos[1]);
 //            player_.start();
         } catch (Exception ex) {
             Log.e(TAG, "Exception: " + ex.getMessage());
@@ -324,7 +336,7 @@ public class PlayerFragment extends Fragment implements MediaController.MediaPla
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.d(TAG, "onPrepared in PlayerFragment");
         controller_.setMediaPlayer(this);
-        controlView_ = getView().findViewById(R.id.controlView);
+//        controlView_ = getView().findViewById(R.id.controlView);
         controller_.setAnchorView(controlView_);
 
         handler_.post(new Runnable() {

@@ -9,7 +9,9 @@
     </string>
     <string name="title_section2" >Queue
     </string>
-    <string name="title_section3" >Status
+    <string name="title_section3" >Library
+    </string>
+    <string name="title_section4" >Status
     </string>
 
 </resources>

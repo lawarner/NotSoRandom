@@ -74,6 +74,15 @@ public class QueueFragment extends Fragment {
         return getItem(currItem_);
     }
 
+    public static boolean getCurrQueuePos(int[] outta) {
+        if (currItem_ < 0)
+            return false;
+
+        outta[0] = currItem_ + 1;
+        outta[1] = qArrSongs_.size();
+        return true;
+    }
+
     public static SongInfo getPrevItem(boolean last) {
         if (last)
             currItem_ = qArrSongs_.size();

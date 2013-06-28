@@ -7,11 +7,10 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
 import android.util.Log;
 import android.view.Menu;
-import android.widget.TabHost;
 
 
 public class MusicPlayer extends FragmentActivity
-        implements PlayerFragment.OnPlayerListener {
+        implements PlayerFragment.OnPlayerListener, NSRMediaLibrary.OnLibraryChangedListener {
     private static final String TAG = "MusicPlayer";
 
     private MediaLibraryBaseImpl library_;
@@ -21,7 +20,7 @@ public class MusicPlayer extends FragmentActivity
 
     public static void log(String tag, String msg) {
         Log.d(tag, msg);
-        StatusFragment.log(msg);
+        MusicStatus.log(msg);
     }
 
     public static void log(String msg) {
@@ -39,23 +38,24 @@ public class MusicPlayer extends FragmentActivity
             tabHost_.setup(this, getSupportFragmentManager(), R.id.realTabContent);
 
             // Manually add the fragments as tabs
-            String restr = getString(R.string.title_section1);
-            tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), PlayerFragment.class, null);
-            restr = getString(R.string.title_section2);
-            tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), QueueFragment.class, null);
-            restr = getString(R.string.title_section3);
-            tabHost_.addTab(tabHost_.newTabSpec(restr).setIndicator(restr), StatusFragment.class, null);
-//            tabHost_.addTab(tabHost_.newTabSpec("library").setIndicator(getString(R.string.title_section4)), LibraryFragment.class, null);
+            tabHost_.addTab(tabHost_.newTabSpec("player").setIndicator(getString(R.string.title_section1)), PlayerFragment.class, null);
+            tabHost_.addTab(tabHost_.newTabSpec("queue").setIndicator(getString(R.string.title_section2)), QueueFragment.class, null);
+            tabHost_.addTab(tabHost_.newTabSpec("library").setIndicator(getString(R.string.title_section3)), MusicLibrary.class, null);
+            tabHost_.addTab(tabHost_.newTabSpec("status").setIndicator(getString(R.string.title_section4)), MusicStatus.class, null);
         }
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
+        library_.initialize();
         library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 //        library_.scanForMedia("RANDOM", true);
+        library_.registerOnLibraryChanged(this);
         library_.getAllSongs();
         library_.sortSongs();
 
-        // Start with the whole library in the queue
-        PlayerFragment.fillQueue(library_.getSongCount());
+        MusicLibrary.initDb(library_);
+
+        // Start with 200 in the queue
+        PlayerFragment.fillQueue(200);
 /*        QueueFragment.clearQueue();
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
             QueueFragment.addToQueue(song);
@@ -88,13 +88,8 @@ public class MusicPlayer extends FragmentActivity
 
     // -----------------------------------------------------------------
     @Override
-    public SongInfo getSongInfo(int ii) {
-        return QueueFragment.getItem(ii);
-    }
-
-    @Override
-    public NSRMediaLibrary getLibrary() {
-        return library_;
+    public boolean getCurrQueuePos(int[] outta) {
+        return QueueFragment.getCurrQueuePos(outta);
     }
 
     @Override
@@ -104,6 +99,11 @@ public class MusicPlayer extends FragmentActivity
             log("getCurrSong returns " + song.getTitle());
 
         return song;
+    }
+
+    @Override
+    public NSRMediaLibrary getLibrary() {
+        return library_;
     }
 
     @Override
@@ -126,8 +126,22 @@ public class MusicPlayer extends FragmentActivity
     }
 
     @Override
+    public SongInfo getSongInfo(int ii) {
+        return QueueFragment.getItem(ii);
+    }
+
+    @Override
     public void onNewSong(SongInfo song) {
         log("Got call from Player fragment onNewSong = " + song.getTitle() + "\n");
 
+    }
+
+    @Override
+    public void libraryUpdated(NSRMediaLibrary library) {
+        log(TAG, "libraryUpdated triggered, calling fragments with update.");
+
+        MusicLibrary.updateDb(true);
+
+        PlayerFragment.fillQueue(200);
     }
 }

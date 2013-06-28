@@ -5,22 +5,13 @@ import java.util.Collection;
 /**
  * Interface that media library class must implement.
  */
-public interface NSRMediaLibrary {
+public interface NSRMediaLibrary extends MusicCollection {
+
     public interface OnLibraryChangedListener {
         void libraryUpdated(NSRMediaLibrary library);
     }
 
-    public SongInfo getFirstSong();
-
-    public SongInfo getNextSong();
-
-    public SongInfo getSong(int idx);
-
-    /**
-     * Get song count.
-     * @return number of songs in library.
-     */
-    public int getSongCount();
+    public void initialize();
 
     /**
      * Register to listen for library change events.
@@ -28,8 +19,6 @@ public interface NSRMediaLibrary {
      * @return the previous listener, or null if there was none.
      */
     public OnLibraryChangedListener registerOnLibraryChanged(OnLibraryChangedListener listener);
-
-    public Collection<SongInfo> getAllSongs();
 
     /**
      * Scan the folder and optionally subfolders for media and add any found to the library.
@@ -45,5 +34,8 @@ public interface NSRMediaLibrary {
      * grouped contiguous together.
      */
     public void sortSongs();
+
+    public boolean updateSenseValue(int item, int sense);
+    public boolean updateSongInfo(int item, SongInfo song);
 
 }

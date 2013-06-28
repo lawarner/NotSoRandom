@@ -19,6 +19,9 @@ public class SongInfo {
     }
 
     public String getTitle() {
+        if (title_.isEmpty())
+            return "File: " + getBaseFileName();
+
         return title_;
     }
 
@@ -59,6 +62,12 @@ public class SongInfo {
 
     public int getSenseValue() {
         return senseValue_;
+    }
+
+    public int setSense(int sense) {
+        int oldSense = senseValue_;
+        senseValue_ = sense;
+        return oldSense;
     }
 
     /**

@@ -19,7 +19,12 @@ to make a sense value.  However the standard definition for a sense value reserv
 the first 3 components as follows:
 - tempo (slow / fast)
 - roughness (soft / hard)
+- humor (light / dark)
+
 - taste (sweet / sour)
+- mood (sad / happy)
+- depth (shallow / deep)
+
 
 Other recommended sense components include temperature, humor, length, depth, 
 whatever.

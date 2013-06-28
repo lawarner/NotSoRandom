@@ -157,7 +157,8 @@ public class MusicMapView extends View implements View.OnTouchListener {
             if (cnt > 0) {
                 float x = 24f + indexToPixel(ii % 8);
                 float y = 24f + indexToPixel(ii / 8);
-                canvas.drawCircle(x, y, 2f * cnt, paint_);
+                float radius = Math.min((float) bitmap_.getWidth(), 2f * cnt);
+                canvas.drawCircle(x, y, radius, paint_);
             }
         }
 
@@ -169,7 +170,8 @@ public class MusicMapView extends View implements View.OnTouchListener {
             if (cnt > 0) {
                 float x = 24f + indexToPixel(ii % 8);
                 float y = 24f + indexToPixel(ii / 8);
-                canvas.drawCircle(x, y, 2f * cnt, paint_);
+                float radius = Math.min((float) bitmap_.getWidth(), 2f * cnt);
+                canvas.drawCircle(x, y, radius, paint_);
             }
         }
     }

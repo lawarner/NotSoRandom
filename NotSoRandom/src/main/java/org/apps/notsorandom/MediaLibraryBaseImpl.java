@@ -22,6 +22,16 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     }
 
     @Override
+    public void initialize() {
+
+    }
+
+    @Override
+    public ArrayList<SongInfo> getAllSongs() {
+        return songs_;
+    }
+
+    @Override
     public SongInfo getFirstSong() {
         iter_ = songs_.iterator();
         return getNextSong();
@@ -56,11 +66,6 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     }
 
     @Override
-    public ArrayList<SongInfo> getAllSongs() {
-        return songs_;
-    }
-
-    @Override
     public int scanForMedia(String folder, boolean subFolders) {
         return 0;
     }
@@ -68,6 +73,7 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     @Override
     public void sortSongs() {
         //TODO keep an isSorted flag
+        //TODO sort according to x,y,z SenseComponents (see Config)
         Collections.sort(songs_, new Comparator<SongInfo>() {
             @Override
             public int compare(SongInfo songInfo, SongInfo songInfo2) {
@@ -79,6 +85,38 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
                 return 0;
             }
         });
+
+        if (listener_ != null)
+            listener_.libraryUpdated(this);
+    }
+
+    @Override
+    public boolean updateSenseValue(int item, int sense) {
+        if (item < 0 || item > songs_.size())
+            return false;
+
+        SongInfo song = songs_.get(item);
+        if (song == null)
+            return false;
+
+        song.setSense(sense);
+        return updateSongInfo(item, song);
+    }
+
+    @Override
+    public boolean updateSongInfo(int item, SongInfo song) {
+        boolean ret = true;
+        try {
+            songs_.set(item, song);
+        }
+        catch (IndexOutOfBoundsException ie) {
+            ret = false;
+        }
+
+        if (listener_ != null && ret)
+            listener_.libraryUpdated(this);
+
+        return ret;
     }
 
 }

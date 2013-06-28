@@ -7,12 +7,12 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.media.MediaMetadataRetriever;
+import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by andy on 6/23/13.
@@ -23,40 +23,101 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     private DbHandler handler_;
 
     public class DbHandler extends SQLiteOpenHelper {
-        private static final String DATABASE_NAME = "mediaLibrary";
-        private static final int    DATABASE_VERSION = 1;
-        private static final String DB_TABLE_SONGS = "songs";
+        private static final String DATABASE_NAME = "mediaLibrary.db";
+        private static final int    DATABASE_VERSION = 2;
+        private static final String TABLE_SONGS = "songs";
+        private static final String TABLE_COMPONENT = "component";
+        private static final String TABLE_CONFIG = "config";
 
-        // Database layout
+        // Database layout songs
         private static final String COL_ID    = "id";
         private static final String COL_TITLE = "title";
         private static final String COL_FILE  = "file";
         private static final String COL_SENSE = "sense";
+        // Database layout components
+        // COL_ID
+        private static final String COL_NAME  = "name";
+        private static final String COL_LABEL = "label";
+        private static final String COL_MASK  = "mask";
+        private static final String COL_SORT_ORDER = "sortorder";
+        private static final String COL_DEFAULT_VALUE  = "defaultvalue";
+        // Database layout config
+        // COL_ID
+        private static final String COL_USER     = "user";
+        private static final String COL_ROOT     = "root";
+        private static final String COL_X_COMP   = "xcomponent";
+        private static final String COL_Y_COMP   = "ycomponent";
+        private static final String COL_LASTSCAN = "lastscan";
 
 
         DbHandler(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
 
+        public void addComponent(SenseComponent sc) {
+            SQLiteDatabase db = getWritableDatabase();
+            addComponent(db, sc);
+            db.close(); // Close database connection
+        }
+
+        public void addComponent(SQLiteDatabase db, SenseComponent sc) {
+            ContentValues values = new ContentValues();
+            values.put(COL_NAME, sc.getName());
+            values.put(COL_LABEL, sc.getLabel());
+            values.put(COL_MASK, sc.getMask());
+            values.put(COL_SORT_ORDER, sc.getSortOrder());
+            values.put(COL_DEFAULT_VALUE, sc.getDefaultValue());
+            try {   //TODO change to insertWithOnConflict()
+                db.insertOrThrow(TABLE_COMPONENT, null, values);
+            } catch (SQLiteConstraintException ce) {
+                // Probably record already exists.
+                Log.e(TAG, "Cannot store component in db: " + ce.getMessage());
+            }
+        }
+
+        public void addConfig(Config config) {
+            SQLiteDatabase db = getWritableDatabase();
+            addConfig(db, config);
+            db.close(); // Close database connection
+        }
+
+        public void addConfig(SQLiteDatabase db, Config config) {
+            ContentValues values = new ContentValues();
+            values.put(COL_USER, config.getUser());
+            values.put(COL_ROOT, config.getRoot());
+            values.put(COL_X_COMP, config.getXcomponent());
+            values.put(COL_Y_COMP, config.getYcomponent_());
+            values.put(COL_LASTSCAN, config.getLastScan());
+            try {   //TODO change to insertWithOnConflict()
+                db.insertOrThrow(TABLE_CONFIG, null, values);
+            } catch (SQLiteConstraintException ce) {
+                // Probably record already exists.
+            }
+        }
+
         public void addSong(SongInfo song) {
             SQLiteDatabase db = getWritableDatabase();
+            addSong(db, song);
+            db.close(); // Close database connection
+        }
 
+        public void addSong(SQLiteDatabase db, SongInfo song) {
             ContentValues values = new ContentValues();
             values.put(COL_TITLE, song.getTitle());
             values.put(COL_FILE, song.getFileName());
             values.put(COL_SENSE, song.getSenseValue());
             try {   //TODO change to insertWithOnConflict()
-                db.insert(DB_TABLE_SONGS, null, values);
+                db.insertOrThrow(TABLE_SONGS, null, values);
+//                db.insert(TABLE_SONGS, null, values);
             } catch (SQLiteConstraintException ce) {
                 // Probably record already exists.
             }
-            db.close(); // Close database connection
         }
 
 
         public ArrayList<SongInfo> getAllSongs() {
             ArrayList<SongInfo> songs = new ArrayList<SongInfo>();
-            String sql = "SELECT * FROM " + DB_TABLE_SONGS;
+            String sql = "SELECT * FROM " + TABLE_SONGS;
             SQLiteDatabase db = getReadableDatabase();
             Cursor cursor = db.rawQuery(sql, null);
 
@@ -74,7 +135,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         }
 
         public int getSongCount() {
-            String sql = "SELECT * FROM " + DB_TABLE_SONGS;
+            String sql = "SELECT * FROM " + TABLE_SONGS;
             SQLiteDatabase db = getReadableDatabase();
             Cursor cursor = db.rawQuery(sql, null);
             cursor.close();
@@ -82,22 +143,52 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             return cursor.getCount();
         }
 
-        public void updateSense(String file, int sense) {
+        public boolean updateSense(String file, int sense) {
+            boolean ret = true;
+
             SQLiteDatabase db = getWritableDatabase();
             ContentValues values = new ContentValues();
-            String where = COL_FILE + " = " + file;
+            String where = COL_FILE + " = \"" + file + "\"";
             values.put(COL_SENSE, sense);
             try {
-                db.update(DB_TABLE_SONGS, values, where, null);
+                db.update(TABLE_SONGS, values, where, null);
             } catch (SQLiteConstraintException ce) {
-                //
+                ret = false;
             }
+            return ret;
         }
 
+        public void initDatabase() {
+            SQLiteDatabase db = getWritableDatabase();
+
+            String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+            if (root == null || root.isEmpty())
+                root = "/mnt/sdcard/";   // just a fallback value
+            else if (!root.endsWith("/"))
+                root += "/";
+
+            Config config = new Config("0", root, "tempo", "roughness", 0);
+            addConfig(db, config);
+
+            SenseComponent component = new SenseComponent("tempo", "slow / fast", 0x00000f, 1, 4);
+            addComponent(db, component);
+            component = new SenseComponent("roughness", "soft / hard", 0x0000f0, 2, 3);
+            addComponent(db, component);
+            component = new SenseComponent("humor", "light / dark", 0x000f00, 3, 3);
+            addComponent(db, component);
+            component = new SenseComponent("taste", "sweet / sour", 0x00f000, 4, 4);
+            addComponent(db, component);
+            component = new SenseComponent("mood", "sad / happy", 0x0f0000, 5, 4);
+            addComponent(db, component);
+            component = new SenseComponent("depth", "shallow / deep", 0xf00000, 6, 4);
+            addComponent(db, component);
+
+            db.close(); // Close database connection
+        }
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            String sql = "CREATE TABLE " + DB_TABLE_SONGS + " ("
+            String sql = "CREATE TABLE " + TABLE_SONGS + " ("
                        + COL_ID + " INTEGER PRIMARY KEY,"
                        + COL_TITLE + " TEXT,"
                        + COL_FILE + " TEXT NOT NULL UNIQUE,"
@@ -105,11 +196,33 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 //                       + "UNIQUE (" + COL_FILE + ") ON CONFLICT REPLACE)";
 
             db.execSQL(sql);
+
+            // component and config tables, v2
+            onUpgrade(db, 1, 2);
         }
 
         @Override
-        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i2) {
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            if (oldVersion == 1 && newVersion == 2) {
+                String sql = "CREATE TABLE " + TABLE_COMPONENT + " ("
+                        + COL_ID + " INTEGER PRIMARY KEY,"
+                        + COL_NAME + " TEXT NOT NULL UNIQUE,"
+                        + COL_LABEL + " TEXT,"
+                        + COL_MASK + " INTEGER,"
+                        + COL_SORT_ORDER + " INTEGER,"
+                        + COL_DEFAULT_VALUE + " INTEGER)";
+                db.execSQL(sql);
 
+                sql = "CREATE TABLE " + TABLE_CONFIG + " ("
+                        + COL_ID + " INTEGER PRIMARY KEY,"
+                        + COL_USER + " TEXT NOT NULL UNIQUE,"
+                        + COL_ROOT + " TEXT,"
+                        + COL_X_COMP + " TEXT,"
+                        + COL_Y_COMP + " TEXT,"
+                        + COL_LASTSCAN + " DATETIME)";
+                db.execSQL(sql);
+            } else
+                Log.e(TAG, "Unexpected database upgrade from " + oldVersion + " to " + newVersion);
         }
     }
 
@@ -121,6 +234,12 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     public ArrayList<SongInfo> getAllSongs() {
         songs_ = handler_.getAllSongs();
         return songs_;
+    }
+
+    @Override
+    public void initialize() {
+        handler_.initDatabase();
+
     }
 
     @Override
@@ -169,4 +288,29 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             }
         }
     }
+
+    @Override
+    public boolean updateSenseValue(int item, int sense) {
+        SongInfo song = getSong(item);
+        if (song == null)
+            return false;
+
+        song.setSense(sense);
+        return updateSongInfo(item, song);
+    }
+
+    @Override
+    public boolean updateSongInfo(int item, SongInfo song) {
+        if (song == null)
+            return false;
+
+        MusicPlayer.log(TAG, "Updating item=" + item + ", song=" + song.getTitle());
+
+        if (!handler_.updateSense(song.getFileName(), song.getSenseValue()))
+            return false;
+
+        // The base implementation updates the array backing store
+        return super.updateSongInfo(item, song);
+    }
+
 }
