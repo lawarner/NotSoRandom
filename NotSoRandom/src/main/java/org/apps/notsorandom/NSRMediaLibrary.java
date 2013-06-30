@@ -35,7 +35,22 @@ public interface NSRMediaLibrary extends MusicCollection {
      */
     public void sortSongs();
 
+    /**
+     * Update a song's sense value in the database.
+     * @param item The index into the song array.
+     * @param sense New sense value to store.
+     * @return True if song was updated in database successfully, otherwise false.
+     */
     public boolean updateSenseValue(int item, int sense);
+
+    /**
+     * Update a song's info in the database.  This currently only updates the sense value, but
+     * in future, it could update any changed songinfo columns.
+     * @param item The index into the song array.
+     * @param song Song values to update.  The song's primary unique key on path name is used
+     *             as key of song record to update.
+     * @return True if song was updated in database successfully, otherwise false.
+     */
     public boolean updateSongInfo(int item, SongInfo song);
 
 }

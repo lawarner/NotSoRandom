@@ -18,7 +18,7 @@ import java.util.Collection;
  * Created by andy on 6/23/13.
  */
 public class MediaLibraryDb extends MediaLibraryBaseImpl {
-    private static final String TAG = "MediaLibraryDb";
+    private static final String TAG = "MusicMediaLibraryDb";
 
     private DbHandler handler_;
 
@@ -95,23 +95,28 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             }
         }
 
-        public void addSong(SongInfo song) {
+        public boolean addSong(SongInfo song) {
             SQLiteDatabase db = getWritableDatabase();
-            addSong(db, song);
+            boolean ret = addSong(db, song);
             db.close(); // Close database connection
+            return ret;
         }
 
-        public void addSong(SQLiteDatabase db, SongInfo song) {
+        public boolean addSong(SQLiteDatabase db, SongInfo song) {
             ContentValues values = new ContentValues();
             values.put(COL_TITLE, song.getTitle());
             values.put(COL_FILE, song.getFileName());
             values.put(COL_SENSE, song.getSenseValue());
+            boolean ret = true;
             try {   //TODO change to insertWithOnConflict()
                 db.insertOrThrow(TABLE_SONGS, null, values);
 //                db.insert(TABLE_SONGS, null, values);
             } catch (SQLiteConstraintException ce) {
                 // Probably record already exists.
+                ret = false;
             }
+
+            return ret;
         }
 
 
@@ -266,14 +271,15 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             mmr.setDataSource(file1.getAbsolutePath());
             String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             if (title == null || title.isEmpty())
-                title = "--> File " + file1.getName();
-            Log.d(TAG, "scanForMedia add: " + file1.getAbsolutePath() + ", " + title);
+                title = "File:  " + file1.getName();
             SongInfo song = new SongInfo(title, file1.getAbsolutePath(), 0x33);
 //            songs_.add(song);
-            handler_.addSong(song);
+            if (handler_.addSong(song))
+                Log.d(TAG, "scanForMedia add: " + file1.getAbsolutePath() + ", " + title);
+
         }
 
-        return 0;
+        return all.size();
     }
 
     private static void _scanRecursive(File file, Collection<File> all) {
@@ -304,7 +310,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         if (song == null)
             return false;
 
-        MusicPlayer.log(TAG, "Updating item=" + item + ", song=" + song.getTitle());
+        MusicPlayerApp.log(TAG, "Updating item=" + item + ", song=" + song.getTitle());
 
         if (!handler_.updateSense(song.getFileName(), song.getSenseValue()))
             return false;

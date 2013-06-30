@@ -1,6 +1,5 @@
 package org.apps.notsorandom;
 
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -139,19 +138,19 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int item, long lParam) {
-        MusicPlayer.log(TAG, "Selected Item " + item + ", param=" + lParam);
+        MusicPlayerApp.log(TAG, "Selected Item " + item + ", param=" + lParam);
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
-        MusicPlayer.log(TAG, "Nothing Selected.");
+        MusicPlayerApp.log(TAG, "Nothing Selected.");
 //        currItem_ = -1;
         starItem(null, -1);
     }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int item, long lParam) {
-        MusicPlayer.log(TAG, "onItemClick Item " + item + ", param=" + lParam);
+        MusicPlayerApp.log(TAG, "onItemClick Item " + item + ", param=" + lParam);
         if (starItem(view, item)) {
             adapterView.setSelection(item);
             setSliders();

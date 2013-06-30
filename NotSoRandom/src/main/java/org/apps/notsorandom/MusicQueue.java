@@ -3,7 +3,6 @@ package org.apps.notsorandom;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.PrintStreamPrinter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,13 +14,15 @@ import java.util.ArrayList;
 /**
  * This fragment contains the music queue of items playing.
  */
-public class QueueFragment extends Fragment {
+public class MusicQueue extends Fragment {
     private static final String TAG = "MusicQueue";
 
     private static ArrayAdapter<String> qArray_ = null;
     private static ArrayList<String> qArrList_ = new ArrayList<String>();
     private static ArrayList<SongInfo> qArrSongs_ = new ArrayList<SongInfo>();
     private static int currItem_;
+
+    private static NSRMediaLibrary library_ = null;
 
     /**
      * Add a song to the queue
@@ -40,7 +41,7 @@ public class QueueFragment extends Fragment {
     }
 
     public static void clearQueue() {
-        MusicPlayer.log(TAG, " clearQueue called");
+        MusicPlayerApp.log(TAG, " clearQueue called");
         if (qArray_ == null)
             qArrList_.clear();
         else
@@ -49,6 +50,35 @@ public class QueueFragment extends Fragment {
         qArrSongs_.clear();
 
         currItem_ = -1;
+    }
+
+    /**
+     * Put number of items from library random list into queue.
+     * @param count Number of items to place in queue.
+     * @return the actual number of items placed in queue.
+     */
+    public static int refreshQueue(int count) {
+        MusicPlayerApp.log(TAG, " Fill Queue with " + count);
+
+        clearQueue();
+        if (library_ == null)
+            return 0;
+
+        //int[] shuffles = library_.getShuffledSongs(false);
+        int[] shuffles = MusicMapView.getShuffledList(false);
+        for (int i : shuffles) {
+            SongInfo song = library_.getSong(i);
+            MusicPlayerApp.log(TAG, "Added to Queue: " + song.getSenseString() + ": " + song.getTitle());
+            addToQueue(song);
+            if (--count <= 0)
+                break;
+        }
+
+        return qArrSongs_.size();
+    }
+
+    public static void setLibrary(NSRMediaLibrary library) {
+        library_ = library;
     }
 
     public static ArrayList<SongInfo> getQueue() {
@@ -61,13 +91,13 @@ public class QueueFragment extends Fragment {
             return null;
 
         currItem_ = idx;
-        MusicPlayer.log(TAG, "+ getItem set currItem_=" + currItem_);
+        MusicPlayerApp.log(TAG, "+ getItem set currItem_=" + currItem_);
 
         return qArrSongs_.get(idx);
     }
 
     public static SongInfo getCurrItem() {
-        MusicPlayer.log(TAG, "+getCurrItem=" + currItem_ + " size=" + qArrSongs_.size());
+        MusicPlayerApp.log(TAG, "+getCurrItem=" + currItem_ + " size=" + qArrSongs_.size());
         if (currItem_ < 0 || currItem_ >= qArrSongs_.size())
             return null;
 
@@ -94,7 +124,7 @@ public class QueueFragment extends Fragment {
     }
 
     public static SongInfo getNextItem(boolean first) {
-        MusicPlayer.log(TAG, "+getNextItem=" + currItem_ + " size=" + qArrSongs_.size());
+        MusicPlayerApp.log(TAG, "+getNextItem=" + currItem_ + " size=" + qArrSongs_.size());
         if (first)
             currItem_ = -1;
 
