@@ -15,15 +15,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by andy on 6/23/13.
+ * Implementation of media library using an RDBMS store
  */
 public class MediaLibraryDb extends MediaLibraryBaseImpl {
     private static final String TAG = "MusicMediaLibraryDb";
 
+    private String sdDir_ = null;
+
     private DbHandler handler_;
 
     public class DbHandler extends SQLiteOpenHelper {
-        private static final String DATABASE_NAME = "mediaLibrary.db";
+        private static final String DATABASE_NAME = "mediaLibrary3.db";
         private static final int    DATABASE_VERSION = 2;
         private static final String TABLE_SONGS = "songs";
         private static final String TABLE_COMPONENT = "component";
@@ -52,6 +54,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
         DbHandler(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
+            sdDir_ = "/mnt/sdcard/";
         }
 
         public void addComponent(SenseComponent sc) {
@@ -105,7 +108,12 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         public boolean addSong(SQLiteDatabase db, SongInfo song) {
             ContentValues values = new ContentValues();
             values.put(COL_TITLE, song.getTitle());
-            values.put(COL_FILE, song.getFileName());
+
+            String fileName = song.getFileName();
+            if (sdDir_ != null && fileName.startsWith(sdDir_))
+                fileName = fileName.substring(sdDir_.length());
+            values.put(COL_FILE, fileName);
+
             values.put(COL_SENSE, song.getSenseValue());
             boolean ret = true;
             try {   //TODO change to insertWithOnConflict()
@@ -130,6 +138,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 do {
                     String title = cursor.getString(1);
                     String file  = cursor.getString(2);
+                    if (!file.startsWith("/"))
+                        file = sdDir_ + file;
                     int sense = Integer.parseInt(cursor.getString(3));
                     SongInfo song = new SongInfo(title, file, sense);
                     songs.add(song);
@@ -270,12 +280,20 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         for (File file1 : all) {
             mmr.setDataSource(file1.getAbsolutePath());
             String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            if (title == null || title.isEmpty())
-                title = "File:  " + file1.getName();
+            if (title == null || title.isEmpty()) {
+                title = file1.getName();
+                if (title.toLowerCase().endsWith(".mp3"))
+                    title = title.substring(0, title.length() - 4);
+                title += " (File)";
+            }
+            String genre = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);
+            if (genre == null || genre.isEmpty())
+                genre = "(Unknown)";
             SongInfo song = new SongInfo(title, file1.getAbsolutePath(), 0x33);
 //            songs_.add(song);
             if (handler_.addSong(song))
-                Log.d(TAG, "scanForMedia add: " + file1.getAbsolutePath() + ", " + title);
+                Log.d(TAG, "scanForMedia add: " + file1.getAbsolutePath() + ", " + title
+                           + "  " + genre);
 
         }
 

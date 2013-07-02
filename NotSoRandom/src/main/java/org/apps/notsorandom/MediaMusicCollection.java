@@ -7,7 +7,7 @@ import java.util.Collection;
  * Read-only interface for working with a music collection.
  * The collection implementation could be backed by a queue, db, network media, etc.
  */
-public interface MusicCollection {
+public interface MediaMusicCollection {
 
     public Collection<SongInfo> getAllSongs();
 

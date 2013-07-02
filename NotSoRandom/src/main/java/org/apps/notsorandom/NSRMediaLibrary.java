@@ -1,11 +1,9 @@
 package org.apps.notsorandom;
 
-import java.util.Collection;
-
 /**
  * Interface that media library class must implement.
  */
-public interface NSRMediaLibrary extends MusicCollection {
+public interface NSRMediaLibrary extends MediaMusicCollection {
 
     public interface OnLibraryChangedListener {
         void libraryUpdated(NSRMediaLibrary library);

@@ -68,7 +68,7 @@ public class MusicQueue extends Fragment {
         int[] shuffles = MusicMapView.getShuffledList(false);
         for (int i : shuffles) {
             SongInfo song = library_.getSong(i);
-            MusicPlayerApp.log(TAG, "Added to Queue: " + song.getSenseString() + ": " + song.getTitle());
+//            MusicPlayerApp.log(TAG, "Added to Queue: " + song.getSenseString() + ": " + song.getTitle());
             addToQueue(song);
             if (--count <= 0)
                 break;
