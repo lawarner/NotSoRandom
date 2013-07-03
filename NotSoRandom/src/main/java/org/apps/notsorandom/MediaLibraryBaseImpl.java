@@ -1,7 +1,6 @@
 package org.apps.notsorandom;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -10,20 +9,29 @@ import java.util.Iterator;
  * Common implementation of the media library, regardless of data sources.
  */
 public class MediaLibraryBaseImpl implements NSRMediaLibrary {
+    private static final String TAG = "MusicMediaLibraryBase";
+
     protected ArrayList<SongInfo> songs_;
     protected Iterator<SongInfo> iter_;
+    protected ArrayList<Integer> shuffled_;
 
     protected  OnLibraryChangedListener listener_;
 
 
     MediaLibraryBaseImpl() {
         songs_ = new ArrayList<SongInfo>(10);
+        shuffled_ = null;
         listener_ = null;
     }
 
     @Override
     public void initialize() {
 
+    }
+
+    @Override
+    public ArrayList<SongInfo> getAllSongs() {
+        return songs_;
     }
 
     @Override
@@ -54,15 +62,35 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     }
 
     @Override
+    public int[] getShuffledSongs(boolean reshuffle) {
+        if (getSongCount() < 1)     // there are no songs
+            return new int[0];
+
+        if (shuffled_ == null) {
+            shuffled_ = new ArrayList<Integer>(getSongCount());
+            for (int i = 0; i < getSongCount(); i++)
+                shuffled_.add(i, new Integer(i));
+
+            reshuffle = true;     // force first-time shuffle
+        }
+
+        if (reshuffle)
+            Collections.shuffle(shuffled_);
+
+        int[] ret = new int[shuffled_.size()];
+        int i = 0;
+        for (Integer n : shuffled_) {
+            ret[i++] = n.intValue();
+        }
+
+        return ret;
+    }
+
+    @Override
     public OnLibraryChangedListener registerOnLibraryChanged(OnLibraryChangedListener listener) {
         OnLibraryChangedListener temp = listener_;
         listener_ = listener;
         return temp;
-    }
-
-    @Override
-    public ArrayList<SongInfo> getAllSongs() {
-        return songs_;
     }
 
     @Override
@@ -73,6 +101,7 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     @Override
     public void sortSongs() {
         //TODO keep an isSorted flag
+        //TODO sort according to x,y,z SenseComponents (see Config)
         Collections.sort(songs_, new Comparator<SongInfo>() {
             @Override
             public int compare(SongInfo songInfo, SongInfo songInfo2) {
@@ -84,6 +113,40 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
                 return 0;
             }
         });
+
+        if (listener_ != null) {
+            MusicPlayerApp.log(TAG, "calling libraryUpdated from sortSongs()");
+            listener_.libraryUpdated(this);
+        }
+    }
+
+    @Override
+    public boolean updateSenseValue(int item, int sense) {
+        if (item < 0 || item > songs_.size())
+            return false;
+
+        SongInfo song = songs_.get(item);
+        if (song == null)
+            return false;
+
+        song.setSense(sense);
+        return updateSongInfo(item, song);
+    }
+
+    @Override
+    public boolean updateSongInfo(int item, SongInfo song) {
+        boolean ret = true;
+        try {
+            songs_.set(item, song);
+        }
+        catch (IndexOutOfBoundsException ie) {
+            ret = false;
+        }
+
+        if (listener_ != null && ret)
+            listener_.libraryUpdated(this);
+
+        return ret;
     }
 
 }

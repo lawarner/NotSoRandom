@@ -1,28 +1,15 @@
 package org.apps.notsorandom;
 
-import java.util.Collection;
-
 /**
  * Interface that media library class must implement.
  */
-public interface NSRMediaLibrary {
+public interface NSRMediaLibrary extends MediaMusicCollection {
+
     public interface OnLibraryChangedListener {
         void libraryUpdated(NSRMediaLibrary library);
     }
 
     public void initialize();
-
-    public SongInfo getFirstSong();
-
-    public SongInfo getNextSong();
-
-    public SongInfo getSong(int idx);
-
-    /**
-     * Get song count.
-     * @return number of songs in library.
-     */
-    public int getSongCount();
 
     /**
      * Register to listen for library change events.
@@ -30,8 +17,6 @@ public interface NSRMediaLibrary {
      * @return the previous listener, or null if there was none.
      */
     public OnLibraryChangedListener registerOnLibraryChanged(OnLibraryChangedListener listener);
-
-    public Collection<SongInfo> getAllSongs();
 
     /**
      * Scan the folder and optionally subfolders for media and add any found to the library.
@@ -47,5 +32,23 @@ public interface NSRMediaLibrary {
      * grouped contiguous together.
      */
     public void sortSongs();
+
+    /**
+     * Update a song's sense value in the database.
+     * @param item The index into the song array.
+     * @param sense New sense value to store.
+     * @return True if song was updated in database successfully, otherwise false.
+     */
+    public boolean updateSenseValue(int item, int sense);
+
+    /**
+     * Update a song's info in the database.  This currently only updates the sense value, but
+     * in future, it could update any changed songinfo columns.
+     * @param item The index into the song array.
+     * @param song Song values to update.  The song's primary unique key on path name is used
+     *             as key of song record to update.
+     * @return True if song was updated in database successfully, otherwise false.
+     */
+    public boolean updateSongInfo(int item, SongInfo song);
 
 }

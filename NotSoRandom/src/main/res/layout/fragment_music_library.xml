@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+    <ListView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/libraryView"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_above="@+id/xSeekBar"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="tempo:"
+            android:id="@+id/xLabel"
+            android:layout_alignTop="@+id/xSeekBar"
+            android:layout_alignParentLeft="true"/>
+
+    <SeekBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/xSeekBar"
+            android:layout_above="@+id/ySeekBar"
+            android:layout_alignParentRight="true"
+            android:max="7"
+            android:layout_alignLeft="@+id/zSeekBar"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="roughness:"
+            android:id="@+id/yLabel"
+            android:layout_alignTop="@+id/ySeekBar"
+            android:layout_alignParentLeft="true"/>
+
+    <SeekBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ySeekBar"
+            android:layout_alignParentRight="true"
+            android:layout_alignLeft="@+id/zSeekBar"
+            android:max="7"
+            android:layout_above="@+id/zSeekBar"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="humor:"
+            android:id="@+id/zLabel"
+            android:layout_alignParentLeft="true"
+            android:layout_alignTop="@+id/zSeekBar"/>
+
+    <SeekBar
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/zSeekBar"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:max="7"
+            android:layout_toRightOf="@+id/zLabel"/>
+
+</RelativeLayout>

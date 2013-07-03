@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal|top"
-        android:text="softer / harder"
+        android:text="slower / faster"
         android:singleLine="true"
         android:textAlignment="center"
         android:layout_alignParentRight="true"
@@ -23,7 +23,7 @@
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="faster / slower"
+            android:text="harder / softer"
             android:id="@+id/row_label"
             android:layout_below="@+id/column_label"
             android:layout_alignParentLeft="true"
@@ -35,19 +35,31 @@
             android:layout_height="wrap_content"
             android:text=" --"
             android:id="@+id/current_song"
-            android:layout_alignParentBottom="true"
+            android:layout_alignParentBottom="false"
             android:layout_alignLeft="@+id/row_label"
             android:layout_marginLeft="16dp"
-            android:layout_alignRight="@+id/column_label"
-            />
+            android:layout_alignParentRight="true"
+            android:layout_above="@+id/track_counter"/>
 
     <LinearLayout
             android:orientation="vertical"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_above="@+id/current_song"
+            android:layout_height="wrap_content"
             android:id="@+id/controlView"
-            >
+            android:layout_alignParentTop="true"
+            android:layout_above="@+id/current_song"
+            android:layout_marginBottom="100dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true">
     </LinearLayout>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 / 0"
+            android:id="@+id/track_counter"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:textSize="8pt"/>
 
 </RelativeLayout>

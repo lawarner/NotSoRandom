@@ -4,9 +4,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.Log;
 
-import java.util.Arrays;
-import java.util.Random;
-
 /**
  *
  * TODO implement a puddleMap for randomizing values.
@@ -20,16 +17,20 @@ public class MusicMap {
 
     private static Rect box_ = new Rect();
 
+    private static NSRMediaLibrary library_;
+
     private int senseValues_[];
     private int puddle_[];
     private MapEntry libEntries_[];
     private MapEntry shuffleEntries_[];
-    private int totalLibEntries_ = 0;
-    private int totalShuffleEntries_ = 0;
     private int maxMapEntry_;
     private int songsInBox_ = 0;
 
-    private NSRMediaLibrary library_;
+    private static int[] shuffleIndices_ = null;
+
+    public static void setLibrary(NSRMediaLibrary library) {
+        library_ = library;
+    }
 
 
     public class MapEntry {
@@ -47,6 +48,13 @@ public class MusicMap {
 
         public int addEntry() {
             return ++count_;
+        }
+
+        public int removeEntry() {
+            if (count_ > 0)
+                return count_--;
+
+            return 0;
         }
 
         public void set(int start, int count) {
@@ -73,8 +81,6 @@ public class MusicMap {
         senseValues_ = new int[MAPSIZE];
         libEntries_ = new MapEntry[MAPSIZE];
         shuffleEntries_ = new MapEntry[MAPSIZE];
-        totalLibEntries_ = 0;
-        totalShuffleEntries_ = 0;
 
         Log.d(TAG, "Initing MusicMap");
         for (int i = 0; i < MAPSIZE; i++) {
@@ -88,36 +94,6 @@ public class MusicMap {
         Log.d(TAG, "Done Initing MusicMap");
     }
 
-    public Rect getBox() {
-        return box_;
-    }
-
-    public MapEntry[] getLibEntries() {
-        return libEntries_;
-    }
-
-    public MapEntry[] getShuffleEntries() {
-        return shuffleEntries_;
-    }
-
-    public boolean isShuffled() {
-//        boolean shuffled = !Arrays.asList(shuffled_).contains(-1);
-        boolean shuffled = false;
-        for (MapEntry entry : shuffleEntries_) {
-            if (entry.getStart() != -1) {
-                shuffled = true;
-                break;
-            }
-        }
-        return shuffled;
-    }
-
-    public void resetShuffle() {
-        totalShuffleEntries_ = 0;
-        for (MapEntry entry : shuffleEntries_) {
-            entry.set(-1, 0);
-        }
-    }
 
     /**
      * Populate the libEntries_ array that represents the distribution of
@@ -125,11 +101,10 @@ public class MusicMap {
      * @return  false if the media library has not yet been set, otherwise true.
      */
     public boolean fillLibEntries() {
-        totalLibEntries_ = 0;
         if (library_ == null)
             return false;
 
-        library_.sortSongs();
+//        library_.sortSongs();
 
         for (int i = 0; i < libEntries_.length; i++) {
             libEntries_[i].set(-1, 0);
@@ -144,7 +119,7 @@ public class MusicMap {
             SongInfo song = library_.getSong(idx);
             int ii = song.getSenseIndex();
             if (ii < 0 || ii >= MAPSIZE) {
-                MusicPlayer.log(TAG, "Sense index " + ii + " out of range for " + song.getFileName());
+                MusicPlayerApp.log(TAG, "Sense index " + ii + " out of range for " + song.getFileName());
                 skipped++;
                 continue;
             }
@@ -157,58 +132,87 @@ public class MusicMap {
                 //libEntries_[ii].set(idx);
                 maxMapEntry_ = Math.max(maxMapEntry_, libEntries_[ii].addEntry());
             } else {
-                MusicPlayer.log(TAG, "Map entries not contiguous in library at " + idx + ".");
+                MusicPlayerApp.log(TAG, "Map entries not contiguous in library at " + idx + ".");
                 lastIndex = -1;
                 skipped++;
             }
         }
 
-        MusicPlayer.log(TAG, "Library has " + library_.getSongCount() + " songs, skipped "
-                             + skipped + ". Max dups = " + maxMapEntry_);
+        MusicPlayerApp.log(TAG, "Library has " + library_.getSongCount() + " songs, skipped "
+                + skipped + ". Max dups = " + maxMapEntry_);
 
-        totalLibEntries_ = library_.getSongCount() - skipped;
         return true;
     }
 
+    public MapEntry[] fillShuffleEntries(int[] indices) {
+        resetShuffle();
+        for (int i : indices) {
+            SongInfo song = library_.getSong(i);
+            int ii = song.getSenseIndex();
+
+            shuffleEntries_[ii].set(libEntries_[ii].getStart());
+            shuffleEntries_[ii].addEntry();
+        }
+
+        return shuffleEntries_;
+    }
+
+    public Rect getBox() {
+        return box_;
+    }
+
+    public MapEntry[] getLibEntries() {
+        return libEntries_;
+    }
+
+    public int getMaxMapEntry() {
+        return maxMapEntry_;
+    }
+
+    public MapEntry[] getShuffleEntries() {
+        return shuffleEntries_;
+    }
+
     /**
-     * This routine will clear the queue and fill it with the specified number of semirandom songs.
-     * @param count number of songs to fill queue.
+     * This returns a list of indices into the MusicLibrary's songs.
+     * If one of the shuffle routines has filled a shuffle list, it is returned,
+     * otherwise the MusicLibrary's total list of shuffled indices is returned.
+     *
+     * @return List of indices into MusicLibrary's songs, or an empty list if library
+     *         not yet initialized.
      */
-    public void fillQueue(int count) {
-        QueueFragment.clearQueue();
+    public int[] getShuffledList() {
+        if (shuffleIndices_ != null)
+            return shuffleIndices_;
+
         if (library_ == null)
-            return;
+            return new int[0];
 
-        Random rnd = new Random();
+        return library_.getShuffledSongs(false);
+    }
 
-        if (count > totalShuffleEntries_)
-            count = totalShuffleEntries_;
-
-        MusicPlayer.log(TAG, " Fill Queue with " + count);
-        while (count > 0) {
-            int ii = rnd.nextInt(shuffleEntries_.length);
-            MapEntry me = shuffleEntries_[ii];
-            if (me.getStart() >= 0) {
-                int il = me.getStart() + rnd.nextInt(me.getCount());
-
-                SongInfo song = library_.getSong(il);
-                if (song != null) {
-                    QueueFragment.addToQueue(song);
-                    count--;
-                }
-                else
-                    MusicPlayer.log(TAG, "Got a null at library entry " + il);
+    public boolean isShuffled() {
+//        boolean shuffled = !Arrays.asList(shuffled_).contains(-1);
+        boolean shuffled = false;
+        for (MapEntry entry : shuffleEntries_) {
+            if (entry.getStart() != -1) {
+                shuffled = true;
+                break;
             }
+        }
+        MusicPlayerApp.log(TAG, "isShuffled = " + shuffled);
+        return shuffled;
+    }
+
+    public void resetShuffle() {
+        for (MapEntry entry : shuffleEntries_) {
+            entry.set(-1, 0);
         }
     }
 
 
-    public void setLibrary(NSRMediaLibrary library) {
-        library_ = library;
-    }
-
-    public MapEntry[] boxShuffle(Rect box) {
-        MusicPlayer.log(TAG, "START BOX SHUFFLE");
+    public int[] boxShuffle(Rect box) {
+        MusicPlayerApp.log(TAG, "START BOX SHUFFLE");
 
         // Sanitize and set box
         int left   = Math.min(MAPWIDTH,  Math.max(0, box.left));
@@ -221,7 +225,7 @@ public class MusicMap {
 
         // size covers whole map, so just random shuffle
         if (box_.width() >= MAPWIDTH && box_.height() >= MAPHEIGHT) {
-            MusicPlayer.log(TAG, "box is whole library -- go to random shuffle");
+            MusicPlayerApp.log(TAG, "box is whole library -- go to random shuffle");
             return randomShuffle(library_.getSongCount());
         }
 
@@ -236,93 +240,55 @@ public class MusicMap {
             }
         }
 
-        MusicPlayer.log(TAG, " + BOX SHUFFLE AT:  " + box_.toString() + ", center=" + center.toString());
-        MusicPlayer.log(TAG, "Library size = " + library_.getSongCount() + ", in box=" + songsInBox_);
+        MusicPlayerApp.log(TAG, " + BOX SHUFFLE AT:  " + box_.toString() + ", center=" + center.toString());
+        MusicPlayerApp.log(TAG, "Library size = " + library_.getSongCount() + ", in box=" + songsInBox_);
 
-        // If box is whole library, then just copy libEntries to shuffleEntries
-        if (songsInBox_ == library_.getSongCount()) {
-            for (int i = 0; i < MAPSIZE; i++) {
-                shuffleEntries_[i].set(libEntries_[i].getStart(), libEntries_[i].getCount());
-            }
-            totalShuffleEntries_ = totalLibEntries_;
-            fillQueue(Math.min(20, totalShuffleEntries_));
-            MusicPlayer.log(TAG, "box filled with whole library ");
-            return shuffleEntries_;
+        if (songsInBox_ == 0) {
+            shuffleIndices_= new int[0];
+            return shuffleIndices_;
         }
 
-        resetShuffle();
-
-        Random rnd = new Random();
-
-        int count = songsInBox_;
-        int iters = 0;
-        while (count > 0) {
-            iters++;
-            int xval = box_.left + rnd.nextInt(box_.width());
-            int yval = box_.top  + rnd.nextInt(box_.height());
-            int ival = xval + yval * MAPWIDTH;
-            if (libEntries_[ival].getStart() == -1)
-                continue;
-            MapEntry entry = shuffleEntries_[ival];
-            if (libEntries_[ival].getCount() > entry.getCount()) {
-                entry.set(libEntries_[ival].getStart());
-                entry.addEntry();
-                count--;
-            } else if (iters > 100000) {
-                MusicPlayer.log(TAG, "Too many iterations");
-                break;
-            }
-        }
-        MusicPlayer.log(TAG, "+-+ box filled " + (songsInBox_ - count) + ", iterations=" + iters);
-        totalShuffleEntries_ = songsInBox_ - count;
-
-        fillQueue(Math.min(20, totalShuffleEntries_));
-        return shuffleEntries_;
-    }
-
-    public MapEntry[] randomShuffle(int count) {
-        int totalSongs = library_.getSongCount();
-        if (count > totalSongs)
-            count = totalSongs;
-
-        MusicPlayer.log(TAG, " RANDOM SHUFFLE of " + count);
-
-        resetShuffle();
-        fillLibEntries();
-
-        Random rnd = new Random();
-
-        int i = 0;
-        int iters = 0;      // prevent endless loop
-        while (i < count ) {
-            iters++;
-            int idx = rnd.nextInt(totalSongs);
+        int[] shuffled = library_.getShuffledSongs(true);
+        int[] ret = new int[songsInBox_];
+        int cnt = 0;
+        for (int idx : shuffled) {
             SongInfo song = library_.getSong(idx);
-            int ii = song.getSenseIndex();
-            if (shuffleEntries_[ii].getCount() < libEntries_[ii].getCount()) {
-                MusicPlayer.log(TAG, "Add to entry " + ii + ", count=" + shuffleEntries_[ii].getCount());
-                shuffleEntries_[ii].set(libEntries_[ii].getStart());
-                shuffleEntries_[ii].addEntry();
-                iters = 0;
-                i++;
-            } else if (iters > 50) {
-                MusicPlayer.log(TAG, "Too many iterations");
-                break;
-            } else
-                MusicPlayer.log(TAG, " === count too big " + shuffleEntries_[ii].getCount() + " at " + ii);
+            int sense = song.getSenseIndex();
+            int x = sense % MAPWIDTH;
+            int y = sense / MAPWIDTH;
+            if (box_.contains(x, y) && libEntries_[sense].removeEntry() > 0) {
+                MusicPlayerApp.log(TAG, "song @ " + sense + " (" + x + "," + y + ") "
+                                        + song.getSenseString() + ": " + song.getTitle());
+                ret[cnt++] = idx;
+                if (cnt >= songsInBox_)
+                    break;
+            }
         }
-        MusicPlayer.log(TAG, "+-+ random songs " + i + " fill from total " + totalLibEntries_);
-        totalShuffleEntries_ = i;
 
-        fillQueue(Math.min(20, totalShuffleEntries_));
-        return shuffleEntries_;
+        fillShuffleEntries(ret);
+        shuffleIndices_ = ret;
+        return ret;
     }
+
+
+    public int[] randomShuffle(int count) {
+        MusicPlayerApp.log(TAG, "RANDOM SHUFFLE " + count);
+        int[] arr = library_.getShuffledSongs(true);
+        if (arr.length == 0)
+            return arr;
+
+        if (count > arr.length)
+            count = arr.length;
+
+        int[] ret = new int[count];
+        System.arraycopy(arr, 0, ret, 0, count);
+
+        fillShuffleEntries(ret);
+        shuffleIndices_ = ret;
+        return ret;
+    }
+
 }
-/* ---- note can make a bell curve, like so:
-        for (int i = 0; i < 64; i++) {
-            Log.d(TAG, "LOG " + i + " " + (i * i / 63));
-        }
-*/
 /* ----------------
     public int[] puddleShuffle(int center) {
         Random rnd = new Random();
@@ -335,7 +301,7 @@ public class MusicMap {
 
         Point pt1 = new Point(center % 8, center / 8);
         Point zpt = new Point();
-        MusicPlayer.log(TAG, "START PUDDLE SHUFFLE AT: " + center + ", pt=" + pt1.toString());
+        MusicPlayerApp.log(TAG, "START PUDDLE SHUFFLE AT: " + center + ", pt=" + pt1.toString());
         int ii = 0;
         while (ii < shuffled_.length) {
             int ival = rnd.nextInt(shuffled_.length);
