@@ -31,7 +31,7 @@ public class MusicQueue extends Fragment {
      */
     public static void addToQueue(SongInfo song) {
         qArrSongs_.add(song);
-        String str = song.getSenseString() + " " + song.getTitle() + " (" + song.getBaseFileName() + ")";
+        String str = song.getTitle() + "   " + song.getSenseString();
         if (qArray_ == null) {
             qArrList_.add(str);
         } else {

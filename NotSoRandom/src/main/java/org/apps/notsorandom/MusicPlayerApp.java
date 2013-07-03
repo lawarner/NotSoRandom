@@ -48,8 +48,9 @@ public class MusicPlayerApp extends FragmentActivity
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
         library_.initialize();
-        library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+//        library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
 //        library_.scanForMedia("RANDOM", true);
+//        library_.scanForMedia("CLEANUP", true);
         library_.registerOnLibraryChanged(this);
         library_.getAllSongs();
         library_.sortSongs();
@@ -62,6 +63,12 @@ public class MusicPlayerApp extends FragmentActivity
 //        MusicQueue.refreshQueue(200);
 
         log("Player has initialized.\n");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        MusicPlayer.shutdown();
     }
 
     @Override

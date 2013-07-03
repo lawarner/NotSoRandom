@@ -25,7 +25,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     private DbHandler handler_;
 
     public class DbHandler extends SQLiteOpenHelper {
-        private static final String DATABASE_NAME = "mediaLibrary3.db";
+        private static final String DATABASE_NAME = "mediaLibrary.db";
         private static final int    DATABASE_VERSION = 2;
         private static final String TABLE_SONGS = "songs";
         private static final String TABLE_COMPONENT = "component";
@@ -54,7 +54,13 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
         DbHandler(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
-            sdDir_ = "/mnt/sdcard/";
+
+            String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+            if (root == null || root.isEmpty())
+                root = "/mnt/sdcard/";   // just a fallback value
+            else if (!root.endsWith("/"))
+                root += "/";
+            sdDir_ = root;
         }
 
         public void addComponent(SenseComponent sc) {
@@ -146,6 +152,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 } while (cursor.moveToNext());
             }
 
+            db.close();
             return songs;
         }
 
@@ -155,7 +162,26 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             Cursor cursor = db.rawQuery(sql, null);
             cursor.close();
 
-            return cursor.getCount();
+            int ret = cursor.getCount();
+            db.close();
+            return ret;
+        }
+
+        public boolean cleanupDb() {
+            boolean ret = true;
+
+            SQLiteDatabase db = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            String where = "substr(file,1,12) != \"/mnt/sdcard/\"";
+            try {
+                db.delete(TABLE_SONGS, where, null);
+                db.execSQL("update songs set file=substr(file,13)");
+            } catch (SQLiteConstraintException ce) {
+                ret = false;
+            }
+
+            db.close();
+            return ret;
         }
 
         public boolean updateSense(String file, int sense) {
@@ -163,6 +189,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
             SQLiteDatabase db = getWritableDatabase();
             ContentValues values = new ContentValues();
+            if (sdDir_ != null && file.startsWith(sdDir_))
+                file = file.substring(sdDir_.length());
             String where = COL_FILE + " = \"" + file + "\"";
             values.put(COL_SENSE, sense);
             try {
@@ -170,6 +198,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             } catch (SQLiteConstraintException ce) {
                 ret = false;
             }
+
+            db.close();
             return ret;
         }
 
@@ -260,6 +290,14 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     @Override
     public int scanForMedia(String folder, boolean subFolders) {
 
+        if (folder.equals("SDCARD")) {
+            folder = Environment.getExternalStorageDirectory().getAbsolutePath();
+        }
+        else if (folder.equals("CLEANUP")) {
+            handler_.cleanupDb();
+            return 0;
+        }
+
         Collection<File> all = new ArrayList<File>();
         File file = new File(folder);
         Log.d(TAG, " - scanForMedia: " + file.getAbsolutePath());
@@ -289,13 +327,15 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             String genre = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);
             if (genre == null || genre.isEmpty())
                 genre = "(Unknown)";
+
             SongInfo song = new SongInfo(title, file1.getAbsolutePath(), 0x33);
 //            songs_.add(song);
-            if (handler_.addSong(song))
-                Log.d(TAG, "scanForMedia add: " + file1.getAbsolutePath() + ", " + title
-                           + "  " + genre);
+            boolean added = handler_.addSong(song);
+            Log.d(TAG, "scanForMedia: " + file1.getAbsolutePath() + (added ? " added, " : " exists, ")
+                           + title + "  " + genre);
 
         }
+        mmr.release();
 
         return all.size();
     }

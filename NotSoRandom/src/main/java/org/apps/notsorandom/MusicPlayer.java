@@ -134,6 +134,21 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         }
     }
 
+    public static void shutdown() {
+        if (player_ != null) {
+            try {
+                player_.reset();
+                player_.release();
+            } catch (Exception ex) {
+                //
+            }
+        }
+        controller_.setEnabled(false);
+        controller_ = null;
+        player_ = null;
+    }
+
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -156,12 +171,14 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         // Deal with the column labels around the music map
         TextView tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
-        tvrl.setTranslationX(-40);
-        tvrl.setTranslationY(48);
+        tvrl.setTranslationX(-68);
+        tvrl.setTranslationY(96);
         RelativeLayout rl = (RelativeLayout) view.findViewById(R.id.player_layout);
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(500, 500);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
-        lp.addRule(RelativeLayout.RIGHT_OF, R.id.row_label);
+        lp.setMargins(120, 0, 2, 0);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
         musicMapView_ = new MusicMapView(rl.getContext());
         rl.addView(musicMapView_, lp);
@@ -319,22 +336,34 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             controller_.setMediaPlayer(this);
         }
 
+        boolean ret = true;
         try {
-            MusicPlayerApp.log(TAG, "queueSong 0 " + song.getFileName());
+            if (!isFirstTime_ && player_.isPlaying()) {
+                MusicPlayerApp.log(TAG, "queueSong, let the current song keep playing.");
+            } else {
+            Log.d(TAG, "queueSong 1 " + song.getFileName());
+            player_.reset();
+            Log.d(TAG, "queueSong 2 " + song.getFileName());
             player_.setDataSource(song.getFileName());
-            MusicPlayerApp.log(TAG, "queueSong 1");
             player_.prepare();
-            MusicPlayerApp.log(TAG, "queueSong 2");
             controller_.setEnabled(true);
-            MusicPlayerApp.log(TAG, "queueSong 3");
+            Log.d(TAG, "queueSong 3");
             setTrackAndTitle(song);
 //            player_.start();
+            }
+        } catch (IllegalStateException ise) {
+            Log.e(TAG, "Illegal state in queueSong: " + ise);
+            ret = false;
+        } catch (IllegalArgumentException iae) {
+            Log.e(TAG, "Illegal arg in queueSong: " + iae);
+            ret = false;
         } catch (Exception ex) {
-            Log.e(TAG, "Exception in queueSong: " + ex.getMessage());
+            Log.e(TAG, "Exception in queueSong: " + ex);
+            ret = false;
         }
+//        throws IOException, IllegalArgumentException, SecurityException, IllegalStateException {
 
-        MusicPlayerApp.log(TAG, " -+ end of queueSong");
-        return true;
+        return ret;
     }
 
     public void stopSong() {

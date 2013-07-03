@@ -110,12 +110,12 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
                 else if (songInfo.getSenseValue() > songInfo2.getSenseValue())
                     return 1;
 
-                return 0;
+                // within same sense value, sort by title
+                return songInfo.getTitle().compareToIgnoreCase(songInfo2.getTitle());
             }
         });
 
         if (listener_ != null) {
-            MusicPlayerApp.log(TAG, "calling libraryUpdated from sortSongs()");
             listener_.libraryUpdated(this);
         }
     }
@@ -138,6 +138,7 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
         boolean ret = true;
         try {
             songs_.set(item, song);
+            sortSongs();
         }
         catch (IndexOutOfBoundsException ie) {
             ret = false;

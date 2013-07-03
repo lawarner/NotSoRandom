@@ -29,7 +29,9 @@
             android:layout_above="@+id/ySeekBar"
             android:layout_alignParentRight="true"
             android:max="7"
-            android:layout_alignLeft="@+id/zSeekBar"/>
+            android:layout_alignLeft="@+id/zSeekBar"
+            android:layout_marginTop="6dp"
+            android:layout_marginRight="4dp"/>
 
     <TextView
             android:layout_width="wrap_content"
@@ -46,7 +48,9 @@
             android:layout_alignParentRight="true"
             android:layout_alignLeft="@+id/zSeekBar"
             android:max="7"
-            android:layout_above="@+id/zSeekBar"/>
+            android:layout_above="@+id/zSeekBar"
+            android:layout_marginTop="6dp"
+            android:layout_marginRight="4dp"/>
 
     <TextView
             android:layout_width="wrap_content"
@@ -63,6 +67,10 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:max="7"
-            android:layout_toRightOf="@+id/zLabel"/>
+            android:layout_toRightOf="@+id/zLabel"
+            android:layout_marginLeft="26dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginRight="4dp"/>
 
 </RelativeLayout>

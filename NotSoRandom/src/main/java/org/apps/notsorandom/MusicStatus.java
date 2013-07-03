@@ -1,5 +1,6 @@
 package org.apps.notsorandom;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -21,6 +23,10 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
     private static String statusStr_ = "";
 
     private TextView statusView_ = null;
+
+    // Used to call back the Activity that attached us.
+    private MusicPlayer.OnPlayerListener callback_ = null;
+
 
     public static void log(String msg) {
         statusStr_ += msg;
@@ -36,6 +42,20 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
         statusStr_ = msg;
     }
 
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        Log.d(TAG, "onAttach in MusicStatus");    // On attach is called before onCreateView
+
+        try {
+            callback_ = (MusicPlayer.OnPlayerListener) activity;
+        } catch (ClassCastException ex) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnPlayerListener interface");
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -44,6 +64,22 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
         statusView_ = (TextView) view.findViewById(R.id.statusText);
         statusView_.setText(statusStr_, TextView.BufferType.EDITABLE);
         statusView_.setOnLongClickListener(this);
+
+        Button but = (Button) view.findViewById(R.id.scanForMedia);
+        but.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                NSRMediaLibrary lib = callback_.getLibrary();
+                if (lib != null) {
+                    //TODO scan in a worker thread
+                    MusicPlayerApp.log(TAG, "Scanning SD card for new media...");
+                    int nr = lib.scanForMedia("SDCARD", true);
+                    MusicPlayerApp.log(TAG, "Scan complete.  Found " + nr + " new items.");
+                }
+            }
+        });
+//        library_.scanForMedia("RANDOM", true);
+//        library_.scanForMedia("CLEANUP", true);
 
         return view;
     }

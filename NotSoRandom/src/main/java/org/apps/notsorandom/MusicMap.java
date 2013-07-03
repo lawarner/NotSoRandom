@@ -243,25 +243,23 @@ public class MusicMap {
         MusicPlayerApp.log(TAG, " + BOX SHUFFLE AT:  " + box_.toString() + ", center=" + center.toString());
         MusicPlayerApp.log(TAG, "Library size = " + library_.getSongCount() + ", in box=" + songsInBox_);
 
-        if (songsInBox_ == 0) {
-            shuffleIndices_= new int[0];
-            return shuffleIndices_;
-        }
-
-        int[] shuffled = library_.getShuffledSongs(true);
         int[] ret = new int[songsInBox_];
-        int cnt = 0;
-        for (int idx : shuffled) {
-            SongInfo song = library_.getSong(idx);
-            int sense = song.getSenseIndex();
-            int x = sense % MAPWIDTH;
-            int y = sense / MAPWIDTH;
-            if (box_.contains(x, y) && libEntries_[sense].removeEntry() > 0) {
-                MusicPlayerApp.log(TAG, "song @ " + sense + " (" + x + "," + y + ") "
-                                        + song.getSenseString() + ": " + song.getTitle());
-                ret[cnt++] = idx;
-                if (cnt >= songsInBox_)
-                    break;
+
+        if (songsInBox_ > 0) {
+            int cnt = 0;
+            int[] shuffled = library_.getShuffledSongs(true);
+            for (int idx : shuffled) {
+                SongInfo song = library_.getSong(idx);
+                int sense = song.getSenseIndex();
+                int x = sense % MAPWIDTH;
+                int y = sense / MAPWIDTH;
+                if (box_.contains(x, y) && libEntries_[sense].removeEntry() > 0) {
+                //    MusicPlayerApp.log(TAG, "song @ " + sense + " (" + x + "," + y + ") "
+                //                            + song.getSenseString() + ": " + song.getTitle());
+                    ret[cnt++] = idx;
+                    if (cnt >= songsInBox_)
+                        break;
+                }
             }
         }
 

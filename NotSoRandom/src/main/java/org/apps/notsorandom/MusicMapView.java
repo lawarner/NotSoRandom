@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-//TODO make sure this does not recalc the musicmap when reactivating the fragment view.
 //TODO remap the coordinates to start in the bottom left.
 /**
  * Custom view that handles rendering and drawing of the Music Map.
@@ -28,7 +27,8 @@ public class MusicMapView extends View implements View.OnTouchListener {
 */
     private static MusicMap musicMap_ = new MusicMap();
 
-    private static PointF calc_ = new PointF(8f/473f, 8f/480f);
+    private static float height_ = 500f;
+    private static PointF calc_ = new PointF(8f/500f, 8f/4500f);
     private static RectF  boxDraw_ = new RectF();
     private static Rect newbox_ = new Rect();
 
@@ -39,12 +39,27 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private PointF start_  = new PointF();
     private PointF stop_   = new PointF();
 
+    private boolean dragBox_ = false;
+
+
     private MusicPlayer.OnPlayerListener listener_;
 
     // ------------------------------------------------------------------------
-    private static float indexToPixel(int idx) {
-        float fpix = Math.round((float) idx / calc_.x);
-        return fpix;
+
+    private static PointF indexToPixel(int x, int y) {
+        PointF fpt = new PointF(Math.round((float) x / calc_.x),
+                                height_ - Math.round((float) y / calc_.y));
+        return fpt;
+    }
+
+    private static Rect pointsToRect(RectF scrn) {
+
+        int left = (int) Math.floor(scrn.left * calc_.x);
+        int top = (int) Math.floor((height_ - scrn.bottom) * calc_.y);
+        int right = (int) Math.ceil(scrn.right * calc_.x);
+        int bottom  = (int) Math.ceil((height_ - scrn.top) * calc_.y);
+
+        return new Rect(left, top, right, bottom);
     }
 
     /**
@@ -62,8 +77,9 @@ public class MusicMapView extends View implements View.OnTouchListener {
             } else {
                 int[] mm = musicMap_.boxShuffle(newbox_);
                 Rect rc = musicMap_.getBox();
-                boxDraw_.set(indexToPixel(rc.left), indexToPixel(rc.top),
-                             indexToPixel(rc.right), indexToPixel(rc.bottom));
+                PointF ptlt = indexToPixel(rc.left, rc.bottom);
+                PointF ptrb = indexToPixel(rc.right, rc.top);
+                boxDraw_.set(ptlt.x, ptlt.y, ptrb.x, ptrb.y);
 
                 return mm;
             }
@@ -83,6 +99,22 @@ public class MusicMapView extends View implements View.OnTouchListener {
         setOnTouchListener(this);
     }
 
+
+    protected float calcRadius(int count) {
+        float maxRadius = Math.max((float) bitmap_.getWidth() / 14f, 10f);
+        int maxDups = Math.max(1, musicMap_.getMaxMapEntry());
+        float pos = (float) maxDups - Math.max(0, Math.min(count, maxDups));
+
+        // Make a curve from 0 to maxDups
+        float posExp = (float) maxDups - (pos * pos / maxDups);
+        if (posExp > maxDups) {
+            MusicPlayerApp.log(TAG, "WARN Radius " + posExp + " bigger than " + maxDups);
+        }
+
+//        MusicPlayerApp.log(TAG, "==== radius: " + radius + " ;  scaled: " + radius * maxRadius / maxDups);
+//        return Math.max(count, posExp * maxRadius / maxDups);
+        return posExp * maxRadius / maxDups;
+    }
 
     public boolean initLibrary() {
         return musicMap_.fillLibEntries();
@@ -105,58 +137,39 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
         RectF rc = new RectF(start_.x, start_.y, stop_.x, stop_.y);
         rc.sort();
-        float fx = rc.centerX();
-        float fy = rc.centerY();
-        int cx = Math.round(fx * calc_.x);
-        int cy = Math.round(fy * calc_.y);
-        Log.d(TAG, "SET SHUFFLE ORIGIN TO (" + cx + "," + cy + ")");
-
-        cx = (int) Math.floor(rc.left * calc_.x);
-        cy = (int) Math.floor(rc.top  * calc_.y);
-        int ix = (int) Math.ceil(rc.right * calc_.x);
-        int iy = (int) Math.ceil(rc.bottom * calc_.y);
-        newbox_.set(cx, cy, ix, iy);
+        newbox_.set(pointsToRect(rc));
         newbox_.sort();
 
-        rc.set(indexToPixel(newbox_.left), indexToPixel(newbox_.top),
-               indexToPixel(newbox_.right), indexToPixel(newbox_.bottom));
-        center_.set(rc.centerX(), rc.centerY());     // Now, set the center
+        center_.set(newbox_.centerX(), newbox_.centerY());     // Now, set the center
     }
 
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        MusicPlayerApp.log(TAG, "MMV MMV onSizeChanged to (" + w + "," + h + ") from (" + oldw + "," + oldh + ")");
         bitmap_ = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         bitmap_.eraseColor(Color.BLACK);
 //        canvas_ = new Canvas(bitmap_);
 
         calc_.x = 8f / w;
         calc_.y = 8f / h;
+        height_ = h;
+        MusicPlayerApp.log(TAG, "onSizeChanged to (" + w + "," + h + ") from ("
+                                + oldw + "," + oldh + ") c=" + calc_);
 
         newbox_.setEmpty();
         boxDraw_.setEmpty();
     }
 
-    protected float calcRadius(int count) {
-        float maxRadius = Math.max((float) bitmap_.getWidth() / 15f, 10f);
-        int maxDups = Math.max(1, musicMap_.getMaxMapEntry());
-        float pos = (float) maxDups - Math.max(0, Math.min(count, maxDups));
-
-        // Make a curve from 0 to maxDups
-        float posExp = (float) maxDups - (pos * pos / maxDups);
-        if (posExp > maxDups) {
-            MusicPlayerApp.log(TAG, "WARN Radius " + posExp + " bigger than " + maxDups);
-            //radius = maxDups;
-        }
-
-//        MusicPlayerApp.log(TAG, "==== radius: " + radius + " ;  scaled: " + radius * maxRadius / maxDups);
-        return Math.max(count, posExp * maxRadius / maxDups);
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
+
+        if (dragBox_) {
+            paint_.setColor(Color.BLUE);
+            paint_.setStyle(Paint.Style.STROKE);
+            canvas.drawRect(start_.x, start_.y, stop_.x, stop_.y, paint_);
+            return;
+        }
 
         canvas.drawBitmap(bitmap_, 0, 0, paint_);
         paint_.setStrokeWidth(0f);
@@ -176,8 +189,9 @@ public class MusicMapView extends View implements View.OnTouchListener {
         for (int ii = 0; ii < me.length; ii++) {
             int cnt = me[ii].getCount();
             if (cnt > 0) {
-                float x = 24f + indexToPixel(ii % 8);
-                float y = 24f + indexToPixel(ii / 8);
+                PointF pt = indexToPixel(ii % 8, ii / 8);
+                float x = pt.x + 26f;
+                float y = pt.y - 26f;
                 float radius = calcRadius(cnt);
                 canvas.drawCircle(x, y, radius, paint_);
             }
@@ -190,9 +204,9 @@ public class MusicMapView extends View implements View.OnTouchListener {
         for (int ii = 0; ii < me.length; ii++) {
             int cnt = me[ii].getCount();
             if (cnt > 0) {
-                float x = 24f + indexToPixel(ii % 8);
-                float y = 24f + indexToPixel(ii / 8);
-//                float radius = Math.min((float) bitmap_.getWidth(), 2f * cnt);
+                PointF pt = indexToPixel(ii % 8, ii / 8);
+                float x = pt.x + 26f;
+                float y = pt.y - 26f;
                 float radius = calcRadius(cnt);
                 canvas.drawCircle(x, y, radius, paint_);
             }
@@ -207,17 +221,21 @@ public class MusicMapView extends View implements View.OnTouchListener {
             action == MotionEvent.ACTION_POINTER_DOWN) {
             Log.d(TAG, "Action onTouch == ACTION_DOWN " + action);
             setStart(motionEvent.getX(), motionEvent.getY());
+            dragBox_ = false;
             return true;
         }
+        if (action == MotionEvent.ACTION_MOVE) {
+            dragBox_ = true;
+            stop_.set(motionEvent.getX(), motionEvent.getY());
+            return true;
+        }
+        dragBox_ = false;
         if (action != MotionEvent.ACTION_UP &&
             action != MotionEvent.ACTION_POINTER_UP)
             return false;
         if (motionEvent.getPointerCount() < 1)
             return false;
         Log.d(TAG, "Action onTouch == ACTION_UP " + action);
-
-        calc_.x = 8f / getWidth();
-        calc_.y = 8f / getHeight();
 
         setStop(motionEvent.getX(), motionEvent.getY());
         int[] arr = getShuffledList(true);   // Reshuffle
