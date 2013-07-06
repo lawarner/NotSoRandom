@@ -13,6 +13,9 @@ import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Implementation of media library using an RDBMS store
@@ -169,17 +172,35 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
         public boolean cleanupDb() {
             boolean ret = true;
-
             SQLiteDatabase db = getWritableDatabase();
-            ContentValues values = new ContentValues();
-            String where = "substr(file,1,12) != \"/mnt/sdcard/\"";
+
+/*  PAST conversions:
+            String update = "update " + TABLE_SONGS + " set " + COL_TITLE + "=substr(" + COL_TITLE + ",10) ";
+            String where = "where substr(" + COL_TITLE + ",1,9)" + "= \"--> File \"";
             try {
-                db.delete(TABLE_SONGS, where, null);
-                db.execSQL("update songs set file=substr(file,13)");
+                db.execSQL(update + where);
             } catch (SQLiteConstraintException ce) {
                 ret = false;
             }
 
+            int fromToSense[] = {
+                0x00,0x11, 0x01,0x11, 0x02,0x12, 0x03,0x13, 0x04,0x14, 0x05,0x15, 0x06,0x16, 0x07,0x17,
+                0x10,0x11, 0x20,0x21, 0x30,0x31, 0x40,0x41, 0x50,0x51, 0x60,0x61, 0x70,0x71
+            };
+            for (int idx = 0; idx < fromToSense.length; idx += 2) {
+                ContentValues values = new ContentValues();
+                String where =  COL_SENSE + "=" + fromToSense[idx];
+                values.put(COL_SENSE, fromToSense[idx+1]);
+                try {
+                    db.update(TABLE_SONGS, values, where, null);
+                } catch (SQLiteConstraintException ce) {
+                    ret = false;
+                }
+            }
+            String where = "substr(file,1,12) != \"/mnt/sdcard/\"";
+                db.delete(TABLE_SONGS, where, null);
+                db.execSQL("update songs set file=substr(file,13)");
+ */
             db.close();
             return ret;
         }
@@ -293,6 +314,10 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         if (folder.equals("SDCARD")) {
             folder = Environment.getExternalStorageDirectory().getAbsolutePath();
         }
+        else if (folder.equals("SDCARDEXT")) {
+            folder = "/mnt/extSdCard";
+
+        }
         else if (folder.equals("CLEANUP")) {
             handler_.cleanupDb();
             return 0;
@@ -313,6 +338,39 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         }
 
         Log.d(TAG, "scanForMedia found " + all.size());
+        HashMap<String,Integer> genreMap = new HashMap<String,Integer>();
+        genreMap.put("Alternative & Punk", new Integer(0x75));
+        genreMap.put("Rap & Hip-Hop",      new Integer(0x74));
+        genreMap.put("Rap/Hip Hop",        new Integer(0x74));
+        genreMap.put("Trip Hop",           new Integer(0x73));
+        genreMap.put("Dance",              new Integer(0x66));
+        genreMap.put("Dance & DJ",         new Integer(0x66));
+        genreMap.put("Electronic",         new Integer(0x65));
+        genreMap.put("Psychadelic Rock",   new Integer(0x64));
+        genreMap.put("Alternative/Indie",  new Integer(0x63));
+        genreMap.put("Power Rock",         new Integer(0x62));
+        genreMap.put("Rock",               new Integer(0x54));
+        genreMap.put("Brit Pop",           new Integer(0x45));
+        genreMap.put("Rock/Pop",           new Integer(0x44));
+        genreMap.put("Blues",              new Integer(0x42));
+        genreMap.put("Mambo",              new Integer(0x36));
+        genreMap.put("Pop",                new Integer(0x34));
+        genreMap.put("Jazz",               new Integer(0x34));
+        genreMap.put("Reggae",             new Integer(0x33));
+        genreMap.put("Nederlands",         new Integer(0x33));
+        genreMap.put("Folk/Rock",          new Integer(0x32));
+        genreMap.put("Latin",              new Integer(0x26));
+        genreMap.put("Pop/Oldies",         new Integer(0x24));
+        genreMap.put("Soft Rock",          new Integer(0x24));
+        genreMap.put("Latin-Ballad",       new Integer(0x23));
+        genreMap.put("Folk",               new Integer(0x22));
+        genreMap.put("Country",            new Integer(0x22));
+        genreMap.put("Classical",          new Integer(0x22));
+        genreMap.put("New Age",            new Integer(0x21));
+        genreMap.put("Smooth Jazz",        new Integer(0x11));
+        genreMap.put("Easy Listening",     new Integer(0x11));
+
+        genreMap.put("Soundtrack",         new Integer(0x44));
 
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
         for (File file1 : all) {
@@ -324,15 +382,20 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                     title = title.substring(0, title.length() - 4);
                 title += " (File)";
             }
+            int sense = 0;
             String genre = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);
             if (genre == null || genre.isEmpty())
                 genre = "(Unknown)";
-
-            SongInfo song = new SongInfo(title, file1.getAbsolutePath(), 0x33);
+            else {
+                Integer ii = genreMap.get(genre);
+                if (ii != null)
+                    sense = ii.intValue();
+            }
+            SongInfo song = new SongInfo(title, file1.getAbsolutePath(), sense);
 //            songs_.add(song);
             boolean added = handler_.addSong(song);
-            Log.d(TAG, "scanForMedia: " + file1.getAbsolutePath() + (added ? " added, " : " exists, ")
-                           + title + "  " + genre);
+//            Log.d(TAG, "scanForMedia: " + file1.getAbsolutePath() + (added ? " added, " : " exists, ")
+//                           + title + "  " + genre);
 
         }
         mmr.release();
@@ -351,6 +414,20 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 _scanRecursive(child, all);
             }
         }
+    }
+
+    @Override
+    public boolean updateSenseValue(SongInfo song, int sense) {
+        if (song == null)
+            return false;
+
+        song.setSense(sense);
+        MusicPlayerApp.log(TAG, "Updating sense to " + Integer.toHexString(sense) + " for song=" + song.getTitle());
+
+        if (!handler_.updateSense(song.getFileName(), song.getSenseValue()))
+            return false;
+
+        return super.updateSongInfo(song);
     }
 
     @Override

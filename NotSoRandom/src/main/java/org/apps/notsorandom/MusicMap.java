@@ -221,7 +221,6 @@ public class MusicMap {
         int bottom = Math.min(MAPHEIGHT, Math.max(0, box.bottom));
         box_.set(left, top, right, bottom);
         box_.sort();
-        Point center = new Point(box_.centerX(), box_.centerY());
 
         // size covers whole map, so just random shuffle
         if (box_.width() >= MAPWIDTH && box_.height() >= MAPHEIGHT) {
@@ -240,8 +239,8 @@ public class MusicMap {
             }
         }
 
-        MusicPlayerApp.log(TAG, " + BOX SHUFFLE AT:  " + box_.toString() + ", center=" + center.toString());
-        MusicPlayerApp.log(TAG, "Library size = " + library_.getSongCount() + ", in box=" + songsInBox_);
+        MusicPlayerApp.log(TAG, " + BOX SHUFFLE AT: " + box_.toString()
+                           + ", Lib songs=" + library_.getSongCount() + ", in box=" + songsInBox_);
 
         int[] ret = new int[songsInBox_];
 

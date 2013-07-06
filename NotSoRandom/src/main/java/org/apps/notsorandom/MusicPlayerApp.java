@@ -48,9 +48,8 @@ public class MusicPlayerApp extends FragmentActivity
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
         library_.initialize();
+        //TODO if library empty, popup to run media scan
 //        library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
-//        library_.scanForMedia("RANDOM", true);
-//        library_.scanForMedia("CLEANUP", true);
         library_.registerOnLibraryChanged(this);
         library_.getAllSongs();
         library_.sortSongs();

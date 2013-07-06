@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -173,13 +174,14 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         tvrl.setRotation(-90);
         tvrl.setTranslationX(-68);
         tvrl.setTranslationY(96);
-        RelativeLayout rl = (RelativeLayout) view.findViewById(R.id.player_layout);
+
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(500, 500);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
-        lp.setMargins(120, 0, 2, 0);
+        lp.setMargins(120, 4, 2, 0);
         lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
+        RelativeLayout rl = (RelativeLayout) view.findViewById(R.id.player_layout);
         musicMapView_ = new MusicMapView(rl.getContext());
         rl.addView(musicMapView_, lp);
         musicMapView_.setId(R.id.music_map);
@@ -189,6 +191,17 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         ArrayList<View> alv = new ArrayList<View>();
         alv.add(musicMapView_);
         view.addTouchables(alv);
+
+        // Add a checkbox
+        CheckBox placeMode = (CheckBox) view.findViewById(R.id.placeOnMap);
+        placeMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CheckBox cb = (CheckBox) view;
+                MusicMapView.setPlaceMode(cb.isChecked());
+            }
+        });
+        MusicMapView.setPlaceMode(false);
 
         controlView_ = view.findViewById(R.id.controlView);
         if (controller_ == null) {
@@ -290,7 +303,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             if (MusicQueue.getCurrQueuePos(qpos))
                 track = "" + qpos[0] + "/" + qpos[1];
 
-            title = "Now playing " + song.getTitle() + " ...";
+            title = song.getTitle();
         }
 
         if (trackCounter_ != null)
@@ -339,17 +352,17 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         boolean ret = true;
         try {
             if (!isFirstTime_ && player_.isPlaying()) {
-                MusicPlayerApp.log(TAG, "queueSong, let the current song keep playing.");
+                MusicPlayerApp.log(TAG, "queueSong, current song is still playing.");
             } else {
-            Log.d(TAG, "queueSong 1 " + song.getFileName());
-            player_.reset();
-            Log.d(TAG, "queueSong 2 " + song.getFileName());
-            player_.setDataSource(song.getFileName());
-            player_.prepare();
-            controller_.setEnabled(true);
-            Log.d(TAG, "queueSong 3");
-            setTrackAndTitle(song);
-//            player_.start();
+                Log.d(TAG, "queueSong 1 " + song.getFileName());
+                player_.reset();
+                Log.d(TAG, "queueSong 2");
+                player_.setDataSource(song.getFileName());
+                player_.prepare();
+                controller_.setEnabled(true);
+                Log.d(TAG, "queueSong 3");
+                setTrackAndTitle(song);
+                musicMapView_.invalidate();     // make the map redraw
             }
         } catch (IllegalStateException ise) {
             Log.e(TAG, "Illegal state in queueSong: " + ise);

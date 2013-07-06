@@ -54,6 +54,12 @@ public class SenseComponent {
         return ret;
     }
 
+    public int getComponentIndex(int senseValue) {
+        int ret = getComponentValue(senseValue);
+        if (ret > 0) ret--;
+        return ret;
+    }
+
     public int getMaskedValue(int senseValue) {
         int ret = (senseValue << bitsPos_) & mask_;
         return ret;

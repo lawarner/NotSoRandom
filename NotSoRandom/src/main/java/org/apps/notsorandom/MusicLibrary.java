@@ -38,9 +38,9 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         library_ = library;
 
         // TODO: get the x,y,z values from config section of library.
-        xSense_ = new SenseComponent("tempo", "slower / faster",     0x000f, 1,  3);
+        xSense_ = new SenseComponent("tempo",     "slower / faster", 0x000f, 1,  3);
         ySense_ = new SenseComponent("roughness", "softer / harder", 0x00f0, 2,  4);
-        zSense_ = new SenseComponent("humor", "lighter / darker",    0x0f00, -1, 0);
+        zSense_ = new SenseComponent("humor",    "lighter / darker", 0x0f00, -1, 0);
 
         updateDb(true);
     }
@@ -78,11 +78,11 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
             return;
 
         SeekBar sb = (SeekBar) getView().findViewById(R.id.xSeekBar);
-        sb.setProgress(xSense_.getComponentValue(song.getSenseValue()));
+        sb.setProgress(xSense_.getComponentIndex(song.getSenseValue()));
         sb = (SeekBar) getView().findViewById(R.id.ySeekBar);
-        sb.setProgress(ySense_.getComponentValue(song.getSenseValue()));
+        sb.setProgress(ySense_.getComponentIndex(song.getSenseValue()));
         sb = (SeekBar) getView().findViewById(R.id.zSeekBar);
-        sb.setProgress(zSense_.getComponentValue(song.getSenseValue()));
+        sb.setProgress(zSense_.getComponentIndex(song.getSenseValue()));
     }
 
     private boolean starItem(View view, int item) {
@@ -166,15 +166,15 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
             return;
 
         SeekBar sb = (SeekBar) getView().findViewById(R.id.xSeekBar);
-        int xval = sb.getProgress();
+        int xval = sb.getProgress() + 1;
         sb = (SeekBar) getView().findViewById(R.id.ySeekBar);
-        int yval = sb.getProgress();
+        int yval = sb.getProgress() + 1;
         sb = (SeekBar) getView().findViewById(R.id.zSeekBar);
-        int zval = sb.getProgress();
+        int zval = sb.getProgress() + 1;
 
         int sense = xSense_.getMaskedValue(xval)
-                  | ySense_.getMaskedValue(yval)
-                  | zSense_.getMaskedValue(zval);
+                  | ySense_.getMaskedValue(yval);
+      //TODO      | zSense_.getMaskedValue(zval);
 
         Log.d(TAG, "New sense value = " + Integer.toHexString(sense) + ", item=" + currItem_);
         library_.updateSenseValue(currItem_, sense);

@@ -41,6 +41,8 @@ public interface NSRMediaLibrary extends MediaMusicCollection {
      */
     public boolean updateSenseValue(int item, int sense);
 
+    public boolean updateSenseValue(SongInfo song, int sense);
+
     /**
      * Update a song's info in the database.  This currently only updates the sense value, but
      * in future, it could update any changed songinfo columns.
@@ -50,5 +52,7 @@ public interface NSRMediaLibrary extends MediaMusicCollection {
      * @return True if song was updated in database successfully, otherwise false.
      */
     public boolean updateSongInfo(int item, SongInfo song);
+
+    public boolean updateSongInfo(SongInfo song);
 
 }

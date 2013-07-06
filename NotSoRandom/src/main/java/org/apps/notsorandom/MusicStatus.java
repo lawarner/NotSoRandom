@@ -73,13 +73,29 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
                 if (lib != null) {
                     //TODO scan in a worker thread
                     MusicPlayerApp.log(TAG, "Scanning SD card for new media...");
-                    int nr = lib.scanForMedia("SDCARD", true);
+                    int nr = -lib.getSongCount();
+                    nr += lib.scanForMedia("SDCARD", true);
                     MusicPlayerApp.log(TAG, "Scan complete.  Found " + nr + " new items.");
+                    nr = -lib.getSongCount();
+                    nr += lib.scanForMedia("SDCARDEXT", true);
+                    MusicPlayerApp.log(TAG, "Scan ext complete.  Found " + nr + " new items.");
                 }
             }
         });
-//        library_.scanForMedia("RANDOM", true);
-//        library_.scanForMedia("CLEANUP", true);
+
+        but = (Button) view.findViewById(R.id.dbCleanup);
+        but.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                NSRMediaLibrary lib = callback_.getLibrary();
+                if (lib != null) {
+                    //TODO scan in a worker thread
+                    MusicPlayerApp.log(TAG, "Database cleanup...");
+                    lib.scanForMedia("CLEANUP", true);
+                    MusicPlayerApp.log(TAG, "Cleanup complete.");
+                }
+            }
+        });
 
         return view;
     }

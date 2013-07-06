@@ -121,6 +121,15 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     }
 
     @Override
+    public boolean updateSenseValue(SongInfo song, int sense) {
+        if (song == null)
+            return false;
+
+        song.setSense(sense);
+        return updateSongInfo(song);
+    }
+
+    @Override
     public boolean updateSenseValue(int item, int sense) {
         if (item < 0 || item > songs_.size())
             return false;
@@ -150,4 +159,13 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
         return ret;
     }
 
+    @Override
+    public boolean updateSongInfo(SongInfo song) {
+        for (int idx = 0; idx < songs_.size(); idx++) {
+            if (song == songs_.get(idx))
+                return updateSongInfo(idx, song);
+        }
+
+        return false;
+    }
 }

@@ -28,14 +28,17 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private static MusicMap musicMap_ = new MusicMap();
 
     private static float height_ = 500f;
-    private static PointF calc_ = new PointF(8f/500f, 8f/4500f);
+    private static float width_  = 500f;
+    private static PointF calc_ = new PointF(7.5f/500f, 7.5f/500f);
     private static RectF  boxDraw_ = new RectF();
+    private static PointF center_ = new PointF();
     private static Rect newbox_ = new Rect();
+
+    private static boolean placeMode_ = false;
 
     private Bitmap bitmap_;
     private Paint  paint_;
 
-    private PointF center_ = new PointF();
     private PointF start_  = new PointF();
     private PointF stop_   = new PointF();
 
@@ -52,8 +55,21 @@ public class MusicMapView extends View implements View.OnTouchListener {
         return fpt;
     }
 
+    private static RectF boxToPixelBox(Rect box) {
+        float halfX = width_ / 15f;
+        float halfY = height_ / 15f;
+        float left = ((float) box.left / calc_.x) - halfX;
+        float top  = height_ - ((float) box.bottom / calc_.y) + halfY;
+        float right = ((float) box.right / calc_.x) - halfX;
+        float bottom = height_ - ((float) box.top / calc_.y) + halfY;
+
+        RectF rc = new RectF(left, top, right, bottom);
+        return rc;
+    }
+
     private static Rect pointsToRect(RectF scrn) {
 
+        scrn.offset(width_ / 15f, -height_ / 15f);
         int left = (int) Math.floor(scrn.left * calc_.x);
         int top = (int) Math.floor((height_ - scrn.bottom) * calc_.y);
         int right = (int) Math.ceil(scrn.right * calc_.x);
@@ -77,9 +93,9 @@ public class MusicMapView extends View implements View.OnTouchListener {
             } else {
                 int[] mm = musicMap_.boxShuffle(newbox_);
                 Rect rc = musicMap_.getBox();
-                PointF ptlt = indexToPixel(rc.left, rc.bottom);
-                PointF ptrb = indexToPixel(rc.right, rc.top);
-                boxDraw_.set(ptlt.x, ptlt.y, ptrb.x, ptrb.y);
+                MusicPlayerApp.log(TAG, "Box in: " + newbox_.toString() + "  Box out: " + rc.toString());
+                boxDraw_.set(boxToPixelBox(rc));
+                center_.set(boxDraw_.centerX(), boxDraw_.centerY());
 
                 return mm;
             }
@@ -87,6 +103,10 @@ public class MusicMapView extends View implements View.OnTouchListener {
         }
 
         return musicMap_.getShuffledList();
+    }
+
+    public static void setPlaceMode(boolean placeMode) {
+        placeMode_ = placeMode;
     }
 
     // ------------------------------------------------------------------------
@@ -113,7 +133,11 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
 //        MusicPlayerApp.log(TAG, "==== radius: " + radius + " ;  scaled: " + radius * maxRadius / maxDups);
 //        return Math.max(count, posExp * maxRadius / maxDups);
-        return posExp * maxRadius / maxDups;
+        float ret = posExp * maxRadius / maxDups;
+        if (count > 0 && ret < 0.5f)
+            ret = 0.5f;
+
+        return ret;
     }
 
     public boolean initLibrary() {
@@ -139,8 +163,6 @@ public class MusicMapView extends View implements View.OnTouchListener {
         rc.sort();
         newbox_.set(pointsToRect(rc));
         newbox_.sort();
-
-        center_.set(newbox_.centerX(), newbox_.centerY());     // Now, set the center
     }
 
 
@@ -151,11 +173,12 @@ public class MusicMapView extends View implements View.OnTouchListener {
         bitmap_.eraseColor(Color.BLACK);
 //        canvas_ = new Canvas(bitmap_);
 
-        calc_.x = 8f / w;
-        calc_.y = 8f / h;
+        calc_.x = 7.5f / w;
+        calc_.y = 7.5f / h;
         height_ = h;
+        width_ = w;
         MusicPlayerApp.log(TAG, "onSizeChanged to (" + w + "," + h + ") from ("
-                                + oldw + "," + oldh + ") c=" + calc_);
+                                + oldw + "," + oldh + ") calc=(" + calc_.x + "," + calc_.y + ")");
 
         newbox_.setEmpty();
         boxDraw_.setEmpty();
@@ -174,6 +197,11 @@ public class MusicMapView extends View implements View.OnTouchListener {
         canvas.drawBitmap(bitmap_, 0, 0, paint_);
         paint_.setStrokeWidth(0f);
 
+        int currIdx = -1;
+        SongInfo curr = listener_.getCurrSong();
+        if (curr != null)
+            currIdx = curr.getSenseIndex();
+
         if (!boxDraw_.isEmpty()) {
             paint_.setColor(Color.BLUE);
             paint_.setStyle(Paint.Style.STROKE);
@@ -190,10 +218,13 @@ public class MusicMapView extends View implements View.OnTouchListener {
             int cnt = me[ii].getCount();
             if (cnt > 0) {
                 PointF pt = indexToPixel(ii % 8, ii / 8);
-                float x = pt.x + 26f;
-                float y = pt.y - 26f;
+                float x = pt.x;
+                float y = pt.y;
                 float radius = calcRadius(cnt);
-                canvas.drawCircle(x, y, radius, paint_);
+                if (radius < 0.51f)
+                    canvas.drawPoint(x, y, paint_);
+                else
+                    canvas.drawCircle(x, y, radius, paint_);
             }
         }
 
@@ -205,10 +236,17 @@ public class MusicMapView extends View implements View.OnTouchListener {
             int cnt = me[ii].getCount();
             if (cnt > 0) {
                 PointF pt = indexToPixel(ii % 8, ii / 8);
-                float x = pt.x + 26f;
-                float y = pt.y - 26f;
+                float x = pt.x;
+                float y = pt.y;
                 float radius = calcRadius(cnt);
-                canvas.drawCircle(x, y, radius, paint_);
+                if (ii == currIdx)
+                    paint_.setColor(Color.GREEN);
+                if (radius < 0.51f)
+                    canvas.drawPoint(x, y, paint_);
+                else
+                    canvas.drawCircle(x, y, radius, paint_);
+                if (ii == currIdx)
+                    paint_.setColor(Color.RED);
             }
         }
     }
@@ -217,6 +255,24 @@ public class MusicMapView extends View implements View.OnTouchListener {
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         int action = motionEvent.getActionMasked();
+        if (placeMode_) {
+            SongInfo song = listener_.getCurrSong();
+            if (song == null || motionEvent.getPointerCount() < 1)
+                return false;
+            if (action == MotionEvent.ACTION_UP ||
+                action == MotionEvent.ACTION_POINTER_UP) {
+                setStart(motionEvent.getX(), motionEvent.getY());
+                setStop(motionEvent.getX(), motionEvent.getY());
+                int x = newbox_.centerX();
+                int y = newbox_.centerY();
+                if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+                    MediaLibraryBaseImpl lib = (MediaLibraryBaseImpl) listener_.getLibrary();
+                    if (lib.updateSenseValue(song, (x | (y << 4))))
+                        invalidate();
+                }
+            }
+            return true;
+        }
         if (action == MotionEvent.ACTION_DOWN ||
             action == MotionEvent.ACTION_POINTER_DOWN) {
             Log.d(TAG, "Action onTouch == ACTION_DOWN " + action);
