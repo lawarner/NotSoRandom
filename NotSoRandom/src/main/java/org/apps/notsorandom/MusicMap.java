@@ -4,6 +4,8 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.Log;
 
+import java.util.ArrayList;
+
 /**
  *
  * TODO implement a puddleMap for randomizing values.
@@ -144,10 +146,33 @@ public class MusicMap {
         return true;
     }
 
+    /**
+     * Repopulate the shuffle map from array of indices.
+     * @param indices Array of indices into the song library.
+     * @return Populated shuffle map.
+     */
     public MapEntry[] fillShuffleEntries(int[] indices) {
         resetShuffle();
         for (int i : indices) {
             SongInfo song = library_.getSong(i);
+            int ii = song.getSenseIndex();
+
+            shuffleEntries_[ii].set(libEntries_[ii].getStart());
+            shuffleEntries_[ii].addEntry();
+        }
+
+        return shuffleEntries_;
+    }
+
+    /**
+     * Repopulate the shuffle map from array of indices.  This version is called with a queue
+     * of songs so that it is does not rely on the library being reshuffled.
+     * @param songs Array of songs.
+     * @return Populated shuffle map.
+     */
+    public MapEntry[] fillShuffleEntries(ArrayList<SongInfo> songs) {
+        resetShuffle();
+        for (SongInfo song : songs) {
             int ii = song.getSenseIndex();
 
             shuffleEntries_[ii].set(libEntries_[ii].getStart());

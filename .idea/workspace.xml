@@ -10,21 +10,18 @@
       <config />
     </shared>
   </component>
+  <component name="AndroidLogFilters">
+    <option name="TOOL_WINDOW_CUSTOM_FILTER" value="M" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="8ab7301f-d41e-4a6b-af1a-c5f63ef28711" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryBaseImpl.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryBaseImpl.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryDb.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryDb.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicLibrary.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicLibrary.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMap.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMap.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMapView.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMapView.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayer.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayer.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayerApp.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayerApp.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicQueue.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicQueue.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicStatus.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicStatus.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/NSRMediaLibrary.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/NSRMediaLibrary.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SenseComponent.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SenseComponent.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_library.xml" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_library.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_player.xml" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_player.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SongInfo.java" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SongInfo.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_status.xml" afterPath="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_status.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -90,48 +87,42 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="MusicLibrary.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicLibrary.java">
+      <file leaf-file-name="MusicPlayer.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="52" column="75" selection-start="1916" selection-end="1916" vertical-scroll-proportion="0.0" vertical-offset="341" max-vertical-offset="2790">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MediaLibraryBaseImpl.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryBaseImpl.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="125" column="0" selection-start="3207" selection-end="3207" vertical-scroll-proportion="0.0" vertical-offset="1695" max-vertical-offset="2565">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NSRMediaLibrary.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/NSRMediaLibrary.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="43" column="62" selection-start="1602" selection-end="1602" vertical-scroll-proportion="0.0" vertical-offset="177" max-vertical-offset="960">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MediaLibraryDb.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryDb.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="420" column="0" selection-start="16686" selection-end="16764" vertical-scroll-proportion="0.0" vertical-offset="5819" max-vertical-offset="6720">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MusicMapView.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMapView.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="271" column="0" selection-start="9232" selection-end="9232" vertical-scroll-proportion="0.36956522" vertical-offset="3912" max-vertical-offset="5010">
+            <state line="316" column="0" selection-start="10886" selection-end="10886" vertical-scroll-proportion="0.0" vertical-offset="4346" max-vertical-offset="7245">
               <folding>
                 <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MusicMapView.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMapView.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="275" column="93" selection-start="9397" selection-end="9397" vertical-scroll-proportion="0.0" vertical-offset="3862" max-vertical-offset="5070">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MusicMap.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMap.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="172" column="28" selection-start="4859" selection-end="4859" vertical-scroll-proportion="0.0" vertical-offset="2052" max-vertical-offset="5235">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="MusicStatus.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicStatus.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="159" column="0" selection-start="5448" selection-end="5448" vertical-scroll-proportion="0.8755187" vertical-offset="1437" max-vertical-offset="2160">
+              <folding>
+                <element signature="e#2989#3187#0" expanded="true" />
+                <element signature="e#3176#3177#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -186,22 +177,22 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaMusicCollection.java" />
         <option value="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/simplerow.xml" />
         <option value="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_library.xml" />
         <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SenseComponent.java" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_status.xml" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayerApp.java" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicQueue.java" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicStatus.java" />
         <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicLibrary.java" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_player.xml" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMap.java" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayer.java" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/NSRMediaLibrary.java" />
         <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryDb.java" />
         <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryBaseImpl.java" />
-        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/NSRMediaLibrary.java" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_player.xml" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SongInfo.java" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayerApp.java" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMap.java" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_status.xml" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicQueue.java" />
         <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMapView.java" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayer.java" />
+        <option value="$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicStatus.java" />
       </list>
     </option>
   </component>
@@ -256,7 +247,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -363,36 +353,6 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="values" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="NotSoRandom" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="NotSoRandomProject" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="NotSoRandom" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="res" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
               <option name="myItemId" value="layout" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -430,10 +390,12 @@
         </subPane>
       </pane>
       <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
+    <property name="UI_DESIGNER_EDITOR_MODE.UIDesignerToolWindowManager2.WIDTH" value="350" />
     <property name="OverrideImplement.combined" value="true" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="MemberChooser.sorted" value="false" />
@@ -445,11 +407,11 @@
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="ANDROID_EXTENDED_DEVICE_CHOOSER_AVD" value="AVD_for_Nexus_7_by_Google" />
     <property name="OverrideImplement.overriding.sorted" value="false" />
-    <property name="MemberChooser.showClasses" value="true" />
     <property name="FullScreen" value="false" />
+    <property name="MemberChooser.showClasses" value="true" />
     <property name="GoToClass.includeLibraries" value="false" />
-    <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.searchVisible" value="true" />
+    <property name="options.splitter.details.proportions" value="0.2" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -618,7 +580,11 @@
       <created>1372619464565</created>
       <updated>1372619464565</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Scan SD uses genre map.&#10;&#10;- Now, values are from 1-7&#10;- Initial place on map, but not working.&#10;- next: Put Artist on screen and move settings.">
+      <created>1373075380386</created>
+      <updated>1373075380386</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
@@ -646,32 +612,32 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="24" width="1535" height="876" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934928" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934928" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39043826" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32893" sideWeight="0.5" order="11" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934928" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20982736" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Android" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.41035858" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.41035858" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934928" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24932614" sideWeight="0.5579399" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22558923" sideWeight="0.58964145" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25185186" sideWeight="0.58964145" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2821549" sideWeight="0.625498" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934928" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -679,13 +645,13 @@
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32893" sideWeight="0.5" order="11" side_tool="true" content_ui="tabs" />
-      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934928" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934928" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20808081" sideWeight="0.560425" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -744,7 +710,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="MusicMapView shows scaled entries to fit screen map." />
+    <option name="LAST_COMMIT_MESSAGE" value="Scan SD uses genre map.&#10;&#10;- Now, values are from 1-7&#10;- Initial place on map, but not working.&#10;- next: Put Artist on screen and move settings." />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -761,91 +727,105 @@
     <MESSAGE value="Box selection working well&#10;&#10;- status does not update after status tab is selected." />
     <MESSAGE value="Layout of player fragment much better." />
     <MESSAGE value="MusicMapView shows scaled entries to fit screen map." />
+    <MESSAGE value="Scan SD uses genre map.&#10;&#10;- Now, values are from 1-7&#10;- Initial place on map, but not working.&#10;- next: Put Artist on screen and move settings." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaMusicCollection.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="23" selection-start="265" selection-end="265" vertical-scroll-proportion="0.186722" vertical-offset="0" max-vertical-offset="723">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/res/layout/simplerow.xml">
+      <provider selected="true" editor-type-id="android-designer">
+        <state />
+      </provider>
       <provider editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="195">
           <folding />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_library.xml">
       <provider selected="true" editor-type-id="android-designer">
         <state />
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_library.xml">
       <provider editor-type-id="text-editor">
         <state line="59" column="0" selection-start="2230" selection-end="2230" vertical-scroll-proportion="0.0" vertical-offset="371" max-vertical-offset="1215">
           <folding />
         </state>
       </provider>
-      <provider selected="true" editor-type-id="android-designer">
-        <state />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicStatus.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="54" selection-start="2854" selection-end="2854" vertical-scroll-proportion="0.0" vertical-offset="750" max-vertical-offset="1965">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_status.xml">
-      <provider editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="555">
-          <folding />
-        </state>
-      </provider>
-      <provider selected="true" editor-type-id="android-designer">
-        <state />
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SenseComponent.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="73" column="0" selection-start="1549" selection-end="1549" vertical-scroll-proportion="0.0" vertical-offset="402" max-vertical-offset="1305">
+        <state line="73" column="0" selection-start="1549" selection-end="1549" vertical-scroll-proportion="0.0" vertical-offset="402" max-vertical-offset="1305" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/NSRMediaLibrary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="43" column="62" selection-start="1602" selection-end="1602" vertical-scroll-proportion="0.0" vertical-offset="177" max-vertical-offset="960" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryBaseImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="164" column="18" selection-start="4181" selection-end="4181" vertical-scroll-proportion="0.0" vertical-offset="2091" max-vertical-offset="2505" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryDb.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="379" column="0" selection-start="15014" selection-end="15313" vertical-scroll-proportion="0.0" vertical-offset="5160" max-vertical-offset="6750">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_player.xml">
+      <provider selected="true" editor-type-id="android-designer">
+        <state />
+      </provider>
       <provider editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1065">
           <folding />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/SongInfo.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="48" column="66" selection-start="1236" selection-end="1236" vertical-scroll-proportion="0.7642105" vertical-offset="357" max-vertical-offset="1485">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicLibrary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="51" column="69" selection-start="1824" selection-end="1828" vertical-scroll-proportion="0.3323741" vertical-offset="354" max-vertical-offset="2790">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/res/layout/fragment_music_status.xml">
       <provider selected="true" editor-type-id="android-designer">
         <state />
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMap.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="135" column="0" selection-start="3734" selection-end="3734" vertical-scroll-proportion="0.0" vertical-offset="1980" max-vertical-offset="4890">
+      <provider editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="555">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicQueue.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="146" column="0" selection-start="4148" selection-end="4148" vertical-scroll-proportion="0.0" vertical-offset="1377" max-vertical-offset="2250">
+        <state line="58" column="0" selection-start="1546" selection-end="1546" vertical-scroll-proportion="0.0" vertical-offset="522" max-vertical-offset="2385">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMap.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="172" column="28" selection-start="4859" selection-end="4859" vertical-scroll-proportion="0.0" vertical-offset="2052" max-vertical-offset="5235">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="359" column="57" selection-start="11938" selection-end="11938" vertical-scroll-proportion="0.0" vertical-offset="4977" max-vertical-offset="6945">
+        <state line="316" column="0" selection-start="10886" selection-end="10886" vertical-scroll-proportion="0.0" vertical-offset="4346" max-vertical-offset="7245">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -854,44 +834,24 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicPlayerApp.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="137" column="0" selection-start="4235" selection-end="4235" vertical-scroll-proportion="0.0" vertical-offset="1272" max-vertical-offset="2490">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryDb.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="420" column="0" selection-start="16686" selection-end="16764" vertical-scroll-proportion="0.0" vertical-offset="5819" max-vertical-offset="6720">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/NSRMediaLibrary.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="43" column="62" selection-start="1602" selection-end="1602" vertical-scroll-proportion="0.0" vertical-offset="177" max-vertical-offset="960">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MediaLibraryBaseImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="125" column="0" selection-start="3207" selection-end="3207" vertical-scroll-proportion="0.0" vertical-offset="1695" max-vertical-offset="2565">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicLibrary.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="52" column="75" selection-start="1916" selection-end="1916" vertical-scroll-proportion="0.0" vertical-offset="341" max-vertical-offset="2790">
+        <state line="109" column="0" selection-start="3587" selection-end="3587" vertical-scroll-proportion="0.14522822" vertical-offset="1410" max-vertical-offset="2490">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicMapView.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="271" column="0" selection-start="9232" selection-end="9232" vertical-scroll-proportion="0.36956522" vertical-offset="3912" max-vertical-offset="5010">
+        <state line="275" column="93" selection-start="9397" selection-end="9397" vertical-scroll-proportion="0.0" vertical-offset="3862" max-vertical-offset="5070">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NotSoRandom/src/main/java/org/apps/notsorandom/MusicStatus.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="159" column="0" selection-start="5448" selection-end="5448" vertical-scroll-proportion="0.8755187" vertical-offset="1437" max-vertical-offset="2160">
           <folding>
-            <element signature="imports" expanded="true" />
+            <element signature="e#2989#3187#0" expanded="true" />
+            <element signature="e#3176#3177#0" expanded="true" />
           </folding>
         </state>
       </provider>

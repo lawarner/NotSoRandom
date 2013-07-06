@@ -421,13 +421,15 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         if (song == null)
             return false;
 
-        song.setSense(sense);
-        MusicPlayerApp.log(TAG, "Updating sense to " + Integer.toHexString(sense) + " for song=" + song.getTitle());
+        for (int idx = 0; idx < songs_.size(); idx++) {
+            if (song == songs_.get(idx)) {
+                song.setSense(sense);
+                MusicPlayerApp.log(TAG, "Updating sense to " + Integer.toHexString(sense) + " for song=" + song.getTitle());
+                return updateSongInfo(idx, song);
+            }
+        }
 
-        if (!handler_.updateSense(song.getFileName(), song.getSenseValue()))
-            return false;
-
-        return super.updateSongInfo(song);
+        return false;
     }
 
     @Override

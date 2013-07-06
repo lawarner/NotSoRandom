@@ -146,6 +146,7 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     public boolean updateSongInfo(int item, SongInfo song) {
         boolean ret = true;
         try {
+            MusicPlayerApp.log(TAG, "updateSongInfo(" + item + ") " + song.getTitle());
             songs_.set(item, song);
             sortSongs();
         }
@@ -161,11 +162,6 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
 
     @Override
     public boolean updateSongInfo(SongInfo song) {
-        for (int idx = 0; idx < songs_.size(); idx++) {
-            if (song == songs_.get(idx))
-                return updateSongInfo(idx, song);
-        }
-
-        return false;
+        return true;
     }
 }

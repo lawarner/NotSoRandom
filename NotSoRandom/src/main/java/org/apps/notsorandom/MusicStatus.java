@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -62,7 +63,6 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
         View view = inflater.inflate(R.layout.fragment_music_status, container, false);
 
         statusView_ = (TextView) view.findViewById(R.id.statusText);
-        statusView_.setText(statusStr_, TextView.BufferType.EDITABLE);
         statusView_.setOnLongClickListener(this);
 
         Button but = (Button) view.findViewById(R.id.scanForMedia);
@@ -83,19 +83,32 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
             }
         });
 
-        but = (Button) view.findViewById(R.id.dbCleanup);
+        but = (Button) view.findViewById(R.id.showLog);
         but.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                NSRMediaLibrary lib = callback_.getLibrary();
+                statusView_.setText(statusStr_, TextView.BufferType.EDITABLE);
+            }
+        });
+
+    /*          NSRMediaLibrary lib = callback_.getLibrary();
                 if (lib != null) {
-                    //TODO scan in a worker thread
                     MusicPlayerApp.log(TAG, "Database cleanup...");
                     lib.scanForMedia("CLEANUP", true);
                     MusicPlayerApp.log(TAG, "Cleanup complete.");
-                }
+    */
+        // Add a checkbox
+        CheckBox placeMode = (CheckBox) view.findViewById(R.id.placeOnMap);
+        placeMode.setChecked(MusicMapView.getPlaceMode());
+        placeMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CheckBox cb = (CheckBox) view;
+                MusicMapView.setPlaceMode(cb.isChecked());
             }
         });
+
+        //TODO radio buttons for Library selection
 
         return view;
     }
@@ -113,7 +126,7 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
         Log.d(TAG, "====== onResume Status Fragment");
 
         statusView_ = (TextView) getView().findViewById(R.id.statusText);
-        statusView_.setText(statusStr_, TextView.BufferType.EDITABLE);
+//        statusView_.setText(statusStr_, TextView.BufferType.EDITABLE);
     }
 
     @Override
@@ -126,6 +139,7 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
                         //Yes button clicked
                         clear();
                         if (statusView_ != null)
+                            statusStr_ = "";
                             statusView_.setText(statusStr_);
                         break;
 

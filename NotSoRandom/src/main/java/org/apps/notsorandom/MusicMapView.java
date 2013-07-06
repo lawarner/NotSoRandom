@@ -105,6 +105,10 @@ public class MusicMapView extends View implements View.OnTouchListener {
         return musicMap_.getShuffledList();
     }
 
+    public static boolean getPlaceMode() {
+        return placeMode_;
+    }
+
     public static void setPlaceMode(boolean placeMode) {
         placeMode_ = placeMode;
     }
@@ -187,13 +191,6 @@ public class MusicMapView extends View implements View.OnTouchListener {
     @Override
     protected void onDraw(Canvas canvas) {
 
-        if (dragBox_) {
-            paint_.setColor(Color.BLUE);
-            paint_.setStyle(Paint.Style.STROKE);
-            canvas.drawRect(start_.x, start_.y, stop_.x, stop_.y, paint_);
-            return;
-        }
-
         canvas.drawBitmap(bitmap_, 0, 0, paint_);
         paint_.setStrokeWidth(0f);
 
@@ -240,13 +237,15 @@ public class MusicMapView extends View implements View.OnTouchListener {
                 float y = pt.y;
                 float radius = calcRadius(cnt);
                 if (ii == currIdx)
-                    paint_.setColor(Color.GREEN);
+                    paint_.setColor(placeMode_ ? Color.CYAN : Color.GREEN);
                 if (radius < 0.51f)
                     canvas.drawPoint(x, y, paint_);
                 else
                     canvas.drawCircle(x, y, radius, paint_);
-                if (ii == currIdx)
+                if (ii == currIdx) {
                     paint_.setColor(Color.RED);
+                    currIdx = -1;
+                }
             }
         }
     }
@@ -259,20 +258,35 @@ public class MusicMapView extends View implements View.OnTouchListener {
             SongInfo song = listener_.getCurrSong();
             if (song == null || motionEvent.getPointerCount() < 1)
                 return false;
+            if (action == MotionEvent.ACTION_DOWN ||
+                action == MotionEvent.ACTION_POINTER_DOWN) {
+                return true;
+            } else
             if (action == MotionEvent.ACTION_UP ||
                 action == MotionEvent.ACTION_POINTER_UP) {
+                Rect saveNewBox = new Rect(newbox_);
                 setStart(motionEvent.getX(), motionEvent.getY());
                 setStop(motionEvent.getX(), motionEvent.getY());
                 int x = newbox_.centerX();
                 int y = newbox_.centerY();
+                newbox_.set(saveNewBox);
+
+                MusicPlayerApp.log(TAG, "placeMode @ (" + x + "," + y + ")");
                 if (x >= 0 && x < 8 && y >= 0 && y < 8) {
                     MediaLibraryBaseImpl lib = (MediaLibraryBaseImpl) listener_.getLibrary();
-                    if (lib.updateSenseValue(song, (x | (y << 4))))
+                    if (lib.updateSenseValue(song, (x | (y << 4)))) {
+                        musicMap_.fillLibEntries();
+                        musicMap_.fillShuffleEntries(listener_.getQueue());
+                        MusicQueue.redrawQueue();
                         invalidate();
+                    }
                 }
+                return true;
             }
-            return true;
+            Log.d(TAG, motionEvent.toString());
+            return false;
         }
+
         if (action == MotionEvent.ACTION_DOWN ||
             action == MotionEvent.ACTION_POINTER_DOWN) {
             Log.d(TAG, "Action onTouch == ACTION_DOWN " + action);
@@ -280,22 +294,22 @@ public class MusicMapView extends View implements View.OnTouchListener {
             dragBox_ = false;
             return true;
         }
-        if (action == MotionEvent.ACTION_MOVE) {
+/*        if (action == MotionEvent.ACTION_MOVE) {
             dragBox_ = true;
             stop_.set(motionEvent.getX(), motionEvent.getY());
-            return true;
-        }
-        dragBox_ = false;
-        if (action != MotionEvent.ACTION_UP &&
-            action != MotionEvent.ACTION_POINTER_UP)
-            return false;
-        if (motionEvent.getPointerCount() < 1)
-            return false;
-        Log.d(TAG, "Action onTouch == ACTION_UP " + action);
+        } else { */
+            dragBox_ = false;
+            if (action != MotionEvent.ACTION_UP &&
+                action != MotionEvent.ACTION_POINTER_UP)
+                return false;
+            if (motionEvent.getPointerCount() < 1)
+                return false;
+            Log.d(TAG, "Action onTouch == ACTION_UP " + action);
 
-        setStop(motionEvent.getX(), motionEvent.getY());
-        int[] arr = getShuffledList(true);   // Reshuffle
-        listener_.refreshQueue(arr.length);
+            setStop(motionEvent.getX(), motionEvent.getY());
+            int[] arr = getShuffledList(true);   // Reshuffle
+            listener_.refreshQueue(arr.length);
+//        }
 
         invalidate();
 

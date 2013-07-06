@@ -46,7 +46,7 @@ public class SongInfo {
         if (fileName_.startsWith(root))
             return fileName_.substring(root.length());
 
-        return null;    // Error, not the right prefix
+        return fileName_;    // Not the right prefix, return as is
     }
 
     public int getSenseIndex() {

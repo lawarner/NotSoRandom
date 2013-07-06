@@ -52,6 +52,11 @@ public class MusicQueue extends Fragment {
         currItem_ = -1;
     }
 
+    public static void redrawQueue() {
+        if (qArray_ != null)
+            qArray_.notifyDataSetChanged();
+    }
+
     /**
      * Put number of items from library random list into queue.
      * @param count Number of items to place in queue.
@@ -85,23 +90,12 @@ public class MusicQueue extends Fragment {
         return qArrSongs_;
     }
 
-
-    public static SongInfo getItem(int idx) {
-        if (idx < 0 || idx >= qArrSongs_.size())
-            return null;
-
-        currItem_ = idx;
-        MusicPlayerApp.log(TAG, "+ getItem set currItem_=" + currItem_);
-
-        return qArrSongs_.get(idx);
-    }
-
     public static SongInfo getCurrItem() {
         MusicPlayerApp.log(TAG, "+getCurrItem=" + currItem_ + " size=" + qArrSongs_.size());
         if (currItem_ < 0 || currItem_ >= qArrSongs_.size())
             return null;
 
-        return getItem(currItem_);
+        return qArrSongs_.get(currItem_);
     }
 
     public static boolean getCurrQueuePos(int[] outta) {
@@ -120,7 +114,7 @@ public class MusicQueue extends Fragment {
         if (currItem_ <= 0)
             return null;
 
-        return getItem(--currItem_);
+        return setItem(--currItem_);
     }
 
     public static SongInfo getNextItem(boolean first) {
@@ -131,7 +125,22 @@ public class MusicQueue extends Fragment {
         if ((currItem_ + 1) >= qArrSongs_.size())
             return null;
 
-        return getItem(++currItem_);
+        return setItem(++currItem_);
+    }
+
+    /**
+     * Set the current item to specified index in song queue.
+     * @param idx Index of song to set as current.
+     * @return Returns the song on success, otherwise null.
+     */
+    protected static SongInfo setItem(int idx) {
+        if (idx < 0 || idx >= qArrSongs_.size())
+            return null;
+
+        currItem_ = idx;
+        MusicPlayerApp.log(TAG, "+ getItem set currItem_=" + currItem_);
+
+        return qArrSongs_.get(idx);
     }
 
 

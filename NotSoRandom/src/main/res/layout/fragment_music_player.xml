@@ -36,12 +36,11 @@
             android:text=" --"
             android:id="@+id/current_song"
             android:layout_alignParentBottom="false"
-            android:layout_alignLeft="@+id/row_label"
-            android:layout_marginLeft="16dp"
             android:layout_alignParentRight="true"
-            android:layout_above="@+id/placeOnMap"
-            android:textSize="14dp"
-            android:layout_alignParentLeft="false"/>
+            android:textSize="16dp"
+            android:layout_alignParentLeft="false"
+            android:layout_alignLeft="@+id/artist"
+            android:layout_above="@+id/artist"/>
 
     <LinearLayout
             android:orientation="vertical"
@@ -59,19 +58,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0 / 0"
-            android:id="@+id/track_counter"
+            android:id="@+id/trackCounter"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:textSize="12dp"/>
 
-    <CheckBox
+    <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Place current song on map"
-            android:id="@+id/placeOnMap"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
+            android:id="@+id/artist"
             android:textSize="12dp"
-            android:layout_marginBottom="-8dp"/>
+            android:layout_alignBottom="@+id/trackCounter"
+            android:layout_alignParentLeft="true"/>
 
 </RelativeLayout>

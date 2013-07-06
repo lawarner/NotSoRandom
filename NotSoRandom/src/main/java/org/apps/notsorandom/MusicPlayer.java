@@ -2,6 +2,7 @@ package org.apps.notsorandom;
 
 import android.app.Activity;
 import android.content.Context;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,6 +17,7 @@ import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
 
 
@@ -43,6 +45,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
     private TextView title_ = null;
     private TextView trackCounter_ = null;
+    private TextView artist_ = null;
 
     private Handler handler_ = new Handler();
 
@@ -60,6 +63,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
          * @return True if the current position is known, otherwise false.
          */
         public boolean getCurrQueuePos(int[] outta);
+
+        public ArrayList<SongInfo> getQueue();
 
         /**
          * Called to retrieve the current song to play.
@@ -93,7 +98,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
          * @param ii song index
          * @return song info
          */
-        public SongInfo getSongInfo(int ii);
+        //public SongInfo getSongInfo(int ii);
 
         /**
          * Called when a new song starts playing
@@ -192,17 +197,6 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         alv.add(musicMapView_);
         view.addTouchables(alv);
 
-        // Add a checkbox
-        CheckBox placeMode = (CheckBox) view.findViewById(R.id.placeOnMap);
-        placeMode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                CheckBox cb = (CheckBox) view;
-                MusicMapView.setPlaceMode(cb.isChecked());
-            }
-        });
-        MusicMapView.setPlaceMode(false);
-
         controlView_ = view.findViewById(R.id.controlView);
         if (controller_ == null) {
             isFirstTime_ = true;
@@ -239,7 +233,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
         controlView_ = getView().findViewById(R.id.controlView);
         title_ = (TextView) getView().findViewById(R.id.current_song);
-        trackCounter_ = (TextView) getView().findViewById(R.id.track_counter);
+        trackCounter_ = (TextView) getView().findViewById(R.id.trackCounter);
+        artist_ = (TextView) getView().findViewById(R.id.artist);
 
         musicMapView_.setLibrary(callback_.getLibrary());
 
@@ -298,18 +293,40 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     private void setTrackAndTitle(SongInfo song) {
         String track = "-/-";
         String title = "";
+        String artist = "";
+
         if (song != null) {
             int[] qpos = new int[2];
             if (MusicQueue.getCurrQueuePos(qpos))
                 track = "" + qpos[0] + "/" + qpos[1];
 
             title = song.getTitle();
+
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(song.getFileName());
+            String str = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            if (str == null || str.isEmpty()) {
+                str = song.getRelativeFileName(null);
+                int slash = str.lastIndexOf('/');
+                if (slash > 2) {
+                    int slash2 = str.lastIndexOf('/', slash - 1);
+                    if (slash2 >= 0) {
+                        artist = str.substring(slash2 + 1, slash) + " (dir)";
+                        slash = str.lastIndexOf('/', slash2 - 1);
+                        if (slash >= 0)
+                            artist = str.substring(slash + 1, slash2) + " (Dir)";
+                    }
+                }
+            } else
+                artist = str;
         }
 
         if (trackCounter_ != null)
             trackCounter_.setText(track);
         if (title_ != null)
             title_.setText(title);
+        if (artist_ != null)
+            artist_.setText(artist);
     }
 
 
@@ -317,9 +334,9 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         if (player_ != null) {
             try {
                 if (player_.isPlaying()) {
-                    MusicPlayerApp.log(TAG, "stop player");
+                    Log.d(TAG, "stop player");
                     player_.stop();
-                    MusicPlayerApp.log(TAG, "reset player");
+                    Log.d(TAG, "reset player");
                     player_.reset();
                 }
             } catch (Exception ex) {

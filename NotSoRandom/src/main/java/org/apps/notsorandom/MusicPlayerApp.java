@@ -8,6 +8,8 @@ import android.support.v4.app.FragmentTabHost;
 import android.util.Log;
 import android.view.Menu;
 
+import java.util.ArrayList;
+
 
 public class MusicPlayerApp extends FragmentActivity
         implements MusicPlayer.OnPlayerListener, NSRMediaLibrary.OnLibraryChangedListener {
@@ -133,14 +135,14 @@ public class MusicPlayerApp extends FragmentActivity
     }
 
     @Override
-    public SongInfo getSongInfo(int ii) {
-        return MusicQueue.getItem(ii);
+    public void onNewSong(SongInfo song) {
+        log("Got call from Player onNewSong = " + song.getTitle() + "\n");
+
     }
 
     @Override
-    public void onNewSong(SongInfo song) {
-        log("Got call from Player fragment onNewSong = " + song.getTitle() + "\n");
-
+    public ArrayList<SongInfo> getQueue() {
+        return MusicQueue.getQueue();
     }
 
     @Override
@@ -159,7 +161,7 @@ public class MusicPlayerApp extends FragmentActivity
 
         MusicLibrary.updateDb(true);
 
-        MusicQueue.refreshQueue(200);
+//        MusicQueue.refreshQueue(200);
 
         log(TAG, "libraryUpdated finished.");
     }

@@ -14,9 +14,8 @@
             android:id="@+id/scrollView"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="false"
             android:layout_alignParentRight="true"
-            android:layout_above="@+id/scanForMedia">
+            android:layout_above="@+id/radioButton">
 
         <TextView
                 android:layout_width="wrap_content"
@@ -40,9 +39,42 @@
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Database cleanup"
-            android:id="@+id/dbCleanup"
-            android:layout_below="@+id/scrollView"
-            android:layout_toRightOf="@+id/scanForMedia"/>
+            android:text="Show log"
+            android:id="@+id/showLog"
+            android:layout_alignTop="@+id/scanForMedia"
+            android:layout_toRightOf="@+id/scanForMedia"
+            android:layout_marginLeft="8dp"/>
+
+    <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit songs directly on map."
+            android:id="@+id/placeOnMap"
+            android:layout_above="@+id/scanForMedia"
+            android:layout_alignLeft="@+id/scrollView"/>
+
+    <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Categorized"
+            android:id="@+id/radioButton"
+            android:layout_above="@+id/placeOnMap"
+            android:layout_alignParentLeft="true"/>
+
+    <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Uncategorized"
+            android:id="@+id/radioButton2"
+            android:layout_above="@+id/placeOnMap"
+            android:layout_toRightOf="@+id/radioButton"/>
+
+    <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="All"
+            android:id="@+id/radioButton3"
+            android:layout_toRightOf="@+id/radioButton2"
+            android:layout_above="@+id/placeOnMap"/>
 
 </RelativeLayout>
