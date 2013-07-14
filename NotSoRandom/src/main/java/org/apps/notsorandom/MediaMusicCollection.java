@@ -11,6 +11,10 @@ public interface MediaMusicCollection {
 
     public Collection<SongInfo> getAllSongs();
 
+    public SenseComponent getComponent(String name);
+
+    public Config getConfig(String user);
+
     public SongInfo getFirstSong();
 
     public SongInfo getNextSong();

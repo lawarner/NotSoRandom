@@ -43,7 +43,6 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
         statusStr_ = msg;
     }
 
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

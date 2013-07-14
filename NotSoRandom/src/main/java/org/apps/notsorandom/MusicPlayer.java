@@ -37,6 +37,10 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
     private static MediaPlayer player_ = null;
 
+    // Default XY components on music map
+    private static SenseComponent xComponent_ = new SenseComponent("tempo",     "slower / faster", 0x00000f, 1, 4);
+    private static SenseComponent yComponent_ = new SenseComponent("roughness", "softer / harder", 0x0000f0, 2, 3);
+
     // Used to call back the Activity that attached us.
     private OnPlayerListener callback_ = null;
 
@@ -112,6 +116,12 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
          * @return Number of items actually placed into queue.
          */
         public int refreshQueue(int count);
+
+        /**
+         * Immediately start playing song.  Used from the library when a song
+         * is selected.
+         */
+        public boolean playSong(SongInfo song);
     }
 
     /**
@@ -138,6 +148,12 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         public void hide_() {
             super.hide();   // OK, I'll hide
         }
+    }
+
+
+    public static void setXYcomponents(SenseComponent xComp, SenseComponent yComp) {
+        xComponent_ = xComp;
+        yComponent_ = yComp;
     }
 
     public static void shutdown() {
@@ -175,14 +191,17 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         View view = inflater.inflate(R.layout.fragment_music_player, container, false);
 
         // Deal with the column labels around the music map
-        TextView tvrl = (TextView) view.findViewById(R.id.row_label);
+        TextView tvrl = (TextView) view.findViewById(R.id.column_label);
+        tvrl.setText(xComponent_.getLabel());
+        tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
-        tvrl.setTranslationX(-68);
+        tvrl.setTranslationX(-50);
         tvrl.setTranslationY(96);
+        tvrl.setText(yComponent_.getLabel());
 
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(500, 500);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(510, 510);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
-        lp.setMargins(120, 4, 2, 0);
+        lp.setMargins(110, 4, 2, 0);
         lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
@@ -311,10 +330,15 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 if (slash > 2) {
                     int slash2 = str.lastIndexOf('/', slash - 1);
                     if (slash2 >= 0) {
-                        artist = str.substring(slash2 + 1, slash) + " (dir)";
+                        artist = str.substring(slash2 + 1, slash);
                         slash = str.lastIndexOf('/', slash2 - 1);
-                        if (slash >= 0)
-                            artist = str.substring(slash + 1, slash2) + " (Dir)";
+                        if (slash >= 0) {
+                            String artist2 = str.substring(slash + 1, slash2);
+                            if (artist2.compareToIgnoreCase("0ther") == 0)
+                                artist = "Soundtrack";
+                            else if (artist2.compareToIgnoreCase("music") != 0)
+                                artist = artist2;
+                        }
                     }
                 }
             } else

@@ -35,6 +35,16 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
     }
 
     @Override
+    public SenseComponent getComponent(String name) {
+        return null;
+    }
+
+    @Override
+    public Config getConfig(String user) {
+        return null;
+    }
+
+    @Override
     public SongInfo getFirstSong() {
         iter_ = songs_.iterator();
         return getNextSong();

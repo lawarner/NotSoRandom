@@ -45,7 +45,7 @@ public class MusicPlayerApp extends FragmentActivity
             tabHost_.addTab(tabHost_.newTabSpec("player").setIndicator(getString(R.string.title_section1)), MusicPlayer.class, null);
             tabHost_.addTab(tabHost_.newTabSpec("queue").setIndicator(getString(R.string.title_section2)), MusicQueue.class, null);
             tabHost_.addTab(tabHost_.newTabSpec("library").setIndicator(getString(R.string.title_section3)), MusicLibrary.class, null);
-            tabHost_.addTab(tabHost_.newTabSpec("status").setIndicator(getString(R.string.title_section4)), MusicStatus.class, null);
+            tabHost_.addTab(tabHost_.newTabSpec("settings").setIndicator(getString(R.string.title_section4)), MusicStatus.class, null);
         }
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
@@ -59,6 +59,12 @@ public class MusicPlayerApp extends FragmentActivity
         MusicLibrary.initDb(library_);
         MusicQueue.setLibrary(library_);
         MusicMap.setLibrary(library_);
+
+        Config config = library_.getConfig(Config.DEFAULT_USER);
+        if (config != null) {
+            log("Got config, x=" + config.getXcomponent().getName() + ", y=" + config.getYcomponent().getName());
+            MusicPlayer.setXYcomponents(config.getXcomponent(), config.getYcomponent());
+        }
 
         // Start with 200 in the queue
 //        MusicQueue.refreshQueue(200);
@@ -153,6 +159,14 @@ public class MusicPlayerApp extends FragmentActivity
             playerFrag_.queueSong(getNextSong(true));
 
         return actual;
+    }
+
+    @Override
+    public boolean playSong(SongInfo song) {
+        if (playerFrag_ != null)
+            return playerFrag_.playSong(song);
+
+        return false;
     }
 
     @Override

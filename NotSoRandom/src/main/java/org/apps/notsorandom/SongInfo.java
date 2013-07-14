@@ -55,9 +55,11 @@ public class SongInfo {
 
     public String getSenseString() {
         if (senseValue_ < 16)
-            return "s0x0" + Integer.toHexString(senseValue_);
+            return "s00" + Integer.toHexString(senseValue_);
+        else if (senseValue_ < 256)
+            return "s0" + Integer.toHexString(senseValue_);
         else
-            return "s0x" + Integer.toHexString(senseValue_);
+            return "s" + Integer.toHexString(senseValue_);
     }
 
     public int getSenseValue() {

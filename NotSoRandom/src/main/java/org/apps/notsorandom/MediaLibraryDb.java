@@ -97,8 +97,10 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             ContentValues values = new ContentValues();
             values.put(COL_USER, config.getUser());
             values.put(COL_ROOT, config.getRoot());
-            values.put(COL_X_COMP, config.getXcomponent());
-            values.put(COL_Y_COMP, config.getYcomponent_());
+            SenseComponent component = config.getXcomponent();
+            values.put(COL_X_COMP, (component == null) ? "" : component.getName());
+            component = config.getYcomponent();
+            values.put(COL_Y_COMP, (component == null) ? "" : component.getName());
             values.put(COL_LASTSCAN, config.getLastScan());
             try {   //TODO change to insertWithOnConflict()
                 db.insertOrThrow(TABLE_CONFIG, null, values);
@@ -159,13 +161,60 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             return songs;
         }
 
+        public SenseComponent getComponent(String name) {
+            SQLiteDatabase db = getReadableDatabase();
+            SenseComponent component = getComponent(db, name);
+            db.close();
+
+            return component;
+        }
+
+        public SenseComponent getComponent(SQLiteDatabase db, String name) {
+            String sql = "SELECT * FROM " + TABLE_COMPONENT + " WHERE " + COL_NAME + "=\"" + name + "\"";
+            Cursor cursor = db.rawQuery(sql, null);
+            SenseComponent component = null;
+
+            if (cursor.moveToFirst()) {
+                String label     = cursor.getString(2);
+                int mask         = cursor.getInt(3);
+                int sortOrder    = cursor.getInt(4);
+                int defaultValue = cursor.getInt(5);
+                component = new SenseComponent(name, label, mask, sortOrder, defaultValue);
+            }
+
+            cursor.close();
+            return component;
+        }
+
+        public Config getConfig(String user) {
+            String sql = "SELECT * FROM " + TABLE_CONFIG + " WHERE " + COL_USER + "=\"" + user + "\"";
+            SQLiteDatabase db = getReadableDatabase();
+            Cursor cursor = db.rawQuery(sql, null);
+            Config config = null;
+
+            if (cursor.moveToFirst()) {
+                String root  = cursor.getString(2);
+                String xName = cursor.getString(3);
+                String yName = cursor.getString(4);
+                long lastScan = cursor.getLong(5);
+                cursor.close();
+
+                SenseComponent xComp = getComponent(db, xName);
+                SenseComponent yComp = getComponent(db, yName);
+                config = new Config(user, root, xComp, yComp, lastScan);
+            }
+
+            db.close();
+            return config;
+        }
+
         public int getSongCount() {
             String sql = "SELECT * FROM " + TABLE_SONGS;
             SQLiteDatabase db = getReadableDatabase();
             Cursor cursor = db.rawQuery(sql, null);
-            cursor.close();
 
             int ret = cursor.getCount();
+            cursor.close();
             db.close();
             return ret;
         }
@@ -233,14 +282,11 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             else if (!root.endsWith("/"))
                 root += "/";
 
-            Config config = new Config("0", root, "tempo", "roughness", 0);
-            addConfig(db, config);
-
-            SenseComponent component = new SenseComponent("tempo", "slow / fast", 0x00000f, 1, 4);
-            addComponent(db, component);
-            component = new SenseComponent("roughness", "soft / hard", 0x0000f0, 2, 3);
-            addComponent(db, component);
-            component = new SenseComponent("humor", "light / dark", 0x000f00, 3, 3);
+            SenseComponent xComponent = new SenseComponent("tempo", "slower / faster", 0x00000f, 1, 4);
+            addComponent(db, xComponent);
+            SenseComponent yComponent = new SenseComponent("roughness", "softer / harder", 0x0000f0, 2, 3);
+            addComponent(db, yComponent);
+            SenseComponent component = new SenseComponent("humor", "light / dark", 0x000f00, 3, 3);
             addComponent(db, component);
             component = new SenseComponent("taste", "sweet / sour", 0x00f000, 4, 4);
             addComponent(db, component);
@@ -248,6 +294,9 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             addComponent(db, component);
             component = new SenseComponent("depth", "shallow / deep", 0xf00000, 6, 4);
             addComponent(db, component);
+
+            Config config = new Config(Config.DEFAULT_USER, root, xComponent, yComponent, 0);
+            addConfig(db, config);
 
             db.close(); // Close database connection
         }
@@ -300,6 +349,15 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     public ArrayList<SongInfo> getAllSongs() {
         songs_ = handler_.getAllSongs();
         return songs_;
+    }
+
+    public Config getConfig(String user) {
+        return handler_.getConfig(user);
+    }
+
+    @Override
+    public SenseComponent getComponent(String name) {
+        return handler_.getComponent(name);
     }
 
     @Override
@@ -380,7 +438,10 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 title = file1.getName();
                 if (title.toLowerCase().endsWith(".mp3"))
                     title = title.substring(0, title.length() - 4);
-                title += " (File)";
+                title = title.replace('_', ' ');
+                if (title.matches("^[0-9]+ .*"))
+                    title = title.substring(title.indexOf(' ') + 1);
+//                title += " (File)";
             }
             int sense = 0;
             String genre = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);

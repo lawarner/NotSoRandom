@@ -1,5 +1,6 @@
 package org.apps.notsorandom;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -33,14 +34,17 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     private static SenseComponent ySense_;
     private static SenseComponent zSense_;
 
+    // Used to call back the Activity that attached us.
+    private MusicPlayer.OnPlayerListener callback_ = null;
+
 
     public static void initDb(MediaLibraryBaseImpl library) {
         library_ = library;
 
-        // TODO: get the x,y,z values from config section of library.
-        xSense_ = new SenseComponent("tempo",     "slower / faster", 0x000f, 1,  3);
-        ySense_ = new SenseComponent("roughness", "softer / harder", 0x00f0, 2,  4);
-        zSense_ = new SenseComponent("humor",    "lighter / darker", 0x0f00, -1, 0);
+        // get the x,y,z values from config section of library.
+        xSense_ = library_.getComponent("tempo");
+        ySense_ = library_.getComponent("roughness");
+        zSense_ = library_.getComponent("humor");
 
         updateDb(true);
     }
@@ -114,6 +118,19 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     }
 
     @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        Log.d(TAG, "onAttach in MusicLibrary");    // On attach is called before onCreateView
+
+        try {
+            callback_ = (MusicPlayer.OnPlayerListener) activity;
+        } catch (ClassCastException ex) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnPlayerListener interface");
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_music_library, container, false);
@@ -154,6 +171,9 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         if (starItem(view, item)) {
             adapterView.setSelection(item);
             setSliders();
+            SongInfo song = library_.getSong(currItem_);
+            if (song != null)
+                callback_.playSong(song);
         }
     }
 
