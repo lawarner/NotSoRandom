@@ -238,6 +238,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             controller_.setPrevNextListeners(next, prev);
         } else {
             isFirstTime_ = false;
+            MusicPlayerApp.log(TAG, " Set AnchorView with control " + controlView_);
             controller_.setAnchorView(controlView_);
         }
         controller_.setMediaPlayer(this);
@@ -283,6 +284,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         if (song != null && queueSong(song)) {
             setTrackAndTitle(song);
 //            if (!isFirstTime_)
+            MusicPlayerApp.log(TAG, "Show controller if player visible=" + isVisible());
+            if (isVisible())
                 controller_.show(0);
         }
         else
@@ -371,7 +374,6 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         if (!queueSong(song))
             return false;
 
-        setTrackAndTitle(song);
         callback_.onNewSong(song);
 
         start();
@@ -400,7 +402,10 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 Log.d(TAG, "queueSong 2");
                 player_.setDataSource(song.getFileName());
                 player_.prepare();
-                controller_.setEnabled(true);
+                if (isVisible()) {   // only show the controller from the player fragment
+                    controller_.setEnabled(true);
+                    MusicPlayerApp.log(TAG, "controller enabled isVisible");
+                }
                 Log.d(TAG, "queueSong 3");
                 setTrackAndTitle(song);
                 musicMapView_.invalidate();     // make the map redraw
@@ -430,66 +435,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         for (int song : songs) {
 //            status_.append(musicMapView_.getFilename(song) + "\n");
         }
-
-    }
-*/
-    @Override
-    public void onPrepared(MediaPlayer mediaPlayer) {
-        Log.d(TAG, "onPrepared in MusicPlayer");
-        controller_.setMediaPlayer(this);
-//        controlView_ = getView().findViewById(R.id.controlView);
-        controller_.setAnchorView(controlView_);
-
-        handler_.post(new Runnable() {
-            public void run() {
-                controller_.setEnabled(true);
-                controller_.show(0);
-            }
-        });
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mediaPlayer) {
-        Log.d(TAG, "onCompletion in MusicPlayer");
-
-        SongInfo song = callback_.getNextSong(false);
-        playSong(song);
-    }
-
-    @Override
-    public void start() {
-        player_.start();
-    }
-
-    @Override
-    public void pause() {
-        player_.pause();
-    }
-
-    @Override
-    public int getDuration() {
-        return player_.getDuration();
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        return player_.getCurrentPosition();
-    }
-
-    @Override
-    public void seekTo(int i) {
-        player_.seekTo(i);
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return player_.isPlaying();
-    }
-
-    @Override
-    public int getBufferPercentage() {
-        return 0;
-    }
+    }*/
 
     @Override
     public boolean canPause() {
@@ -504,6 +450,70 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     @Override
     public boolean canSeekForward() {
         return true;
+    }
+
+    @Override
+    public int getBufferPercentage() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        return player_.getCurrentPosition();
+    }
+
+    @Override
+    public int getDuration() {
+        return player_.getDuration();
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return player_.isPlaying();
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mediaPlayer) {
+        Log.d(TAG, "onCompletion in MusicPlayer");
+
+        SongInfo song = callback_.getNextSong(false);
+        playSong(song);
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mediaPlayer) {
+        Log.d(TAG, "onPrepared in MusicPlayer");
+        if (isHidden()) return;     // Too brutal?
+        if (getView() == null) {
+            MusicPlayerApp.log(TAG, "Player not in view, return...");
+            return;
+        }
+        Log.d(TAG, "onPrepared in MusicPlayer - 2");
+        controller_.setMediaPlayer(this);
+//        controlView_ = getView().findViewById(R.id.controlView);
+        controller_.setAnchorView(controlView_);
+
+        handler_.post(new Runnable() {
+            public void run() {
+                controller_.setEnabled(true);
+                controller_.show(0);
+            }
+        });
+    }
+
+    @Override
+    public void pause() {
+        player_.pause();
+    }
+
+    @Override
+    public void seekTo(int i) {
+        player_.seekTo(i);
+    }
+
+    @Override
+    public void start() {
+        player_.start();
     }
 
 }
