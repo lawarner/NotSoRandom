@@ -284,9 +284,10 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         if (song != null && queueSong(song)) {
             setTrackAndTitle(song);
 //            if (!isFirstTime_)
-            MusicPlayerApp.log(TAG, "Show controller if player visible=" + isVisible());
-            if (isVisible())
+            if (getView() != null) {
+                MusicPlayerApp.log(TAG, "Show controller. player is in view.");
                 controller_.show(0);
+            }
         }
         else
             MusicPlayerApp.log(TAG, "Unable to queue song " + song);
@@ -483,14 +484,12 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.d(TAG, "onPrepared in MusicPlayer");
-        if (isHidden()) return;     // Too brutal?
         if (getView() == null) {
-            MusicPlayerApp.log(TAG, "Player not in view, return...");
+            MusicPlayerApp.log(TAG, "Player not in view, return.");
             return;
         }
-        Log.d(TAG, "onPrepared in MusicPlayer - 2");
+        Log.d(TAG, "onPrepared in MusicPlayer - show player controls.");
         controller_.setMediaPlayer(this);
-//        controlView_ = getView().findViewById(R.id.controlView);
         controller_.setAnchorView(controlView_);
 
         handler_.post(new Runnable() {

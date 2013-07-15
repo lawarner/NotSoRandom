@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.RadioButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -18,8 +19,8 @@ import android.widget.TextView;
  * Show status of player.  Currently this fragment is only used as a debugging
  * window and could be hidden unless a debug option is enabled.
  */
-public class MusicStatus extends Fragment implements View.OnLongClickListener {
-    private static final String TAG = "MusicStatus";
+public class MusicSettings extends Fragment implements View.OnLongClickListener {
+    private static final String TAG = "MusicSettings";
 
     private static String statusStr_ = "";
 
@@ -46,7 +47,7 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        Log.d(TAG, "onAttach in MusicStatus");    // On attach is called before onCreateView
+        Log.d(TAG, "onAttach in MusicSettings");    // On attach is called before onCreateView
 
         try {
             callback_ = (MusicPlayer.OnPlayerListener) activity;
@@ -90,6 +91,18 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
             }
         });
 
+        but = (Button) view.findViewById(R.id.backupDb);
+        but.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                NSRMediaLibrary lib = callback_.getLibrary();
+                if (lib != null) {
+                    lib.scanForMedia("BACKUP", false);
+                    MusicPlayerApp.log(TAG, "Db backed up to SD card");
+                }
+            }
+        });
+
     /*          NSRMediaLibrary lib = callback_.getLibrary();
                 if (lib != null) {
                     MusicPlayerApp.log(TAG, "Database cleanup...");
@@ -107,7 +120,9 @@ public class MusicStatus extends Fragment implements View.OnLongClickListener {
             }
         });
 
-        //TODO radio buttons for Library selection
+        // radio buttons for Library selection
+        RadioButton rb = (RadioButton) view.findViewById(R.id.selectAll);
+        rb.setChecked(true);
 
         return view;
     }

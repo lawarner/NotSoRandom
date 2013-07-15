@@ -8,6 +8,7 @@ public class Config {
     public static final String DEFAULT_USER = "0";
     public static final String DEFAULT_X_COMPONENT = "tempo";
     public static final String DEFAULT_Y_COMPONENT = "roughness";
+    public static final String DEFAULT_Z_COMPONENT = "humor";
 
     private String user_;
 
@@ -18,16 +19,19 @@ public class Config {
     private String root_;
 
     /**
-     * Key of the sense component to show on X axis.
+     * Sense component to show on X axis.
      */
-//    private String xComponent_;
     private SenseComponent xComponent_;
 
     /**
-     * Key of the sense component to show on Y axis.
+     * Sense component to show on Y axis.
      */
-//    private String yComponent_;
     private SenseComponent yComponent_;
+
+    /**
+     * Sense component to show on Z axis.
+     */
+    private SenseComponent zComponent_;
 
     /**
      * Timestamp of the last time the media library has been scanned.
@@ -39,11 +43,13 @@ public class Config {
 
     }
 
-    Config(String user, String root, SenseComponent xComponent, SenseComponent yComponent, long lastScan) {
+    Config(String user, String root, SenseComponent xComponent,
+           SenseComponent yComponent, SenseComponent zComponent, long lastScan) {
         user_ = user;
         root_ = root;
         xComponent_ = xComponent;
         yComponent_ = yComponent;
+        zComponent_ = zComponent;
         lastScan_ = lastScan;
     }
 
@@ -61,6 +67,10 @@ public class Config {
 
     public SenseComponent getYcomponent() {
         return yComponent_;
+    }
+
+    public SenseComponent getZcomponent() {
+        return zComponent_;
     }
 
     public long getLastScan() {

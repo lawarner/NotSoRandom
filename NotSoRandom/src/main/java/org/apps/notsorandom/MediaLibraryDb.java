@@ -11,6 +11,12 @@ import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,13 +29,14 @@ import java.util.Set;
 public class MediaLibraryDb extends MediaLibraryBaseImpl {
     private static final String TAG = "MusicMediaLibraryDb";
 
+    private static final String DATABASE_NAME = "mediaLibrary.db";
+
     private String sdDir_ = null;
 
     private DbHandler handler_;
 
     public class DbHandler extends SQLiteOpenHelper {
-        private static final String DATABASE_NAME = "mediaLibrary.db";
-        private static final int    DATABASE_VERSION = 2;
+        private static final int    DATABASE_VERSION = 3;
         private static final String TABLE_SONGS = "songs";
         private static final String TABLE_COMPONENT = "component";
         private static final String TABLE_CONFIG = "config";
@@ -53,6 +60,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         private static final String COL_X_COMP   = "xcomponent";
         private static final String COL_Y_COMP   = "ycomponent";
         private static final String COL_LASTSCAN = "lastscan";
+        private static final String COL_Z_COMP   = "zcomponent";
 
 
         DbHandler(Context context) {
@@ -101,6 +109,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             values.put(COL_X_COMP, (component == null) ? "" : component.getName());
             component = config.getYcomponent();
             values.put(COL_Y_COMP, (component == null) ? "" : component.getName());
+            component = config.getZcomponent();
+            values.put(COL_Z_COMP, (component == null) ? "" : component.getName());
             values.put(COL_LASTSCAN, config.getLastScan());
             try {   //TODO change to insertWithOnConflict()
                 db.insertOrThrow(TABLE_CONFIG, null, values);
@@ -197,11 +207,14 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 String xName = cursor.getString(3);
                 String yName = cursor.getString(4);
                 long lastScan = cursor.getLong(5);
+                String zName = cursor.getString(6);
                 cursor.close();
 
                 SenseComponent xComp = getComponent(db, xName);
                 SenseComponent yComp = getComponent(db, yName);
-                config = new Config(user, root, xComp, yComp, lastScan);
+                SenseComponent zComp = getComponent(db, zName);
+                MusicPlayerApp.log(TAG, "the zComp is " + zComp);
+                config = new Config(user, root, xComp, yComp, zComp, lastScan);
             }
 
             db.close();
@@ -286,16 +299,16 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             addComponent(db, xComponent);
             SenseComponent yComponent = new SenseComponent("roughness", "softer / harder", 0x0000f0, 2, 3);
             addComponent(db, yComponent);
-            SenseComponent component = new SenseComponent("humor", "light / dark", 0x000f00, 3, 3);
+            SenseComponent zComponent = new SenseComponent("humor", "lighter / darker", 0x000f00, 3, 3);
+            addComponent(db, zComponent);
+            SenseComponent component = new SenseComponent("taste", "sweeter / bitterer", 0x00f000, 4, 4);
             addComponent(db, component);
-            component = new SenseComponent("taste", "sweet / sour", 0x00f000, 4, 4);
+            component = new SenseComponent("mood", "sadder / happier", 0x0f0000, 5, 4);
             addComponent(db, component);
-            component = new SenseComponent("mood", "sad / happy", 0x0f0000, 5, 4);
-            addComponent(db, component);
-            component = new SenseComponent("depth", "shallow / deep", 0xf00000, 6, 4);
+            component = new SenseComponent("depth", "shallower / deeper", 0xf00000, 6, 4);
             addComponent(db, component);
 
-            Config config = new Config(Config.DEFAULT_USER, root, xComponent, yComponent, 0);
+            Config config = new Config(Config.DEFAULT_USER, root, xComponent, yComponent, zComponent, 0);
             addConfig(db, config);
 
             db.close(); // Close database connection
@@ -314,6 +327,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
             // component and config tables, v2
             onUpgrade(db, 1, 2);
+            onUpgrade(db, 2, 3);
         }
 
         @Override
@@ -335,6 +349,18 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                         + COL_X_COMP + " TEXT,"
                         + COL_Y_COMP + " TEXT,"
                         + COL_LASTSCAN + " DATETIME)";
+                db.execSQL(sql);
+            } else if (oldVersion == 2 && newVersion == 3) {
+                String sql = "ALTER TABLE " + TABLE_CONFIG + " ADD "
+                        + COL_Z_COMP + " TEXT";
+                db.execSQL(sql);
+
+                sql = "UPDATE " + TABLE_CONFIG + " SET " + COL_Z_COMP + "='humor'";
+                db.execSQL(sql);
+
+                sql = "UPDATE " + TABLE_SONGS + " SET " + COL_TITLE + "=SUBSTR(" + COL_TITLE + ",1,length(" + COL_TITLE + ")-7) "
+                        + "WHERE SUBSTR(" + COL_TITLE + ",-7)=' (File)'";
+//                update songs set title=substr(title,1,length(title)-7)  where substr(title, -7) = ' (File)'
                 db.execSQL(sql);
             } else
                 Log.e(TAG, "Unexpected database upgrade from " + oldVersion + " to " + newVersion);
@@ -378,6 +404,27 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         }
         else if (folder.equals("CLEANUP")) {
             handler_.cleanupDb();
+            return 0;
+        }
+        else if (folder.equals("BACKUP")) {
+            String dbDir = Environment.getDataDirectory() + "/data/org.apps.notsorandom/databases/";
+            String backDir = Environment.getExternalStorageDirectory().getAbsolutePath();
+            Log.d(TAG, "Backing up Media DB from " + dbDir + " to " + backDir);
+            try {
+                InputStream  is = new FileInputStream(new File(dbDir, DATABASE_NAME));
+                OutputStream os = new FileOutputStream(new File(backDir, DATABASE_NAME));
+                byte[] buffer = new byte[1024];
+                int read;
+                while((read = is.read(buffer)) != -1){
+                    os.write(buffer, 0, read);
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+                return -1;
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+
             return 0;
         }
 

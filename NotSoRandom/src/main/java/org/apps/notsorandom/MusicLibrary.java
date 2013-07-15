@@ -1,6 +1,7 @@
 package org.apps.notsorandom;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -37,15 +38,22 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     // Used to call back the Activity that attached us.
     private MusicPlayer.OnPlayerListener callback_ = null;
 
+    private static final int HILIGHT_COLOR = Color.argb(0xff, 130, 209, 236);
 
     public static void initDb(MediaLibraryBaseImpl library) {
         library_ = library;
 
         // get the x,y,z values from config section of library.
-        xSense_ = library_.getComponent("tempo");
-        ySense_ = library_.getComponent("roughness");
-        zSense_ = library_.getComponent("humor");
-
+        Config config = library_.getConfig(Config.DEFAULT_USER);
+        if (config != null) {
+            xSense_ = config.getXcomponent();
+            ySense_ = config.getYcomponent();
+            zSense_ = config.getZcomponent();
+        } else {    // Load global defaults
+            xSense_ = library_.getComponent("tempo");
+            ySense_ = library_.getComponent("roughness");
+            zSense_ = library_.getComponent("humor");
+        }
         updateDb(true);
     }
 
@@ -89,16 +97,13 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         sb.setProgress(zSense_.getComponentIndex(song.getSenseValue()));
     }
 
-    private boolean starItem(View view, int item) {
+    private boolean hilightItem(View view, int item) {
         if (item == currItem_)
             return true;
 
         // unstar previous item if it was starred.
         if (currItemView_ != null) {
-            String str = currItemView_.getText().toString();
-            if (str.startsWith("* ")) {
-                currItemView_.setText(str.substring(2));
-            }
+            currItemView_.setBackgroundColor(Color.WHITE);
         }
 
         currItem_ = item;
@@ -108,10 +113,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
 
         // star current item.
         if (currItemView_ != null) {
-            String str = currItemView_.getText().toString();
-            if (!str.startsWith("* ")) {
-                currItemView_.setText("* " + str);
-            }
+            currItemView_.setBackgroundColor(HILIGHT_COLOR);
         }
 
         return true;
@@ -162,13 +164,13 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     public void onNothingSelected(AdapterView<?> adapterView) {
         MusicPlayerApp.log(TAG, "Nothing Selected.");
 //        currItem_ = -1;
-        starItem(null, -1);
+        hilightItem(null, -1);
     }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int item, long lParam) {
         MusicPlayerApp.log(TAG, "onItemClick Item " + item + ", param=" + lParam);
-        if (starItem(view, item)) {
+        if (hilightItem(view, item)) {
             adapterView.setSelection(item);
             setSliders();
             SongInfo song = library_.getSong(currItem_);

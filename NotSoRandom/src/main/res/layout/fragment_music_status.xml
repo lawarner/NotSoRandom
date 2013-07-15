@@ -15,7 +15,7 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
-            android:layout_above="@+id/radioButton">
+            android:layout_above="@+id/selectCategorized">
 
         <TextView
                 android:layout_width="wrap_content"
@@ -53,28 +53,46 @@
             android:layout_above="@+id/scanForMedia"
             android:layout_alignLeft="@+id/scrollView"/>
 
-    <RadioButton
-            android:layout_width="wrap_content"
+    <RadioGroup
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Categorized"
-            android:id="@+id/radioButton"
             android:layout_above="@+id/placeOnMap"
-            android:layout_alignParentLeft="true"/>
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:orientation="horizontal">
 
-    <RadioButton
+        <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Categorized"
+                android:id="@+id/selectCategorized"
+                android:layout_above="@+id/placeOnMap"
+                android:layout_alignParentLeft="true"/>
+
+        <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Uncategorized"
+                android:id="@+id/selectUncategorized"
+                android:layout_above="@+id/placeOnMap"
+                android:layout_toRightOf="@+id/selectCategorized"/>
+
+        <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All"
+                android:id="@+id/selectAll"
+                android:layout_toRightOf="@+id/selectUncategorized"
+                android:layout_above="@+id/placeOnMap"/>
+
+    </RadioGroup>
+
+    <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Uncategorized"
-            android:id="@+id/radioButton2"
-            android:layout_above="@+id/placeOnMap"
-            android:layout_toRightOf="@+id/radioButton"/>
-
-    <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="All"
-            android:id="@+id/radioButton3"
-            android:layout_toRightOf="@+id/radioButton2"
-            android:layout_above="@+id/placeOnMap"/>
+            android:text="Backup"
+            android:id="@+id/backupDb"
+            android:layout_alignTop="@+id/showLog"
+            android:layout_alignParentRight="true"/>
 
 </RelativeLayout>

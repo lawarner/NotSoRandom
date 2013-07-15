@@ -1,7 +1,6 @@
 package org.apps.notsorandom;
 
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
@@ -24,7 +23,7 @@ public class MusicPlayerApp extends FragmentActivity
 
     public static void log(String tag, String msg) {
         Log.d(tag, msg);
-        MusicStatus.log(msg);
+        MusicSettings.log(msg);
     }
 
     public static void log(String msg) {
@@ -45,7 +44,7 @@ public class MusicPlayerApp extends FragmentActivity
             tabHost_.addTab(tabHost_.newTabSpec("player").setIndicator(getString(R.string.title_section1)), MusicPlayer.class, null);
             tabHost_.addTab(tabHost_.newTabSpec("queue").setIndicator(getString(R.string.title_section2)), MusicQueue.class, null);
             tabHost_.addTab(tabHost_.newTabSpec("library").setIndicator(getString(R.string.title_section3)), MusicLibrary.class, null);
-            tabHost_.addTab(tabHost_.newTabSpec("settings").setIndicator(getString(R.string.title_section4)), MusicStatus.class, null);
+            tabHost_.addTab(tabHost_.newTabSpec("settings").setIndicator(getString(R.string.title_section4)), MusicSettings.class, null);
         }
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
