@@ -1,29 +1,63 @@
 package org.apps.notsorandom;
 
+import android.media.MediaMetadataRetriever;
 import android.os.Environment;
 
 /**
- * Created by andy on 6/22/13.
+ * Represent info for a song.
  *
  * TODO add number of components
  */
 public class SongInfo {
+//    private static MediaMetadataRetriever mmr_ = new MediaMetadataRetriever();
+
     private String title_;
     private String fileName_;
     private int senseValue_;
+    private String artist_;
 
-    public SongInfo(String title, String fileName, int senseValue) {
+    public SongInfo(String title, String fileName, int senseValue, String artist) {
         title_ = title;
         fileName_ = fileName;
         senseValue_ = senseValue;
+        artist_ = artist;
     }
 
-    public String getTitle() {
-        if (title_.isEmpty())
-            return "File: " + getBaseFileName();
-
-        return title_;
+    public String getArtist() {
+        return artist_;
     }
+/*
+    public String getArtist(boolean init) {
+        if (artist_ == null) {
+            if (!init) return "Unknown";
+
+            mmr_.setDataSource(getFileName());
+            String str = mmr_.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            if (str == null || str.isEmpty()) {
+                artist_ = "Unknown";
+                str = getRelativeFileName(null);
+                int slash = str.lastIndexOf('/');
+                if (slash > 2) {
+                    int slash2 = str.lastIndexOf('/', slash - 1);
+                    if (slash2 >= 0) {
+                        artist_ = str.substring(slash2 + 1, slash);
+                        slash = str.lastIndexOf('/', slash2 - 1);
+                        if (slash >= 0) {
+                            String artist2 = str.substring(slash + 1, slash2);
+                            if (artist2.compareToIgnoreCase("0ther") == 0)
+                                artist_ = "Soundtrack";
+                            else if (artist2.compareToIgnoreCase("music") != 0)
+                                artist_ = artist2;
+                        }
+                    }
+                }
+            } else
+                artist_ = str;
+        }
+
+        return artist_;
+    }
+*/
 
     public String getFileName() {
         return fileName_;
@@ -36,17 +70,17 @@ public class SongInfo {
         return fileName_;
     }
 
-    public String getRelativeFileName(String rootPath) {
+    public static String getRelativeFileName(String fileName, String rootPath) {
         String root;
         if (rootPath == null || rootPath.isEmpty())
             root = Environment.getExternalStorageDirectory().getAbsolutePath();
         else
             root = rootPath;
 
-        if (fileName_.startsWith(root))
-            return fileName_.substring(root.length());
+        if (fileName.startsWith(root))
+            return fileName.substring(root.length());
 
-        return fileName_;    // Not the right prefix, return as is
+        return fileName;    // Not the right prefix, return as is
     }
 
     public int getSenseIndex() {
@@ -66,6 +100,18 @@ public class SongInfo {
         return senseValue_;
     }
 
+    public String getTitle() {
+        if (title_.isEmpty())
+            return getBaseFileName();
+
+        return title_;
+    }
+
+    /**
+     * Set this song's sense value.
+     * @param sense new sense value. No error checking is performed.
+     * @return the previous sense value.
+     */
     public int setSense(int sense) {
         int oldSense = senseValue_;
         senseValue_ = sense;

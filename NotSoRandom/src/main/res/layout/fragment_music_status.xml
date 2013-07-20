@@ -15,7 +15,9 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
-            android:layout_above="@+id/selectCategorized">
+            android:layout_alignParentEnd="false"
+            android:layout_above="@+id/placeOnMap"
+            android:layout_marginBottom="32dp">
 
         <TextView
                 android:layout_width="wrap_content"
@@ -67,7 +69,8 @@
                 android:text="Categorized"
                 android:id="@+id/selectCategorized"
                 android:layout_above="@+id/placeOnMap"
-                android:layout_alignParentLeft="true"/>
+                android:layout_alignParentLeft="true"
+                android:onClick="onRadioButtonClicked"/>
 
         <RadioButton
                 android:layout_width="wrap_content"
@@ -75,7 +78,8 @@
                 android:text="Uncategorized"
                 android:id="@+id/selectUncategorized"
                 android:layout_above="@+id/placeOnMap"
-                android:layout_toRightOf="@+id/selectCategorized"/>
+                android:layout_toRightOf="@+id/selectCategorized"
+                android:onClick="onRadioButtonClicked"/>
 
         <RadioButton
                 android:layout_width="wrap_content"
@@ -83,7 +87,8 @@
                 android:text="All"
                 android:id="@+id/selectAll"
                 android:layout_toRightOf="@+id/selectUncategorized"
-                android:layout_above="@+id/placeOnMap"/>
+                android:layout_above="@+id/placeOnMap"
+                android:onClick="onRadioButtonClicked"/>
 
     </RadioGroup>
 

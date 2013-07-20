@@ -1,11 +1,15 @@
 package org.apps.notsorandom;
 
+import android.app.SearchManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTabHost;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.view.Window;
 
 import java.util.ArrayList;
 
@@ -20,6 +24,13 @@ public class MusicPlayerApp extends FragmentActivity
 
     private MusicPlayer playerFrag_ = null;
 
+    public enum LibraryCategory {
+        CATEGORIZED,
+        UNCATEGORIZED,
+        ALL
+    }
+    private LibraryCategory libCat_ = LibraryCategory.ALL;
+
 
     public static void log(String tag, String msg) {
         Log.d(tag, msg);
@@ -33,6 +44,8 @@ public class MusicPlayerApp extends FragmentActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+//        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.main_player);
 
         tabHost_ = (FragmentTabHost) findViewById(R.id.mytabHost);
@@ -61,8 +74,9 @@ public class MusicPlayerApp extends FragmentActivity
 
         Config config = library_.getConfig(Config.DEFAULT_USER);
         if (config != null) {
-            log("Got config, x=" + config.getXcomponent().getName() + ", y=" + config.getYcomponent().getName());
-            MusicPlayer.setXYcomponents(config.getXcomponent(), config.getYcomponent());
+            log("Got config, x=" + config.getXcomponent().getName() + ", y=" + config.getYcomponent().getName()
+                    + ", z=" + config.getZcomponent().getName());
+            MusicPlayer.setupComponents(config);
         }
 
         // Start with 200 in the queue
@@ -100,6 +114,23 @@ public class MusicPlayerApp extends FragmentActivity
     }
 
 
+    public void onRadioButtonClicked(View view) {
+        log(TAG, "clicked radio button " + view.getId());
+        switch (view.getId()) {
+            case R.id.selectCategorized:
+                libCat_ = LibraryCategory.CATEGORIZED;
+                break;
+            case R.id.selectUncategorized:
+                libCat_ = LibraryCategory.UNCATEGORIZED;
+                break;
+            case R.id.selectAll:
+                libCat_ = LibraryCategory.ALL;
+                break;
+            default:
+                log(TAG, "Unknown radio button clicked.");
+        }
+    }
+
     // -----------------------------------------------------------------
     @Override
     public boolean getCurrQueuePos(int[] outta) {
@@ -118,6 +149,11 @@ public class MusicPlayerApp extends FragmentActivity
     @Override
     public NSRMediaLibrary getLibrary() {
         return library_;
+    }
+
+    @Override
+    public LibraryCategory getLibCategory() {
+        return libCat_;
     }
 
     @Override
@@ -166,6 +202,11 @@ public class MusicPlayerApp extends FragmentActivity
             return playerFrag_.playSong(song);
 
         return false;
+    }
+
+    @Override
+    public void setCurrSong(SongInfo song) {
+        MusicQueue.insertInQueue(song);
     }
 
     @Override

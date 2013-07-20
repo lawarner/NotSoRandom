@@ -97,7 +97,8 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
             public void onClick(View view) {
                 NSRMediaLibrary lib = callback_.getLibrary();
                 if (lib != null) {
-                    lib.scanForMedia("BACKUP", false);
+                    lib.scanForMedia("CLEANUP", true);
+//                    lib.scanForMedia("BACKUP", false);
                     MusicPlayerApp.log(TAG, "Db backed up to SD card");
                 }
             }
@@ -170,4 +171,5 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
 
         return true;
     }
+
 }

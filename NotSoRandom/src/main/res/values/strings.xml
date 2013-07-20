@@ -13,5 +13,6 @@
     </string>
     <string name="title_section4" >Settings
     </string>
+    <string name="search_hint">Search song, artist, title</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package org.apps.notsorandom;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -8,20 +9,23 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Filter;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 
 /**
- * Represents the library and allows editting sense values for songs.
+ * Represents the library and allows editing sense values for songs.
  */
 public class MusicLibrary extends Fragment implements AdapterView.OnItemClickListener,
                                                     AdapterView.OnItemSelectedListener,
-                                                    SeekBar.OnSeekBarChangeListener {
+                                                    SeekBar.OnSeekBarChangeListener, SearchView.OnQueryTextListener {
     private static final String TAG = "MusicLibrary";
 
     private static ArrayAdapter<String> libArray_ = null;
@@ -63,7 +67,12 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
 
         ArrayList<String> songs = new ArrayList<String>(library_.getSongCount());
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
-            String str = song.getSenseString() + " " + song.getTitle();
+            String title = song.getTitle();
+            String artist = song.getArtist();
+            if (artist == null)
+                artist = "";
+            String str = title + "\n"
+                       + song.getSenseString() + "  " + artist;
             songs.add(str);
         }
 
@@ -100,7 +109,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     private boolean hilightItem(View view, int item) {
         if (item == currItem_)
             return true;
-
+/*
         // unstar previous item if it was starred.
         if (currItemView_ != null) {
             currItemView_.setBackgroundColor(Color.WHITE);
@@ -115,7 +124,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         if (currItemView_ != null) {
             currItemView_.setBackgroundColor(HILIGHT_COLOR);
         }
-
+*/
         return true;
     }
 
@@ -144,6 +153,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         lv.setAdapter(libArray_);
         lv.setOnItemClickListener(this);
         lv.setOnItemSelectedListener(this);
+        lv.setTextFilterEnabled(true);
 
         SeekBar sb = (SeekBar) view.findViewById(R.id.xSeekBar);
         sb.setOnSeekBarChangeListener(this);
@@ -152,7 +162,25 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         sb = (SeekBar) view.findViewById(R.id.zSeekBar);
         sb.setOnSeekBarChangeListener(this);
 
+        // Associate searchable configuration with the SearchView
+        SearchView searchView = (SearchView) view.findViewById(R.id.searchView);
+        searchView.setIconifiedByDefault(false);
+        searchView.setOnQueryTextListener(this);
+        searchView.setSubmitButtonEnabled(false);
+        searchView.setQueryHint(getString(R.string.search_hint));
+        searchView.setSuggestionsAdapter(null);
+
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        // Hide the soft keyboard when switching views
+        View svw = getView().findViewById(R.id.searchView);
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(svw.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     @Override
@@ -164,19 +192,33 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     public void onNothingSelected(AdapterView<?> adapterView) {
         MusicPlayerApp.log(TAG, "Nothing Selected.");
 //        currItem_ = -1;
-        hilightItem(null, -1);
+//        hilightItem(null, -1);
     }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int item, long lParam) {
         MusicPlayerApp.log(TAG, "onItemClick Item " + item + ", param=" + lParam);
-        if (hilightItem(view, item)) {
-            adapterView.setSelection(item);
+
+        String strItem = (String) adapterView.getItemAtPosition(item);
+        int currItem = 0;
+        for ( ; currItem < libArrList_.size(); currItem++) {
+            if (strItem.equals(libArrList_.get(currItem)))
+                break;
+        }
+        MusicPlayerApp.log(TAG, " item id=" + adapterView.getItemIdAtPosition(item) + " is " + currItem);
+        if (currItem >= libArrList_.size())
+            return;
+
+        currItem_ = currItem;
+//        if (hilightItem(view, currItem)) {
+            adapterView.setSelection(currItem);
+            adapterView.setSelected(true);
             setSliders();
             SongInfo song = library_.getSong(currItem_);
-            if (song != null)
+            if (song != null) {
+                callback_.setCurrSong(song);
                 callback_.playSong(song);
-        }
+            }
     }
 
     @Override
@@ -211,4 +253,27 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     public void onStopTrackingTouch(SeekBar seekBar) {
 
     }
+
+    @Override
+    public boolean onQueryTextChange(String str) {
+        Filter filter = libArray_.getFilter();
+        filter.filter(str);
+        libArray_.notifyDataSetChanged();
+        /*
+        ListView lv = (ListView) getView().findViewById(R.id.libraryView);
+        if (str.isEmpty()) {
+            lv.clearTextFilter();
+        } else {
+            MusicPlayerApp.log(TAG, "Filter on text: " + str + ".");
+            lv.setFilterText(str);
+        }
+        */
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String str) {
+        return false;
+    }
+
 }

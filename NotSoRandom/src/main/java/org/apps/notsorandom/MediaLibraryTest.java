@@ -29,17 +29,17 @@ public class MediaLibraryTest extends MediaLibraryBaseImpl {
                 int sv = SongInfo.indexToSense(idx);
                 String name = "test" + ii;
 
-                songs_.add(new SongInfo("Song " + name, root + name + ".mp3", sv));
+                songs_.add(new SongInfo("Song " + name, root + name + ".mp3", sv, "artist"));
             }
         } else {
-            songs_.add(new SongInfo("All I Want To Do...", root + "test1.mp3", 0x00));
-            songs_.add(new SongInfo("Get On Outch Ere", root + "test2.mp3", 0x01));
-            songs_.add(new SongInfo("Iggy Pop? Uh, I forget :)", root + "test3.mp3", 0x02));
+            songs_.add(new SongInfo("All I Want To Do...", root + "test1.mp3", 0x00, "artist"));
+            songs_.add(new SongInfo("Get On Outch Ere", root + "test2.mp3", 0x01, "artist"));
+            songs_.add(new SongInfo("Iggy Pop? Uh, I forget :)", root + "test3.mp3", 0x02, "artist"));
 
             for (int ii = 3; ii < 64; ii++) {
                 int sv = SongInfo.indexToSense(ii);
                 String name = "test" + (ii + 1);
-                songs_.add(new SongInfo("Song " + name, root + name + ".mp3", sv));
+                songs_.add(new SongInfo("Song " + name, root + name + ".mp3", sv, "artist"));
             }
         }
 

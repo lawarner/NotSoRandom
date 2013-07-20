@@ -31,21 +31,24 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
     private static final String DATABASE_NAME = "mediaLibrary.db";
 
+    private static final int MINIMUM_FILESIZE = 355000;
+
     private String sdDir_ = null;
 
     private DbHandler handler_;
 
     public class DbHandler extends SQLiteOpenHelper {
-        private static final int    DATABASE_VERSION = 3;
+        private static final int    DATABASE_VERSION = 4;
         private static final String TABLE_SONGS = "songs";
         private static final String TABLE_COMPONENT = "component";
         private static final String TABLE_CONFIG = "config";
 
         // Database layout songs
-        private static final String COL_ID    = "id";
-        private static final String COL_TITLE = "title";
-        private static final String COL_FILE  = "file";
-        private static final String COL_SENSE = "sense";
+        private static final String COL_ID     = "id";
+        private static final String COL_TITLE  = "title";
+        private static final String COL_FILE   = "file";
+        private static final String COL_SENSE  = "sense";
+        private static final String COL_ARTIST = "artist";
         // Database layout components
         // COL_ID
         private static final String COL_NAME  = "name";
@@ -133,9 +136,10 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             String fileName = song.getFileName();
             if (sdDir_ != null && fileName.startsWith(sdDir_))
                 fileName = fileName.substring(sdDir_.length());
-            values.put(COL_FILE, fileName);
+            values.put(COL_FILE,   fileName);
+            values.put(COL_SENSE,  song.getSenseValue());
+            values.put(COL_ARTIST, song.getArtist());
 
-            values.put(COL_SENSE, song.getSenseValue());
             boolean ret = true;
             try {   //TODO change to insertWithOnConflict()
                 db.insertOrThrow(TABLE_SONGS, null, values);
@@ -150,8 +154,14 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
 
         public ArrayList<SongInfo> getAllSongs() {
+            return getSongs(null);
+        }
+
+        public ArrayList<SongInfo> getSongs(String where) {
             ArrayList<SongInfo> songs = new ArrayList<SongInfo>();
             String sql = "SELECT * FROM " + TABLE_SONGS;
+            if (where != null)
+                sql += " WHERE " + where;
             SQLiteDatabase db = getReadableDatabase();
             Cursor cursor = db.rawQuery(sql, null);
 
@@ -162,7 +172,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                     if (!file.startsWith("/"))
                         file = sdDir_ + file;
                     int sense = Integer.parseInt(cursor.getString(3));
-                    SongInfo song = new SongInfo(title, file, sense);
+                    String artist = cursor.getString(4);
+                    SongInfo song = new SongInfo(title, file, sense, artist);
                     songs.add(song);
                 } while (cursor.moveToNext());
             }
@@ -233,9 +244,40 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         }
 
         public boolean cleanupDb() {
-            boolean ret = true;
+            ArrayList<SongInfo> songs = getSongs(COL_ARTIST + " IS NULL");
+            MusicPlayerApp.log(TAG, "There are " + songs.size() + " songs with blank artist.");
+
             SQLiteDatabase db = getWritableDatabase();
 
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            for (SongInfo song : songs) {
+                boolean ret = true;
+                try {
+                    mmr.setDataSource(song.getFileName());
+                } catch (IllegalArgumentException ex) {
+                    MusicPlayerApp.log(TAG, "Illegal file: " + song.getFileName());
+                    mmr.release();
+                    mmr = new MediaMetadataRetriever();
+                    ret = false;
+                }
+                if (ret) {
+                    String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                    if (artist != null && !artist.isEmpty()) {
+                        String fileName = song.getFileName();
+                        if (fileName.startsWith(sdDir_))
+                            fileName = fileName.substring(sdDir_.length());
+
+                        ContentValues values = new ContentValues();
+                        String where = COL_FILE + " = \"" + fileName + "\"";
+                        values.put(COL_ARTIST, artist);
+                        try {
+                            db.update(TABLE_SONGS, values, where, null);
+                        } catch (SQLiteConstraintException ce) {
+                            MusicPlayerApp.log(TAG, "Got an error updating " + fileName + " with " + artist);
+                        }
+                    }
+                }
+            }
 /*  PAST conversions:
             String update = "update " + TABLE_SONGS + " set " + COL_TITLE + "=substr(" + COL_TITLE + ",10) ";
             String where = "where substr(" + COL_TITLE + ",1,9)" + "= \"--> File \"";
@@ -264,7 +306,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 db.execSQL("update songs set file=substr(file,13)");
  */
             db.close();
-            return ret;
+            return true;
         }
 
         public boolean updateSense(String file, int sense) {
@@ -320,7 +362,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                        + COL_ID + " INTEGER PRIMARY KEY,"
                        + COL_TITLE + " TEXT,"
                        + COL_FILE + " TEXT NOT NULL UNIQUE,"
-                       + COL_SENSE + " INTEGER)";
+                       + COL_SENSE + " INTEGER,"
+                       + COL_ARTIST + " TEXT)";
 //                       + "UNIQUE (" + COL_FILE + ") ON CONFLICT REPLACE)";
 
             db.execSQL(sql);
@@ -328,6 +371,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             // component and config tables, v2
             onUpgrade(db, 1, 2);
             onUpgrade(db, 2, 3);
+            // 3 to 4 just adds artist column, which we already did above
         }
 
         @Override
@@ -362,6 +406,11 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                         + "WHERE SUBSTR(" + COL_TITLE + ",-7)=' (File)'";
 //                update songs set title=substr(title,1,length(title)-7)  where substr(title, -7) = ' (File)'
                 db.execSQL(sql);
+            } else if (oldVersion == 3 && newVersion == 4) {
+                String sql = "ALTER TABLE " + TABLE_SONGS + " ADD "
+                        + COL_ARTIST + " TEXT";
+                db.execSQL(sql);
+
             } else
                 Log.e(TAG, "Unexpected database upgrade from " + oldVersion + " to " + newVersion);
         }
@@ -437,7 +486,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             File[] children = file.listFiles();
             if (children != null) {
                 for (File child : children) {
-                    all.add(child);
+                    if (child.isFile() && child.length() >= MINIMUM_FILESIZE)
+                        all.add(child);
                 }
             }
         }
@@ -499,7 +549,28 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 if (ii != null)
                     sense = ii.intValue();
             }
-            SongInfo song = new SongInfo(title, file1.getAbsolutePath(), sense);
+
+            String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+            if (artist == null || artist.isEmpty()) {
+                String str = SongInfo.getRelativeFileName(file1.getAbsolutePath(), null);
+                int slash = str.lastIndexOf('/');
+                if (slash > 2) {
+                    int slash2 = str.lastIndexOf('/', slash - 1);
+                    if (slash2 >= 0) {
+                        artist = str.substring(slash2 + 1, slash);
+                        slash = str.lastIndexOf('/', slash2 - 1);
+                        if (slash >= 0) {
+                            str = str.substring(slash + 1, slash2);
+                            if (str.compareToIgnoreCase("0ther") == 0)
+                                artist = "Soundtrack";
+                            else if (str.compareToIgnoreCase("music") != 0)
+                                artist = str;
+                        }
+                    }
+                }
+            }
+
+            SongInfo song = new SongInfo(title, file1.getAbsolutePath(), sense, artist);
 //            songs_.add(song);
             boolean added = handler_.addSong(song);
 //            Log.d(TAG, "scanForMedia: " + file1.getAbsolutePath() + (added ? " added, " : " exists, ")
@@ -515,8 +586,10 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
         File[] children = file.listFiles();
         if (children == null) {
-            if (file.getName().endsWith(".mp3") || file.getName().endsWith(".MP3"))
-                all.add(file);
+            if (file.getName().endsWith(".mp3") || file.getName().endsWith(".MP3")) {
+                if (file.length() >= MINIMUM_FILESIZE)
+                    all.add(file);
+            }
         } else {
             for (File child : children) {
                 _scanRecursive(child, all);

@@ -40,6 +40,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     // Default XY components on music map
     private static SenseComponent xComponent_ = new SenseComponent("tempo",     "slower / faster", 0x00000f, 1, 4);
     private static SenseComponent yComponent_ = new SenseComponent("roughness", "softer / harder", 0x0000f0, 2, 3);
+    private static SenseComponent zComponent_ = new SenseComponent("humor",    "lighter / darker", 0x000f00, 3, 3);
 
     // Used to call back the Activity that attached us.
     private OnPlayerListener callback_ = null;
@@ -78,6 +79,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         public SongInfo getCurrSong();
 
         public NSRMediaLibrary getLibrary();
+
+        public MusicPlayerApp.LibraryCategory getLibCategory();
 
         /**
          * Called to retrieve the next song to play.
@@ -122,6 +125,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
          * is selected.
          */
         public boolean playSong(SongInfo song);
+
+        public void setCurrSong(SongInfo song);
     }
 
     /**
@@ -151,9 +156,15 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     }
 
 
-    public static void setXYcomponents(SenseComponent xComp, SenseComponent yComp) {
+    public static void setupComponents(Config config) {
+        setXYZComponents(config.getXcomponent(), config.getYcomponent(), config.getZcomponent());
+    }
+
+    public static void setXYZComponents(SenseComponent xComp,
+                                        SenseComponent yComp, SenseComponent zComp) {
         xComponent_ = xComp;
         yComponent_ = yComp;
+        zComponent_ = zComp;
     }
 
     public static void shutdown() {
@@ -271,7 +282,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             musicMapView_.getShuffledList(false);
 
             callback_.refreshQueue(30);
-            setTrackAndTitle(callback_.getCurrSong());
+//            setTrackAndTitle(callback_.getCurrSong());
             song = callback_.getNextSong(true);
             MusicPlayerApp.log(TAG, " first time Song.");
         } else {
@@ -314,6 +325,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     }
 
     private void setTrackAndTitle(SongInfo song) {
+        MusicPlayerApp.log(TAG, "setTrackAndTitle with " + song.getTitle());
         String track = "-/-";
         String title = "";
         String artist = "";
@@ -324,29 +336,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 track = "" + qpos[0] + "/" + qpos[1];
 
             title = song.getTitle();
-
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(song.getFileName());
-            String str = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-            if (str == null || str.isEmpty()) {
-                str = song.getRelativeFileName(null);
-                int slash = str.lastIndexOf('/');
-                if (slash > 2) {
-                    int slash2 = str.lastIndexOf('/', slash - 1);
-                    if (slash2 >= 0) {
-                        artist = str.substring(slash2 + 1, slash);
-                        slash = str.lastIndexOf('/', slash2 - 1);
-                        if (slash >= 0) {
-                            String artist2 = str.substring(slash + 1, slash2);
-                            if (artist2.compareToIgnoreCase("0ther") == 0)
-                                artist = "Soundtrack";
-                            else if (artist2.compareToIgnoreCase("music") != 0)
-                                artist = artist2;
-                        }
-                    }
-                }
-            } else
-                artist = str;
+            artist = song.getArtist();
         }
 
         if (trackCounter_ != null)

@@ -37,10 +37,13 @@
             android:id="@+id/current_song"
             android:layout_alignParentBottom="false"
             android:layout_alignParentRight="true"
-            android:textSize="16dp"
+            android:textSize="15dp"
             android:layout_alignParentLeft="false"
             android:layout_alignLeft="@+id/artist"
-            android:layout_above="@+id/artist"/>
+            android:layout_above="@+id/artist"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:textStyle="bold"/>
 
     <LinearLayout
             android:orientation="vertical"

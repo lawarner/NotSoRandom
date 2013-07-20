@@ -40,6 +40,17 @@ public class MusicQueue extends Fragment {
         }
     }
 
+    public static int insertInQueue(SongInfo song) {
+        if (currItem_ < 0 || currItem_ >= qArrSongs_.size()) {
+            addToQueue(song);
+            currItem_ = qArrSongs_.size() - 1;
+        } else {
+            qArrSongs_.add(currItem_, song);
+        }
+
+        return currItem_;
+    }
+
     public static void clearQueue() {
         MusicPlayerApp.log(TAG, " clearQueue called");
         if (qArray_ == null)
