@@ -12,9 +12,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-//TODO remap the coordinates to start in the bottom left.
 /**
  * Custom view that handles rendering and drawing of the Music Map.
+ *
+ * TODO incorporate labels, mode buttons
  */
 public class MusicMapView extends View implements View.OnTouchListener {
     private static final String TAG = "MusicMapView";
@@ -85,13 +86,13 @@ public class MusicMapView extends View implements View.OnTouchListener {
      * @return list of songs indices. Can be used as parameter to getSongInfo()
      *         to retrieve the song information.
      */
-    public static int[] getShuffledList(boolean reshuffle) {
+    public static SongInfo[] getShuffledList(boolean reshuffle) {
         if (reshuffle || !musicMap_.isShuffled()) {
             if (newbox_.isEmpty()) {
                 boxDraw_.setEmpty();
                 return musicMap_.randomShuffle(20);
             } else {
-                int[] mm = musicMap_.boxShuffle(newbox_);
+                SongInfo[] mm = musicMap_.boxShuffle(newbox_);
                 Rect rc = musicMap_.getBox();
                 MusicPlayerApp.log(TAG, "Box in: " + newbox_.toString() + "  Box out: " + rc.toString());
                 boxDraw_.set(boxToPixelBox(rc));
@@ -144,12 +145,12 @@ public class MusicMapView extends View implements View.OnTouchListener {
         return ret;
     }
 
-    public boolean initLibrary() {
-        return musicMap_.fillLibEntries();
+    public boolean initLibrary(MusicPlayerApp.LibraryCategory libCat) {
+        return musicMap_.fillLibEntries(libCat);
     }
 
     public void setLibrary(NSRMediaLibrary library) {
-        musicMap_.setLibrary(library);
+        MusicMap.setLibrary(library);
     }
 
     public void setListener(MusicPlayer.OnPlayerListener listener) {
@@ -211,17 +212,17 @@ public class MusicMapView extends View implements View.OnTouchListener {
         paint_.setStyle(Paint.Style.STROKE);
         paint_.setColor(Color.YELLOW);
         MusicMap.MapEntry[] me = musicMap_.getLibEntries();
-        for (int ii = 0; ii < me.length; ii++) {
-            int cnt = me[ii].getCount();
-            if (cnt > 0) {
+        for (int ii = 0; ii < 64; ii++) {
+            int count = 0;      // count all layers
+            for (int jj = ii; jj < me.length; jj += 64)
+                count += me[jj].getCount();
+            if (count > 0) {
                 PointF pt = indexToPixel(ii % 8, ii / 8);
-                float x = pt.x;
-                float y = pt.y;
-                float radius = calcRadius(cnt);
+                float radius = calcRadius(count);
                 if (radius < 0.51f)
-                    canvas.drawPoint(x, y, paint_);
+                    canvas.drawPoint(pt.x, pt.y, paint_);
                 else
-                    canvas.drawCircle(x, y, radius, paint_);
+                    canvas.drawCircle(pt.x, pt.y, radius, paint_);
             }
         }
 
@@ -229,19 +230,19 @@ public class MusicMapView extends View implements View.OnTouchListener {
         paint_.setStyle(Paint.Style.FILL);
         paint_.setColor(Color.RED);
         me = musicMap_.getShuffleEntries();
-        for (int ii = 0; ii < me.length; ii++) {
-            int cnt = me[ii].getCount();
-            if (cnt > 0) {
+        for (int ii = 0; ii < 64; ii++) {
+            int count = 0;      // count all layers
+            for (int jj = ii; jj < me.length; jj += 64)
+                count += me[jj].getCount();
+            if (count > 0) {
                 PointF pt = indexToPixel(ii % 8, ii / 8);
-                float x = pt.x;
-                float y = pt.y;
-                float radius = calcRadius(cnt);
+                float radius = calcRadius(count);
                 if (ii == currIdx)
                     paint_.setColor(placeMode_ ? Color.CYAN : Color.GREEN);
                 if (radius < 0.51f)
-                    canvas.drawPoint(x, y, paint_);
-                else
-                    canvas.drawCircle(x, y, radius, paint_);
+                    radius = 1f;
+
+                canvas.drawCircle(pt.x, pt.y, radius, paint_);
                 if (ii == currIdx) {
                     paint_.setColor(Color.RED);
                     currIdx = -1;
@@ -275,7 +276,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
                 if (x >= 0 && x < 8 && y >= 0 && y < 8) {
                     MediaLibraryBaseImpl lib = (MediaLibraryBaseImpl) listener_.getLibrary();
                     if (lib.updateSenseValue(song, (x | (y << 4)))) {
-                        musicMap_.fillLibEntries();
+                        musicMap_.fillLibEntries(listener_.getLibCategory());
                         musicMap_.fillShuffleEntries(listener_.getQueue());
                         MusicQueue.redrawQueue();
                         invalidate();
@@ -283,10 +284,10 @@ public class MusicMapView extends View implements View.OnTouchListener {
                 }
                 return true;
             }
-            Log.d(TAG, motionEvent.toString());
             return false;
         }
 
+        // Selection mode
         if (action == MotionEvent.ACTION_DOWN ||
             action == MotionEvent.ACTION_POINTER_DOWN) {
             Log.d(TAG, "Action onTouch == ACTION_DOWN " + action);
@@ -294,28 +295,27 @@ public class MusicMapView extends View implements View.OnTouchListener {
             dragBox_ = false;
             return true;
         }
-/*        if (action == MotionEvent.ACTION_MOVE) {
-            dragBox_ = true;
-            stop_.set(motionEvent.getX(), motionEvent.getY());
-        } else { */
-            dragBox_ = false;
-            if (action != MotionEvent.ACTION_UP &&
-                action != MotionEvent.ACTION_POINTER_UP)
-                return false;
-            if (motionEvent.getPointerCount() < 1)
-                return false;
-            Log.d(TAG, "Action onTouch == ACTION_UP " + action);
+        dragBox_ = false;
+        if (action != MotionEvent.ACTION_UP &&
+            action != MotionEvent.ACTION_POINTER_UP)
+            return false;
+        if (motionEvent.getPointerCount() < 1)
+            return false;
+        Log.d(TAG, "Action onTouch == ACTION_UP " + action);
 
-            setStop(motionEvent.getX(), motionEvent.getY());
-            int[] arr = getShuffledList(true);   // Reshuffle
-            listener_.refreshQueue(arr.length);
-//        }
+        setStop(motionEvent.getX(), motionEvent.getY());
+        SongInfo[] arr = getShuffledList(true);   // Reshuffle
+        listener_.refreshQueue(arr.length);
 
         invalidate();
 
         return true;
     }
 
+/*        if (action == MotionEvent.ACTION_MOVE) {
+            dragBox_ = true;
+            stop_.set(motionEvent.getX(), motionEvent.getY());
+        } else { */
 /*        MusicPlayerApp.log(TAG, " WHOLE MAP AREA IS " + getWidth() + ", " + getHeight());
         for (int x = 0; x < getWidth(); x += (getWidth() / 8)) {
             for (int y = 0; y < getHeight(); y += (getHeight() / 8)) {
@@ -338,5 +338,4 @@ public class MusicMapView extends View implements View.OnTouchListener {
                                      ") ==> (" + pt.x + "," + cy + ")");
             }
         } */
-
 }

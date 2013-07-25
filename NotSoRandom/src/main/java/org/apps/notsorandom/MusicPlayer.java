@@ -2,7 +2,6 @@ package org.apps.notsorandom;
 
 import android.app.Activity;
 import android.content.Context;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,12 +11,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.io.File;
 import java.util.ArrayList;
 
 
@@ -37,10 +34,10 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
     private static MediaPlayer player_ = null;
 
-    // Default XY components on music map
-    private static SenseComponent xComponent_ = new SenseComponent("tempo",     "slower / faster", 0x00000f, 1, 4);
-    private static SenseComponent yComponent_ = new SenseComponent("roughness", "softer / harder", 0x0000f0, 2, 3);
-    private static SenseComponent zComponent_ = new SenseComponent("humor",    "lighter / darker", 0x000f00, 3, 3);
+    // Default XYZ components on music map
+    private static SenseComponent xComponent_;
+    private static SenseComponent yComponent_;
+    private static SenseComponent zComponent_;
 
     // Used to call back the Activity that attached us.
     private OnPlayerListener callback_ = null;
@@ -69,7 +66,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
          */
         public boolean getCurrQueuePos(int[] outta);
 
-        public ArrayList<SongInfo> getQueue();
+        public SongInfo[] getQueue();
 
         /**
          * Called to retrieve the current song to play.
@@ -157,14 +154,9 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
 
     public static void setupComponents(Config config) {
-        setXYZComponents(config.getXcomponent(), config.getYcomponent(), config.getZcomponent());
-    }
-
-    public static void setXYZComponents(SenseComponent xComp,
-                                        SenseComponent yComp, SenseComponent zComp) {
-        xComponent_ = xComp;
-        yComponent_ = yComp;
-        zComponent_ = zComp;
+        xComponent_ = config.getXcomponent();
+        yComponent_ = config.getYcomponent();
+        zComponent_ = config.getZcomponent();
     }
 
     public static void shutdown() {
@@ -206,7 +198,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         tvrl.setText(xComponent_.getLabel());
         tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
-        tvrl.setTranslationX(-50);
+        tvrl.setTranslationX(-52);
         tvrl.setTranslationY(96);
         tvrl.setText(yComponent_.getLabel());
 
@@ -278,7 +270,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
         SongInfo song = null;
         if (isFirstTime_) {
-            musicMapView_.initLibrary();
+            musicMapView_.initLibrary(callback_.getLibCategory());
             musicMapView_.getShuffledList(false);
 
             callback_.refreshQueue(30);
@@ -292,8 +284,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             MusicPlayerApp.log(TAG, " resuming on Curr/Next Song.");
         }
 
-        if (song != null && queueSong(song)) {
-            setTrackAndTitle(song);
+        if (queueSong(song)) {
 //            if (!isFirstTime_)
             if (getView() != null) {
                 MusicPlayerApp.log(TAG, "Show controller. player is in view.");
@@ -347,6 +338,13 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             artist_.setText(artist);
     }
 
+
+    public static void initLibrary(MusicPlayerApp.LibraryCategory libCat) {
+        if (musicMapView_ != null) {
+            musicMapView_.initLibrary(libCat);
+            musicMapView_.getShuffledList(true);
+        }
+    }
 
     public boolean playSong(SongInfo song) {
         if (player_ != null) {

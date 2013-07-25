@@ -28,11 +28,11 @@ public interface MediaMusicCollection {
     public int getSongCount();
 
     /**
-     * Get a shuffled list of song indices.  The list is reshuffled each time
+     * Get a shuffled list of songs.  The list is reshuffled each time
      * this method is called, unless shuffle is false.
      * @param reshuffle If true then the list will be reshuffled.
-     * @return list of indices into music collection, in random order.
+     * @return list of songs in music collection, in random order.
      */
-    public int[] getShuffledSongs(boolean reshuffle);
+    public ArrayList<SongInfo> getShuffledSongs(boolean reshuffle);
 
 }

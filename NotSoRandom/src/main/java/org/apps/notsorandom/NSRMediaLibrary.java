@@ -35,12 +35,10 @@ public interface NSRMediaLibrary extends MediaMusicCollection {
 
     /**
      * Update a song's sense value in the database.
-     * @param item The index into the song array.
+     * @param song The song to update.
      * @param sense New sense value to store.
      * @return True if song was updated in database successfully, otherwise false.
      */
-    public boolean updateSenseValue(int item, int sense);
-
     public boolean updateSenseValue(SongInfo song, int sense);
 
     /**

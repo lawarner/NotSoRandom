@@ -39,10 +39,6 @@ public class Config {
     private long lastScan_;
 
 
-    Config() {
-
-    }
-
     Config(String user, String root, SenseComponent xComponent,
            SenseComponent yComponent, SenseComponent zComponent, long lastScan) {
         user_ = user;

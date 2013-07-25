@@ -224,7 +224,6 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 SenseComponent xComp = getComponent(db, xName);
                 SenseComponent yComp = getComponent(db, yName);
                 SenseComponent zComp = getComponent(db, zName);
-                MusicPlayerApp.log(TAG, "the zComp is " + zComp);
                 config = new Config(user, root, xComp, yComp, zComp, lastScan);
             }
 
@@ -337,17 +336,22 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             else if (!root.endsWith("/"))
                 root += "/";
 
-            SenseComponent xComponent = new SenseComponent("tempo", "slower / faster", 0x00000f, 1, 4);
+            SenseComponent xComponent
+                = new SenseComponent(Config.DEFAULT_X_COMPONENT, "slower / faster", 0x0000000f, 1, 4);
             addComponent(db, xComponent);
-            SenseComponent yComponent = new SenseComponent("roughness", "softer / harder", 0x0000f0, 2, 3);
+            SenseComponent yComponent
+                = new SenseComponent(Config.DEFAULT_Y_COMPONENT, "softer / harder", 0x000000f0, 2, 3);
             addComponent(db, yComponent);
-            SenseComponent zComponent = new SenseComponent("humor", "lighter / darker", 0x000f00, 3, 3);
+            SenseComponent zComponent
+                = new SenseComponent(Config.DEFAULT_Z_COMPONENT, "lighter / darker", 0x00000f00, 3, 3);
             addComponent(db, zComponent);
-            SenseComponent component = new SenseComponent("taste", "sweeter / bitterer", 0x00f000, 4, 4);
+            SenseComponent component = new SenseComponent("feelings", "love / hate", 0x0000f000, 4, 4);
             addComponent(db, component);
-            component = new SenseComponent("mood", "sadder / happier", 0x0f0000, 5, 4);
+            component = new SenseComponent("taste", "sweeter / sourer",   0x000f0000, 5, 4);
             addComponent(db, component);
-            component = new SenseComponent("depth", "shallower / deeper", 0xf00000, 6, 4);
+            component = new SenseComponent("mood", "sadder / happier",    0x00f00000, 6, 4);
+            addComponent(db, component);
+            component = new SenseComponent("depth", "shallower / deeper", 0x0f000000, 7, 4);
             addComponent(db, component);
 
             Config config = new Config(Config.DEFAULT_USER, root, xComponent, yComponent, zComponent, 0);
@@ -417,7 +421,6 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     }
 
     public MediaLibraryDb(Context context) {
-        super();
         handler_ = new DbHandler(context);
     }
 
@@ -427,7 +430,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     }
 
     public Config getConfig(String user) {
-        return handler_.getConfig(user);
+        config_ = handler_.getConfig(user);
+        return config_;
     }
 
     @Override
@@ -476,6 +480,27 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
             return 0;
         }
+        else if (folder.equals("RESTORE")) {
+            String dbDir = Environment.getDataDirectory() + "/data/org.apps.notsorandom/databases/";
+            String backDir = Environment.getExternalStorageDirectory().getAbsolutePath();
+            Log.d(TAG, "Restoring Media DB from " + backDir + " to " + dbDir);
+            try {
+                InputStream  is = new FileInputStream(new File(backDir, DATABASE_NAME + ".restore"));
+                OutputStream os = new FileOutputStream(new File(dbDir, DATABASE_NAME));
+                byte[] buffer = new byte[1024];
+                int read;
+                while((read = is.read(buffer)) != -1){
+                    os.write(buffer, 0, read);
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+                return -1;
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+
+            return 0;
+        }
 
         Collection<File> all = new ArrayList<File>();
         File file = new File(folder);
@@ -492,7 +517,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             }
         }
 
-        Log.d(TAG, "scanForMedia found " + all.size());
+//        Log.d(TAG, "scanForMedia found " + all.size());
         HashMap<String,Integer> genreMap = new HashMap<String,Integer>();
         genreMap.put("Alternative & Punk", new Integer(0x75));
         genreMap.put("Rap & Hip-Hop",      new Integer(0x74));
@@ -538,7 +563,6 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 title = title.replace('_', ' ');
                 if (title.matches("^[0-9]+ .*"))
                     title = title.substring(title.indexOf(' ') + 1);
-//                title += " (File)";
             }
             int sense = 0;
             String genre = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE);
@@ -611,16 +635,6 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         }
 
         return false;
-    }
-
-    @Override
-    public boolean updateSenseValue(int item, int sense) {
-        SongInfo song = getSong(item);
-        if (song == null)
-            return false;
-
-        song.setSense(sense);
-        return updateSongInfo(item, song);
     }
 
     @Override

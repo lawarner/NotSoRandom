@@ -15,20 +15,22 @@ public class MusicMap {
 
     public static final int MAPWIDTH  = 8;   // matrix width
     public static final int MAPHEIGHT = 8;   // matrix height
-    public static final int MAPSIZE = MAPWIDTH * MAPHEIGHT;
+    public static final int MAPDEPTH  = 8;   // matrix depth
+    public static final int MAPSIZE = MAPWIDTH * MAPHEIGHT * MAPDEPTH;
 
     private static Rect box_ = new Rect();
 
     private static NSRMediaLibrary library_;
 
-    private int senseValues_[];
-    private int puddle_[];
+    //private int puddle_[];
     private MapEntry libEntries_[];
     private MapEntry shuffleEntries_[];
     private int maxMapEntry_;
     private int songsInBox_ = 0;
 
-    private static int[] shuffleIndices_ = null;
+    MusicPlayerApp.LibraryCategory libCat_ = MusicPlayerApp.LibraryCategory.ALL;
+
+    private static SongInfo[] shuffleIndices_ = null;
 
     public static void setLibrary(NSRMediaLibrary library) {
         library_ = library;
@@ -79,19 +81,13 @@ public class MusicMap {
 
 
     public MusicMap() {
-        puddle_ = new int[MAPSIZE];
-        senseValues_ = new int[MAPSIZE];
         libEntries_ = new MapEntry[MAPSIZE];
         shuffleEntries_ = new MapEntry[MAPSIZE];
 
         Log.d(TAG, "Initing MusicMap");
         for (int i = 0; i < MAPSIZE; i++) {
-            int j = (i % 8) | (( i / 8) << 4);
-            senseValues_[i] = j;
-            puddle_[i] = 0;
             libEntries_[i] = new MapEntry(-1, 0);
             shuffleEntries_[i] = new MapEntry(-1, 0);
-//            Log.d(TAG, "Value: " + Integer.toHexString(j));
         }
         Log.d(TAG, "Done Initing MusicMap");
     }
@@ -102,11 +98,12 @@ public class MusicMap {
      * library songs to their sense value.
      * @return  false if the media library has not yet been set, otherwise true.
      */
-    public boolean fillLibEntries() {
+    public boolean fillLibEntries(MusicPlayerApp.LibraryCategory libCat) {
+        libCat_ = libCat;
         if (library_ == null)
             return false;
 
-//        library_.sortSongs();
+        library_.sortSongs();
 
         for (int i = 0; i < libEntries_.length; i++) {
             libEntries_[i].set(-1, 0);
@@ -116,9 +113,21 @@ public class MusicMap {
         int lastIndex = -1;
         int skipped = 0;
 
+        Config config = library_.getConfig(Config.DEFAULT_USER);
+        SenseComponent xComp = config.getXcomponent();
+        SenseComponent yComp = config.getYcomponent();
+
         // Fill in libEntries_ array from media library
         for (int idx = 0; idx < library_.getSongCount(); idx++) {
             SongInfo song = library_.getSong(idx);
+            int sense = song.getSenseValue();
+            boolean gutter = (sense & xComp.getMask()) == 0
+                          || (sense & yComp.getMask()) == 0;
+            if (libCat == MusicPlayerApp.LibraryCategory.CATEGORIZED && gutter)
+                continue;
+            if (libCat == MusicPlayerApp.LibraryCategory.UNCATEGORIZED && !gutter)
+                continue;
+
             int ii = song.getSenseIndex();
             if (ii < 0 || ii >= MAPSIZE) {
                 MusicPlayerApp.log(TAG, "Sense index " + ii + " out of range for " + song.getFileName());
@@ -147,30 +156,11 @@ public class MusicMap {
     }
 
     /**
-     * Repopulate the shuffle map from array of indices.
-     * @param indices Array of indices into the song library.
+     * Repopulate the shuffle map from array of songs.
+     * @param songs Array of songs from library.
      * @return Populated shuffle map.
      */
-    public MapEntry[] fillShuffleEntries(int[] indices) {
-        resetShuffle();
-        for (int i : indices) {
-            SongInfo song = library_.getSong(i);
-            int ii = song.getSenseIndex();
-
-            shuffleEntries_[ii].set(libEntries_[ii].getStart());
-            shuffleEntries_[ii].addEntry();
-        }
-
-        return shuffleEntries_;
-    }
-
-    /**
-     * Repopulate the shuffle map from array of indices.  This version is called with a queue
-     * of songs so that it is does not rely on the library being reshuffled.
-     * @param songs Array of songs.
-     * @return Populated shuffle map.
-     */
-    public MapEntry[] fillShuffleEntries(ArrayList<SongInfo> songs) {
+    public MapEntry[] fillShuffleEntries(SongInfo[] songs) {
         resetShuffle();
         for (SongInfo song : songs) {
             int ii = song.getSenseIndex();
@@ -199,21 +189,24 @@ public class MusicMap {
     }
 
     /**
-     * This returns a list of indices into the MusicLibrary's songs.
+     * This returns a list of songs in the MusicLibrary.
      * If one of the shuffle routines has filled a shuffle list, it is returned,
-     * otherwise the MusicLibrary's total list of shuffled indices is returned.
+     * otherwise the MusicLibrary's total list of shuffled songs is returned.
      *
-     * @return List of indices into MusicLibrary's songs, or an empty list if library
-     *         not yet initialized.
+     * @return List of songs in the MusicLibrary, or an empty list if library
+     *         is not yet initialized.
      */
-    public int[] getShuffledList() {
+    public SongInfo[] getShuffledList() {
         if (shuffleIndices_ != null)
             return shuffleIndices_;
 
         if (library_ == null)
-            return new int[0];
+            return new SongInfo[0];
 
-        return library_.getShuffledSongs(false);
+        ArrayList<SongInfo> arr = library_.getShuffledSongs(false);
+        SongInfo[] ret = new SongInfo[library_.getSongCount()];
+        arr.toArray(ret);
+        return ret;
     }
 
     public boolean isShuffled() {
@@ -236,7 +229,7 @@ public class MusicMap {
     }
 
 
-    public int[] boxShuffle(Rect box) {
+    public SongInfo[] boxShuffle(Rect box) {
         MusicPlayerApp.log(TAG, "START BOX SHUFFLE");
 
         // Sanitize and set box
@@ -254,34 +247,41 @@ public class MusicMap {
         }
 
         // Find out total songs in the box
-        fillLibEntries();
+        fillLibEntries(libCat_);
         songsInBox_ = 0;    // box_.width() * box_.height();
         int start = box_.left + box_.top * MAPWIDTH;
         for (int y = 0; y < box_.height(); y++) {
             for (int x = 0; x < box_.width(); x++) {
-                int idx = start + x + y * MAPWIDTH;
-                songsInBox_ += libEntries_[idx].getCount();
+                int xy = start + x + y * MAPWIDTH;
+                // Count all layers
+                for (int idx = xy; idx < MAPSIZE; idx += MAPHEIGHT * MAPWIDTH)
+                    songsInBox_ += libEntries_[idx].getCount();
             }
         }
 
         MusicPlayerApp.log(TAG, " + BOX SHUFFLE AT: " + box_.toString()
                            + ", Lib songs=" + library_.getSongCount() + ", in box=" + songsInBox_);
 
-        int[] ret = new int[songsInBox_];
+        SongInfo[] ret = new SongInfo[songsInBox_];
 
         if (songsInBox_ > 0) {
-            int cnt = 0;
-            int[] shuffled = library_.getShuffledSongs(true);
-            for (int idx : shuffled) {
-                SongInfo song = library_.getSong(idx);
-                int sense = song.getSenseIndex();
-                int x = sense % MAPWIDTH;
-                int y = sense / MAPWIDTH;
-                if (box_.contains(x, y) && libEntries_[sense].removeEntry() > 0) {
-                //    MusicPlayerApp.log(TAG, "song @ " + sense + " (" + x + "," + y + ") "
-                //                            + song.getSenseString() + ": " + song.getTitle());
-                    ret[cnt++] = idx;
-                    if (cnt >= songsInBox_)
+            int count = 0;
+            Config config = library_.getConfig(Config.DEFAULT_USER);
+            SenseComponent xComp = config.getXcomponent();
+            SenseComponent yComp = config.getYcomponent();
+
+            ArrayList<SongInfo> shuffled = library_.getShuffledSongs(true);
+            for (SongInfo song : shuffled) {
+                int sense = song.getSenseValue();
+                int idx = song.getSenseIndex();
+                int x = xComp.getComponentValue(sense);
+                int y = yComp.getComponentValue(sense);
+
+                if (box_.contains(x, y) && libEntries_[idx].removeEntry() > 0) {
+//                    MusicPlayerApp.log(TAG, "song @ " + idx + " (" + x + "," + y + ") "
+//                                            + song.getSenseString() + ": " + song.getTitle());
+                    ret[count++] = song;
+                    if (count >= songsInBox_)
                         break;
                 }
             }
@@ -293,17 +293,19 @@ public class MusicMap {
     }
 
 
-    public int[] randomShuffle(int count) {
+    public SongInfo[] randomShuffle(int count) {
         MusicPlayerApp.log(TAG, "RANDOM SHUFFLE " + count);
-        int[] arr = library_.getShuffledSongs(true);
-        if (arr.length == 0)
-            return arr;
+        ArrayList<SongInfo> arr = library_.getShuffledSongs(true);
+        if (arr.size() == 0) {
+            shuffleIndices_ = new SongInfo[0];
+            return shuffleIndices_;
+        }
 
-        if (count > arr.length)
-            count = arr.length;
+        if (count > arr.size())
+            count = arr.size();
 
-        int[] ret = new int[count];
-        System.arraycopy(arr, 0, ret, 0, count);
+        SongInfo[] ret = new SongInfo[count];
+        arr.subList(0, count).toArray(ret);
 
         fillShuffleEntries(ret);
         shuffleIndices_ = ret;

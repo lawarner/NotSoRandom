@@ -3,7 +3,9 @@ package org.apps.notsorandom;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,7 +14,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
@@ -25,6 +26,10 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
     private static String statusStr_ = "";
 
     private TextView statusView_ = null;
+
+    private boolean isScanning_ = false;
+
+    private Handler handler_ = new Handler();
 
     // Used to call back the Activity that attached us.
     private MusicPlayer.OnPlayerListener callback_ = null;
@@ -69,17 +74,40 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
         but.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                NSRMediaLibrary lib = callback_.getLibrary();
-                if (lib != null) {
-                    //TODO scan in a worker thread
-                    MusicPlayerApp.log(TAG, "Scanning SD card for new media...");
-                    int nr = -lib.getSongCount();
-                    nr += lib.scanForMedia("SDCARD", true);
-                    MusicPlayerApp.log(TAG, "Scan complete.  Found " + nr + " new items.");
-                    nr = -lib.getSongCount();
-                    nr += lib.scanForMedia("SDCARDEXT", true);
-                    MusicPlayerApp.log(TAG, "Scan ext complete.  Found " + nr + " new items.");
-                }
+
+                view.setEnabled(false);
+                isScanning_ = true;
+                AsyncTask<View, Void, Void> at = new AsyncTask<View, Void, Void>() {
+
+                    @Override
+                    protected Void doInBackground(View... views) {
+                        NSRMediaLibrary lib = callback_.getLibrary();
+                        if (lib != null) {
+                            //TODO scan in a worker thread
+                            MusicPlayerApp.log(TAG, "Scanning SD card for new media...");
+                            int orig = lib.getSongCount();
+                            int nr = lib.scanForMedia("SDCARD", true);
+                            MusicPlayerApp.log(TAG, "Scan complete.  Found " + nr + " new items.");
+                            nr = lib.scanForMedia("SDCARDEXT", true);
+                            MusicPlayerApp.log(TAG, "Scan ext complete.  Found " + nr + " new items.");
+                            lib.getAllSongs();
+                            lib.sortSongs();
+                            MusicLibrary.updateDb(true, MusicPlayerApp.LibraryCategory.ALL);
+                        }
+                        isScanning_ = false;
+                        final View view = views[0];
+                        handler_.post(new Runnable() {
+                            public void run() {
+                                MusicPlayer.initLibrary(MusicPlayerApp.LibraryCategory.ALL);
+                                view.setEnabled(true);
+                            }
+                        });
+
+                        return null;
+                    }
+                };
+
+                at.execute(view);
             }
         });
 
@@ -97,8 +125,7 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
             public void onClick(View view) {
                 NSRMediaLibrary lib = callback_.getLibrary();
                 if (lib != null) {
-                    lib.scanForMedia("CLEANUP", true);
-//                    lib.scanForMedia("BACKUP", false);
+                    lib.scanForMedia("BACKUP", false);
                     MusicPlayerApp.log(TAG, "Db backed up to SD card");
                 }
             }

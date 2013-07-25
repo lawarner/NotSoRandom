@@ -5,7 +5,7 @@ import android.os.Environment;
 import java.util.Random;
 
 /**
- * Created by andy on 6/23/13.
+ * Class that implements a media library with dummy data.
  */
 public class MediaLibraryTest extends MediaLibraryBaseImpl {
     public MediaLibraryTest() {

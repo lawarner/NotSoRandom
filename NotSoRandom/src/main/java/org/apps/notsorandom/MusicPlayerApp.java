@@ -61,9 +61,19 @@ public class MusicPlayerApp extends FragmentActivity
         }
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
+        //log(TAG, "Attempt to restore db from sdcard");
+        //library_.scanForMedia("RESTORE", false);
+
         library_.initialize();
         //TODO if library empty, popup to run media scan
 //        library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+        Config config = library_.getConfig(Config.DEFAULT_USER);
+        if (config != null) {
+            log("Got config, x=" + config.getXcomponent().getName() + ", y=" + config.getYcomponent().getName()
+                    + ", z=" + config.getZcomponent().getName());
+            MusicPlayer.setupComponents(config);
+        }
+
         library_.registerOnLibraryChanged(this);
         library_.getAllSongs();
         library_.sortSongs();
@@ -71,13 +81,6 @@ public class MusicPlayerApp extends FragmentActivity
         MusicLibrary.initDb(library_);
         MusicQueue.setLibrary(library_);
         MusicMap.setLibrary(library_);
-
-        Config config = library_.getConfig(Config.DEFAULT_USER);
-        if (config != null) {
-            log("Got config, x=" + config.getXcomponent().getName() + ", y=" + config.getYcomponent().getName()
-                    + ", z=" + config.getZcomponent().getName());
-            MusicPlayer.setupComponents(config);
-        }
 
         // Start with 200 in the queue
 //        MusicQueue.refreshQueue(200);
@@ -128,7 +131,11 @@ public class MusicPlayerApp extends FragmentActivity
                 break;
             default:
                 log(TAG, "Unknown radio button clicked.");
+                return;
         }
+
+        MusicLibrary.updateDb(true, libCat_);
+        MusicPlayer.initLibrary(libCat_);
     }
 
     // -----------------------------------------------------------------
@@ -182,8 +189,11 @@ public class MusicPlayerApp extends FragmentActivity
     }
 
     @Override
-    public ArrayList<SongInfo> getQueue() {
-        return MusicQueue.getQueue();
+    public SongInfo[] getQueue() {
+        ArrayList<SongInfo> arr = MusicQueue.getQueue();
+        SongInfo[] songs = new SongInfo[arr.size()];
+        arr.toArray(songs);
+        return songs;
     }
 
     @Override
@@ -213,7 +223,7 @@ public class MusicPlayerApp extends FragmentActivity
     public void libraryUpdated(NSRMediaLibrary library) {
         log(TAG, "libraryUpdated triggered, calling fragments with update.");
 
-        MusicLibrary.updateDb(true);
+        MusicLibrary.updateDb(true, libCat_);
 
 //        MusicQueue.refreshQueue(200);
 

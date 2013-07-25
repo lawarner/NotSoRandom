@@ -1,7 +1,10 @@
 package org.apps.notsorandom;
 
 /**
- * Created by andy on 6/27/13.
+ * A sense component describes one range of values (0-7).  These components can be stored
+ * compactly as 4 bits (with the highest bit reserved).  Within the music player, each
+ * component represents a dimension and it uses 32 bits to store them, giving up to 8
+ * dimensions.  The values range from 1 to 6 and 0 meaning undefined.
  */
 public class SenseComponent {
     private String name_;
@@ -49,11 +52,21 @@ public class SenseComponent {
         return mask_;
     }
 
+    /**
+     * Returns the component value from 0 to 7 where 0 means uninitialized.
+     * @param senseValue A sense value.
+     * @return The sense value for this component.
+     */
     public int getComponentValue(int senseValue) {
         int ret = (senseValue & mask_) >> bitsPos_;
         return ret;
     }
 
+    /**
+     * Returns component value as an index from 0 to 6.  Used to index arrays.
+     * @param senseValue
+     * @return
+     */
     public int getComponentIndex(int senseValue) {
         int ret = getComponentValue(senseValue);
         if (ret > 0) ret--;

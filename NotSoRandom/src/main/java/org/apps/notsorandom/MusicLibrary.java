@@ -19,34 +19,152 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
- * Represents the library and allows editing sense values for songs.
+ * Represents the library of songs.  Allows searching for songs and editing sense values for songs.
  */
 public class MusicLibrary extends Fragment implements AdapterView.OnItemClickListener,
                                                     AdapterView.OnItemSelectedListener,
                                                     SeekBar.OnSeekBarChangeListener, SearchView.OnQueryTextListener {
     private static final String TAG = "MusicLibrary";
 
-    private static ArrayAdapter<String> libArray_ = null;
+    private static SongsAdapter libArray_ = null;
     private static ArrayList<String> libArrList_ = new ArrayList<String>();
 
     private static MediaLibraryBaseImpl library_;
     private static int currItem_ = -1;
+    private static SongInfo currSong_ = null;
     private static TextView currItemView_ = null;
 
     private static SenseComponent xSense_;
     private static SenseComponent ySense_;
     private static SenseComponent zSense_;
 
+    private final Object lock_ = new Object();
+
     // Used to call back the Activity that attached us.
-    private MusicPlayer.OnPlayerListener callback_ = null;
+    protected MusicPlayer.OnPlayerListener callback_ = null;
 
     private static final int HILIGHT_COLOR = Color.argb(0xff, 130, 209, 236);
 
-    public static void initDb(MediaLibraryBaseImpl library) {
-        library_ = library;
 
+    protected class SongsAdapter extends ArrayAdapter<String> {
+        protected Filter filter_;
+        protected List<String> objects_;
+        protected ArrayList<String> originals_;
+
+        public SongsAdapter(Context context, int textViewId, List<String> objects) {
+            super(context, textViewId, objects);
+            objects_ = objects;
+        }
+
+        @Override
+        public void addAll(Collection<? extends String> objects) {
+            super.addAll(objects);
+            objects_.addAll(objects);
+            originals_.addAll(objects);
+        }
+
+        @Override
+        public void clear() {
+            if (originals_ != null)
+                originals_.clear();
+            else
+                objects_.clear();
+            super.clear();
+        }
+
+        @Override
+        public Filter getFilter() {
+            if (filter_ == null)
+                filter_ = new SongsFilter();
+
+            return filter_;
+        }
+
+        public List<String> getList() {
+            return objects_;
+        }
+
+        public ArrayList<String> getOriginals() {
+            if (originals_ == null) {
+                synchronized (lock_) {
+                    originals_ = new ArrayList<String>(objects_);
+                }
+            }
+            return originals_;
+        }
+
+        protected class SongsFilter extends Filter {
+
+            @Override
+            protected FilterResults performFiltering(CharSequence filterWords) {
+                FilterResults results = new FilterResults();
+
+                if (originals_ == null) {
+                    synchronized (lock_) {
+                        originals_ = new ArrayList<String>(objects_);
+                    }
+                }
+
+                if (filterWords == null || filterWords.length() == 0) {
+                    ArrayList<String> list;
+                    synchronized (lock_) {
+                        list = new ArrayList<String>(originals_);
+                    }
+                    results.values = list;
+                    results.count = list.size();
+                } else {
+                    String[] words = filterWords.toString().toLowerCase().split("[ ,]+");
+
+                    ArrayList<String> values;
+                    synchronized (lock_) {
+                        values = new ArrayList<String>(originals_);
+                    }
+
+                    final int count = values.size();
+                    final ArrayList<String> newValues = new ArrayList<String>();
+
+                    for (int i = 0; i < count; i++) {
+                        final String value = values.get(i);
+                        final String valueText = value.toLowerCase();
+
+                        boolean matched = true;
+                        for (String word : words) {
+                            if (valueText.indexOf(word) == -1) {
+                                matched = false;
+                                break;
+                            }
+                        }
+
+                        if (matched)
+                            newValues.add(value);
+                    }
+
+                    results.values = newValues;
+                    results.count = newValues.size();
+                }
+
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence charSequence, FilterResults results) {
+                objects_.clear();
+                objects_.addAll((List<String>) results.values);
+                if (results.count > 0) {
+                    notifyDataSetChanged();
+                } else {
+                    notifyDataSetInvalidated();
+                }
+
+            }
+        }
+    }
+
+    private static void setupComponents() {
         // get the x,y,z values from config section of library.
         Config config = library_.getConfig(Config.DEFAULT_USER);
         if (config != null) {
@@ -54,19 +172,31 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
             ySense_ = config.getYcomponent();
             zSense_ = config.getZcomponent();
         } else {    // Load global defaults
-            xSense_ = library_.getComponent("tempo");
-            ySense_ = library_.getComponent("roughness");
-            zSense_ = library_.getComponent("humor");
+            xSense_ = library_.getComponent(Config.DEFAULT_X_COMPONENT);
+            ySense_ = library_.getComponent(Config.DEFAULT_Y_COMPONENT);
+            zSense_ = library_.getComponent(Config.DEFAULT_Z_COMPONENT);
         }
-        updateDb(true);
     }
 
-    public static void updateDb(boolean clear) {
+    public static void initDb(MediaLibraryBaseImpl library) {
+        library_ = library;
+        setupComponents();
+        updateDb(true, MusicPlayerApp.LibraryCategory.ALL);
+    }
+
+    public static void updateDb(boolean clear, MusicPlayerApp.LibraryCategory libCat) {
         if (library_ == null)
             return;
 
         ArrayList<String> songs = new ArrayList<String>(library_.getSongCount());
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
+            int sense = song.getSenseValue();
+            boolean gutter = (sense & xSense_.getMask()) == 0 || (sense & ySense_.getMask()) == 0;
+            if (libCat == MusicPlayerApp.LibraryCategory.CATEGORIZED && gutter)
+                continue;
+            if (libCat == MusicPlayerApp.LibraryCategory.UNCATEGORIZED && !gutter)
+                continue;
+
             String title = song.getTitle();
             String artist = song.getArtist();
             if (artist == null)
@@ -94,16 +224,12 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         if (currItem_ < 0 || currItem_ > library_.getSongCount())
             return;
 
-        SongInfo song = library_.getSong(currItem_);
-        if (song == null)
-            return;
-
         SeekBar sb = (SeekBar) getView().findViewById(R.id.xSeekBar);
-        sb.setProgress(xSense_.getComponentIndex(song.getSenseValue()));
+        sb.setProgress(xSense_.getComponentIndex(currSong_.getSenseValue()));
         sb = (SeekBar) getView().findViewById(R.id.ySeekBar);
-        sb.setProgress(ySense_.getComponentIndex(song.getSenseValue()));
+        sb.setProgress(ySense_.getComponentIndex(currSong_.getSenseValue()));
         sb = (SeekBar) getView().findViewById(R.id.zSeekBar);
-        sb.setProgress(zSense_.getComponentIndex(song.getSenseValue()));
+        sb.setProgress(zSense_.getComponentIndex(currSong_.getSenseValue()));
     }
 
     private boolean hilightItem(View view, int item) {
@@ -148,12 +274,19 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         ListView lv = (ListView) view.findViewById(R.id.libraryView);
 
         if (libArray_ == null) {
-            libArray_ = new ArrayAdapter<String>(getActivity(), R.layout.simplerow, libArrList_);
+            libArray_ = new SongsAdapter(getActivity(), R.layout.simplerow, libArrList_);
         }
         lv.setAdapter(libArray_);
         lv.setOnItemClickListener(this);
         lv.setOnItemSelectedListener(this);
         lv.setTextFilterEnabled(true);
+
+        TextView tv = (TextView) view.findViewById(R.id.xLabel);
+        tv.setText(xSense_.getName());
+        tv = (TextView) view.findViewById(R.id.yLabel);
+        tv.setText(ySense_.getName());
+        tv = (TextView) view.findViewById(R.id.zLabel);
+        tv.setText(zSense_.getName());
 
         SeekBar sb = (SeekBar) view.findViewById(R.id.xSeekBar);
         sb.setOnSeekBarChangeListener(this);
@@ -191,7 +324,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
         MusicPlayerApp.log(TAG, "Nothing Selected.");
-//        currItem_ = -1;
+        currItem_ = -1;
 //        hilightItem(null, -1);
     }
 
@@ -199,26 +332,27 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     public void onItemClick(AdapterView<?> adapterView, View view, int item, long lParam) {
         MusicPlayerApp.log(TAG, "onItemClick Item " + item + ", param=" + lParam);
 
-        String strItem = (String) adapterView.getItemAtPosition(item);
+        String strItem = libArray_.getList().get(item);
+        //String strItem = (String) adapterView.getItemAtPosition(item);
         int currItem = 0;
-        for ( ; currItem < libArrList_.size(); currItem++) {
-            if (strItem.equals(libArrList_.get(currItem)))
+        ArrayList<String> origArr = libArray_.getOriginals();
+        for ( ; currItem < origArr.size(); currItem++) {
+            if (strItem.equals(origArr.get(currItem)))
                 break;
         }
-        MusicPlayerApp.log(TAG, " item id=" + adapterView.getItemIdAtPosition(item) + " is " + currItem);
-        if (currItem >= libArrList_.size())
+        MusicPlayerApp.log(TAG, " item is " + currItem + ", strItem=" + strItem);
+        if (currItem >= origArr.size())
             return;
 
         currItem_ = currItem;
+        currSong_ = library_.getSong(currItem_);
+        MusicPlayerApp.log(TAG, "CurrSong is " + currSong_.getTitle());
 //        if (hilightItem(view, currItem)) {
-            adapterView.setSelection(currItem);
+            adapterView.setSelection(currItem_);
             adapterView.setSelected(true);
             setSliders();
-            SongInfo song = library_.getSong(currItem_);
-            if (song != null) {
-                callback_.setCurrSong(song);
-                callback_.playSong(song);
-            }
+            callback_.setCurrSong(currSong_);
+            callback_.playSong(currSong_);
     }
 
     @Override
@@ -237,11 +371,12 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         int zval = sb.getProgress() + 1;
 
         int sense = xSense_.getMaskedValue(xval)
-                  | ySense_.getMaskedValue(yval);
-      //TODO      | zSense_.getMaskedValue(zval);
+                  | ySense_.getMaskedValue(yval)
+                  | zSense_.getMaskedValue(zval);
 
-        Log.d(TAG, "New sense value = " + Integer.toHexString(sense) + ", item=" + currItem_);
-        library_.updateSenseValue(currItem_, sense);
+        Log.d(TAG, "New sense value = " + Integer.toHexString(sense)
+                 + ", item=" + currItem_ + ", song=" + currSong_.getTitle());
+        library_.updateSenseValue(currSong_, sense);
     }
 
     @Override

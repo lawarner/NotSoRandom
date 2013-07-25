@@ -121,20 +121,22 @@ public class SongInfo {
     /**
      * Simple convenience method.
      * @param idx Sequential index of values
-     * @return Encoded sense value (current only 2 parts).
+     * @return Encoded sense value (current only 4 dimensions).
      */
     public static int indexToSense(int idx) {
-        int sv = ((idx & 0xf8) << 1) | (idx & 0x07);
+        int sv = ((idx & 0xe000) << 3) | ((idx & 0x01c0) << 2)
+               | ((idx & 0x0038) << 1) |  (idx & 0x0007);
         return sv;
     }
 
     /**
      * Simple convenience method.
-     * @param sense Encoded sense value
+     * @param sense Encoded sense value (current only 4 dimensions).
      * @return Sequential index of value
      */
     public static int senseToIndex(int sense) {
-        int idx = ((sense & 0xf0) >> 1) | (sense & 0x07);
+        int idx = ((sense & 0x7000) >> 3) | ((sense & 0x0700) >> 2)
+                | ((sense & 0x0070) >> 1) | (sense & 0x0007);
         return idx;
     }
 
