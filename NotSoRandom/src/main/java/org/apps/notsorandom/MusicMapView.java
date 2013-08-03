@@ -275,6 +275,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
                 MusicPlayerApp.log(TAG, "placeMode @ (" + x + "," + y + ")");
                 if (x >= 0 && x < 8 && y >= 0 && y < 8) {
                     MediaLibraryBaseImpl lib = (MediaLibraryBaseImpl) listener_.getLibrary();
+                    //TODO use SenseComponents for x y below
                     if (lib.updateSenseValue(song, (x | (y << 4)))) {
                         musicMap_.fillLibEntries(listener_.getLibCategory());
                         musicMap_.fillShuffleEntries(listener_.getQueue());

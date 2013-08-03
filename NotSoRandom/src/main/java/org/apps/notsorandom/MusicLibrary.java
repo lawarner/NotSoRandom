@@ -31,10 +31,9 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     private static final String TAG = "MusicLibrary";
 
     private static SongsAdapter libArray_ = null;
-    private static ArrayList<String> libArrList_ = new ArrayList<String>();
+    private static ArrayList<SongInfo> libArrList_ = new ArrayList<SongInfo>();
 
     private static MediaLibraryBaseImpl library_;
-    private static int currItem_ = -1;
     private static SongInfo currSong_ = null;
     private static TextView currItemView_ = null;
 
@@ -50,21 +49,22 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     private static final int HILIGHT_COLOR = Color.argb(0xff, 130, 209, 236);
 
 
-    protected class SongsAdapter extends ArrayAdapter<String> {
+    protected class SongsAdapter extends ArrayAdapter<SongInfo> {
         protected Filter filter_;
-        protected List<String> objects_;
-        protected ArrayList<String> originals_;
+        protected List<SongInfo> objects_;
+        protected ArrayList<SongInfo> originals_;
 
-        public SongsAdapter(Context context, int textViewId, List<String> objects) {
+        public SongsAdapter(Context context, int textViewId, List<SongInfo> objects) {
             super(context, textViewId, objects);
             objects_ = objects;
         }
 
         @Override
-        public void addAll(Collection<? extends String> objects) {
+        public void addAll(Collection<? extends SongInfo> objects) {
             super.addAll(objects);
             objects_.addAll(objects);
-            originals_.addAll(objects);
+            if (originals_ != null)
+                originals_.addAll(objects);
         }
 
         @Override
@@ -84,14 +84,14 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
             return filter_;
         }
 
-        public List<String> getList() {
+        public List<SongInfo> getList() {
             return objects_;
         }
 
-        public ArrayList<String> getOriginals() {
+        public ArrayList<SongInfo> getOriginals() {
             if (originals_ == null) {
                 synchronized (lock_) {
-                    originals_ = new ArrayList<String>(objects_);
+                    originals_ = new ArrayList<SongInfo>(objects_);
                 }
             }
             return originals_;
@@ -105,31 +105,31 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
 
                 if (originals_ == null) {
                     synchronized (lock_) {
-                        originals_ = new ArrayList<String>(objects_);
+                        originals_ = new ArrayList<SongInfo>(objects_);
                     }
                 }
 
                 if (filterWords == null || filterWords.length() == 0) {
-                    ArrayList<String> list;
+                    ArrayList<SongInfo> list;
                     synchronized (lock_) {
-                        list = new ArrayList<String>(originals_);
+                        list = new ArrayList<SongInfo>(originals_);
                     }
                     results.values = list;
                     results.count = list.size();
                 } else {
                     String[] words = filterWords.toString().toLowerCase().split("[ ,]+");
 
-                    ArrayList<String> values;
+                    ArrayList<SongInfo> values;
                     synchronized (lock_) {
-                        values = new ArrayList<String>(originals_);
+                        values = new ArrayList<SongInfo>(originals_);
                     }
 
                     final int count = values.size();
-                    final ArrayList<String> newValues = new ArrayList<String>();
+                    final ArrayList<SongInfo> newValues = new ArrayList<SongInfo>();
 
                     for (int i = 0; i < count; i++) {
-                        final String value = values.get(i);
-                        final String valueText = value.toLowerCase();
+                        final SongInfo value = values.get(i);
+                        final String valueText = value.toString().toLowerCase();
 
                         boolean matched = true;
                         for (String word : words) {
@@ -153,7 +153,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
             @Override
             protected void publishResults(CharSequence charSequence, FilterResults results) {
                 objects_.clear();
-                objects_.addAll((List<String>) results.values);
+                objects_.addAll((List<SongInfo>) results.values);
                 if (results.count > 0) {
                     notifyDataSetChanged();
                 } else {
@@ -188,7 +188,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         if (library_ == null)
             return;
 
-        ArrayList<String> songs = new ArrayList<String>(library_.getSongCount());
+        ArrayList<SongInfo> songs = new ArrayList<SongInfo>(library_.getSongCount());
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
             int sense = song.getSenseValue();
             boolean gutter = (sense & xSense_.getMask()) == 0 || (sense & ySense_.getMask()) == 0;
@@ -197,14 +197,9 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
             if (libCat == MusicPlayerApp.LibraryCategory.UNCATEGORIZED && !gutter)
                 continue;
 
-            String title = song.getTitle();
-            String artist = song.getArtist();
-            if (artist == null)
-                artist = "";
-            String str = title + "\n"
-                       + song.getSenseString() + "  " + artist;
-            songs.add(str);
+            songs.add(song);
         }
+        songs.trimToSize();
 
         if (clear)
             libArrList_.clear();
@@ -221,7 +216,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     // -----------------------------------------------------------------------------
 
     private void setSliders() {
-        if (currItem_ < 0 || currItem_ > library_.getSongCount())
+        if (currSong_ == null)
             return;
 
         SeekBar sb = (SeekBar) getView().findViewById(R.id.xSeekBar);
@@ -233,8 +228,8 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     }
 
     private boolean hilightItem(View view, int item) {
-        if (item == currItem_)
-            return true;
+        if (currSong_ == null)
+            return false;
 /*
         // unstar previous item if it was starred.
         if (currItemView_ != null) {
@@ -324,7 +319,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
         MusicPlayerApp.log(TAG, "Nothing Selected.");
-        currItem_ = -1;
+        currSong_ = null;
 //        hilightItem(null, -1);
     }
 
@@ -332,23 +327,17 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     public void onItemClick(AdapterView<?> adapterView, View view, int item, long lParam) {
         MusicPlayerApp.log(TAG, "onItemClick Item " + item + ", param=" + lParam);
 
-        String strItem = libArray_.getList().get(item);
-        //String strItem = (String) adapterView.getItemAtPosition(item);
-        int currItem = 0;
-        ArrayList<String> origArr = libArray_.getOriginals();
-        for ( ; currItem < origArr.size(); currItem++) {
-            if (strItem.equals(origArr.get(currItem)))
-                break;
-        }
-        MusicPlayerApp.log(TAG, " item is " + currItem + ", strItem=" + strItem);
-        if (currItem >= origArr.size())
+        SongInfo song = libArray_.getList().get(item);
+        currSong_ = song;
+        if (song == null)
             return;
 
-        currItem_ = currItem;
-        currSong_ = library_.getSong(currItem_);
-        MusicPlayerApp.log(TAG, "CurrSong is " + currSong_.getTitle());
+        MusicPlayerApp.log(TAG, "onItemClick:  CurrSong is " + currSong_.getTitle());
+
+        song = (SongInfo) adapterView.getItemAtPosition(item);
+        MusicPlayerApp.log(TAG, "onItemClick:  (song == currSong_) = " + (song == currSong_));
 //        if (hilightItem(view, currItem)) {
-            adapterView.setSelection(currItem_);
+//            adapterView.setSelection(currItem_);
             adapterView.setSelected(true);
             setSliders();
             callback_.setCurrSong(currSong_);
@@ -360,7 +349,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         if (!byUser)
             return;
 
-        if (currItem_ < 0 || currItem_ > library_.getSongCount())
+        if (currSong_ == null)
             return;
 
         SeekBar sb = (SeekBar) getView().findViewById(R.id.xSeekBar);
@@ -375,7 +364,7 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
                   | zSense_.getMaskedValue(zval);
 
         Log.d(TAG, "New sense value = " + Integer.toHexString(sense)
-                 + ", item=" + currItem_ + ", song=" + currSong_.getTitle());
+                 + ", song=" + currSong_.getTitle());
         library_.updateSenseValue(currSong_, sense);
     }
 

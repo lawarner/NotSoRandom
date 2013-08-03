@@ -327,6 +327,28 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             return ret;
         }
 
+        public boolean updateSong(SongInfo song) {
+            boolean ret = true;
+
+            SQLiteDatabase db = getWritableDatabase();
+            ContentValues values = new ContentValues();
+            String file = song.getFileName();
+            if (sdDir_ != null && file.startsWith(sdDir_))
+                file = file.substring(sdDir_.length());
+            String where = COL_FILE + " = \"" + file + "\"";
+            values.put(COL_TITLE, song.getTitle());
+            values.put(COL_SENSE, song.getSenseValue());
+            values.put(COL_ARTIST, song.getArtist());
+            try {
+                db.update(TABLE_SONGS, values, where, null);
+            } catch (SQLiteConstraintException ce) {
+                ret = false;
+            }
+
+            db.close();
+            return ret;
+        }
+
         public void initDatabase() {
             SQLiteDatabase db = getWritableDatabase();
 
@@ -626,15 +648,11 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         if (song == null)
             return false;
 
-        for (int idx = 0; idx < songs_.size(); idx++) {
-            if (song == songs_.get(idx)) {
-                song.setSense(sense);
-                MusicPlayerApp.log(TAG, "Updating sense to " + Integer.toHexString(sense) + " for song=" + song.getTitle());
-                return updateSongInfo(idx, song);
-            }
-        }
+        if (!super.updateSenseValue(song, sense))
+            return false;
 
-        return false;
+        MusicPlayerApp.log(TAG, "Updating sense to " + Integer.toHexString(sense) + " for song=" + song.getTitle());
+        return handler_.updateSense(song.getFileName(), sense);
     }
 
     @Override
@@ -644,7 +662,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
 
         MusicPlayerApp.log(TAG, "Updating item=" + item + ", song=" + song.getTitle());
 
-        if (!handler_.updateSense(song.getFileName(), song.getSenseValue()))
+        if (!handler_.updateSong(song))
             return false;
 
         // The base implementation updates the array backing store

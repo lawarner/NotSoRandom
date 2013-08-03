@@ -282,6 +282,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             if (song == null)
                 song = callback_.getNextSong(true);
             MusicPlayerApp.log(TAG, " resuming on Curr/Next Song.");
+            setTrackAndTitle(song);
         }
 
         if (queueSong(song)) {
@@ -316,7 +317,6 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     }
 
     private void setTrackAndTitle(SongInfo song) {
-        MusicPlayerApp.log(TAG, "setTrackAndTitle with " + song.getTitle());
         String track = "-/-";
         String title = "";
         String artist = "";
@@ -328,6 +328,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
             title = song.getTitle();
             artist = song.getArtist();
+            MusicPlayerApp.log(TAG, "setTrackAndTitle with " + track + " " + title);
         }
 
         if (trackCounter_ != null)
@@ -480,6 +481,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         controller_.setMediaPlayer(this);
         controller_.setAnchorView(controlView_);
 
+        handler_.getLooper().getThread().setPriority(Thread.NORM_PRIORITY);
         handler_.post(new Runnable() {
             public void run() {
                 controller_.setEnabled(true);

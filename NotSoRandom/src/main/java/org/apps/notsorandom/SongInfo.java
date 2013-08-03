@@ -118,6 +118,15 @@ public class SongInfo {
         return oldSense;
     }
 
+    public String toString() {
+        String artist = getArtist();
+        if (artist == null)
+            artist = "";
+        String str = getTitle() + "\n"
+                + getSenseString() + "  " + artist;
+        return str;
+    }
+
     /**
      * Simple convenience method.
      * @param idx Sequential index of values

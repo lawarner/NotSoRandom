@@ -182,8 +182,11 @@ public class MediaLibraryBaseImpl implements NSRMediaLibrary {
         if (song == null)
             return false;
 
-        song.setSense(sense);
-        return updateSongInfo(song);
+        if (song.getSenseValue() != sense) {
+            song.setSense(sense);
+            isSorted_ = false;
+        }
+        return true;
     }
 
     @Override
