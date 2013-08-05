@@ -89,6 +89,14 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         }
 
         public ArrayList<SongInfo> getOriginals() {
+            ArrayList<SongInfo> values;
+            synchronized (lock_) {
+                values = new ArrayList<SongInfo>(originals_);
+            }
+            return values;
+        }
+
+        public ArrayList<SongInfo> saveOriginals() {
             if (originals_ == null) {
                 synchronized (lock_) {
                     originals_ = new ArrayList<SongInfo>(objects_);
@@ -103,35 +111,23 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
             protected FilterResults performFiltering(CharSequence filterWords) {
                 FilterResults results = new FilterResults();
 
-                if (originals_ == null) {
-                    synchronized (lock_) {
-                        originals_ = new ArrayList<SongInfo>(objects_);
-                    }
-                }
+                saveOriginals();
 
+                ArrayList<SongInfo> allValues = getOriginals();
                 if (filterWords == null || filterWords.length() == 0) {
-                    ArrayList<SongInfo> list;
-                    synchronized (lock_) {
-                        list = new ArrayList<SongInfo>(originals_);
-                    }
-                    results.values = list;
-                    results.count = list.size();
+                    // no filter, return whole list
+                    results.values = allValues;
+                    results.count = allValues.size();
                 } else {
                     String[] words = filterWords.toString().toLowerCase().split("[ ,]+");
 
-                    ArrayList<SongInfo> values;
-                    synchronized (lock_) {
-                        values = new ArrayList<SongInfo>(originals_);
-                    }
-
-                    final int count = values.size();
+                    final int count = allValues.size();
                     final ArrayList<SongInfo> newValues = new ArrayList<SongInfo>();
 
-                    for (int i = 0; i < count; i++) {
-                        final SongInfo value = values.get(i);
+                    for (final SongInfo value : allValues) {
                         final String valueText = value.toString().toLowerCase();
 
-                        boolean matched = true;
+                        boolean matched = true;     // must contain every word
                         for (String word : words) {
                             if (valueText.indexOf(word) == -1) {
                                 matched = false;
@@ -164,9 +160,8 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         }
     }
 
-    private static void setupComponents() {
+    private static void setupComponents(Config config) {
         // get the x,y,z values from config section of library.
-        Config config = library_.getConfig(Config.DEFAULT_USER);
         if (config != null) {
             xSense_ = config.getXcomponent();
             ySense_ = config.getYcomponent();
@@ -180,13 +175,14 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
 
     public static void initDb(MediaLibraryBaseImpl library) {
         library_ = library;
-        setupComponents();
         updateDb(true, MusicPlayerApp.LibraryCategory.ALL);
     }
 
     public static void updateDb(boolean clear, MusicPlayerApp.LibraryCategory libCat) {
         if (library_ == null)
             return;
+
+        setupComponents(MusicPlayerApp.getConfig());
 
         ArrayList<SongInfo> songs = new ArrayList<SongInfo>(library_.getSongCount());
         for (SongInfo song = library_.getFirstSong(); song != null; song = library_.getNextSong()) {
@@ -276,6 +272,8 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
         lv.setOnItemSelectedListener(this);
         lv.setTextFilterEnabled(true);
 
+        Config config = MusicPlayerApp.getConfig();
+        setupComponents(config);
         TextView tv = (TextView) view.findViewById(R.id.xLabel);
         tv.setText(xSense_.getName());
         tv = (TextView) view.findViewById(R.id.yLabel);
@@ -319,7 +317,10 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
         MusicPlayerApp.log(TAG, "Nothing Selected.");
-        currSong_ = null;
+        if (currSong_ != null) {
+            //currSong_.setLongForm(false);
+            currSong_ = null;
+        }
 //        hilightItem(null, -1);
     }
 
@@ -334,14 +335,13 @@ public class MusicLibrary extends Fragment implements AdapterView.OnItemClickLis
 
         MusicPlayerApp.log(TAG, "onItemClick:  CurrSong is " + currSong_.getTitle());
 
-        song = (SongInfo) adapterView.getItemAtPosition(item);
-        MusicPlayerApp.log(TAG, "onItemClick:  (song == currSong_) = " + (song == currSong_));
 //        if (hilightItem(view, currItem)) {
 //            adapterView.setSelection(currItem_);
-            adapterView.setSelected(true);
-            setSliders();
-            callback_.setCurrSong(currSong_);
-            callback_.playSong(currSong_);
+        //currSong_.setLongForm(true);
+        adapterView.setSelected(true);
+        setSliders();
+        callback_.setCurrSong(currSong_);
+        callback_.playSong(currSong_);
     }
 
     @Override

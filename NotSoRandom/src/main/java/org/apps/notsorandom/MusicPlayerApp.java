@@ -18,6 +18,8 @@ public class MusicPlayerApp extends FragmentActivity
         implements MusicPlayer.OnPlayerListener, NSRMediaLibrary.OnLibraryChangedListener {
     private static final String TAG = "MusicPlayerApp";
 
+    private static Config config_;
+
     private MediaLibraryBaseImpl library_;
 
     private FragmentTabHost tabHost_;
@@ -31,6 +33,16 @@ public class MusicPlayerApp extends FragmentActivity
     }
     private LibraryCategory libCat_ = LibraryCategory.ALL;
 
+
+    ///////////  static methods used throughout app. ///////////
+
+    /**
+     * Get the global configuration
+     * @return Configuration for current user.
+     */
+    public static Config getConfig() {
+        return config_;
+    }
 
     public static void log(String tag, String msg) {
         Log.d(tag, msg);
@@ -49,7 +61,7 @@ public class MusicPlayerApp extends FragmentActivity
         setContentView(R.layout.main_player);
 
         tabHost_ = (FragmentTabHost) findViewById(R.id.mytabHost);
-        if (tabHost_ != null && savedInstanceState == null) {
+        if (tabHost_ != null /*&& savedInstanceState == null*/) {
             tabHost_.setId(R.id.mytabHost);
             tabHost_.setup(this, getSupportFragmentManager(), R.id.realTabContent);
 
@@ -62,16 +74,15 @@ public class MusicPlayerApp extends FragmentActivity
 
         library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
         //log(TAG, "Attempt to restore db from sdcard");
-        //library_.scanForMedia("RESTORE", false);
+        library_.scanForMedia("RESTORE", false);
 
         library_.initialize();
         //TODO if library empty, popup to run media scan
 //        library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
-        Config config = library_.getConfig(Config.DEFAULT_USER);
-        if (config != null) {
-            log("Got config, x=" + config.getXcomponent().getName() + ", y=" + config.getYcomponent().getName()
-                    + ", z=" + config.getZcomponent().getName());
-            MusicPlayer.setupComponents(config);
+        config_ = library_.getConfig(Config.DEFAULT_USER);
+        if (config_ != null) {
+            log("Got config, x=" + config_.getXcomponent().getName() + ", y=" + config_.getYcomponent().getName()
+                    + ", z=" + config_.getZcomponent().getName());
         }
 
         library_.registerOnLibraryChanged(this);
@@ -84,14 +95,10 @@ public class MusicPlayerApp extends FragmentActivity
 
         // Start with 200 in the queue
 //        MusicQueue.refreshQueue(200);
+        if (savedInstanceState != null)
+            log("-restored from saved state.");
 
         log("Player has initialized.\n");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        MusicPlayer.shutdown();
     }
 
     @Override
@@ -104,10 +111,24 @@ public class MusicPlayerApp extends FragmentActivity
     }
 
     @Override
+    public void onBackPressed() {
+        log("onBackPressed");
+        //TODO check if playing
+        MusicPlayer.shutdown();
+        finish();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.music_player, menu);
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        MusicPlayer.shutdown();
     }
 
     @Override
@@ -116,6 +137,10 @@ public class MusicPlayerApp extends FragmentActivity
         log("MusicPlayerApp.onResume called.\n");
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+
+    }
 
     public void onRadioButtonClicked(View view) {
         log(TAG, "clicked radio button " + view.getId());

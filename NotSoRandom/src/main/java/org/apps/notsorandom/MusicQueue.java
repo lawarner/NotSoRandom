@@ -17,8 +17,7 @@ import java.util.ArrayList;
 public class MusicQueue extends Fragment {
     private static final String TAG = "MusicQueue";
 
-    private static ArrayAdapter<String> qArray_ = null;
-    private static ArrayList<String> qArrList_ = new ArrayList<String>();
+    private static ArrayAdapter<SongInfo> qArray_ = null;
     private static ArrayList<SongInfo> qArrSongs_ = new ArrayList<SongInfo>();
     private static int currItem_;
 
@@ -30,13 +29,16 @@ public class MusicQueue extends Fragment {
      * @param song Info for song to be added.
      */
     public static void addToQueue(SongInfo song) {
-        qArrSongs_.add(song);
-        String str = song.getSenseString() + "   " + song.getTitle();
+        _addToQueue(song, true);
+    }
+
+    private static void _addToQueue(SongInfo song, boolean notify) {
         if (qArray_ == null) {
-            qArrList_.add(str);
+            qArrSongs_.add(song);
         } else {
-            qArray_.add(str);
-            qArray_.notifyDataSetChanged();
+            qArray_.add(song);
+            if (notify)
+                qArray_.notifyDataSetChanged();
         }
     }
 
@@ -54,11 +56,9 @@ public class MusicQueue extends Fragment {
     public static void clearQueue() {
         MusicPlayerApp.log(TAG, " clearQueue called");
         if (qArray_ == null)
-            qArrList_.clear();
+            qArrSongs_.clear();
         else
             qArray_.clear();
-
-        qArrSongs_.clear();
 
         currItem_ = -1;
     }
@@ -84,10 +84,13 @@ public class MusicQueue extends Fragment {
         SongInfo[] shuffles = MusicMapView.getShuffledList(false);
         for (SongInfo song : shuffles) {
 //            MusicPlayerApp.log(TAG, "Added to Queue: " + song.getSenseString() + ": " + song.getTitle());
-            addToQueue(song);
+            _addToQueue(song, false);
             if (--count <= 0)
                 break;
         }
+
+        if (qArray_ != null)
+            qArray_.notifyDataSetChanged();
 
         return qArrSongs_.size();
     }
@@ -161,7 +164,7 @@ public class MusicQueue extends Fragment {
         ListView lv = (ListView) view.findViewById(R.id.queueView);
 
         if (qArray_ == null) {
-            qArray_ = new ArrayAdapter<String>(getActivity(), R.layout.simplerow, qArrList_);
+            qArray_ = new ArrayAdapter<SongInfo>(getActivity(), R.layout.simplerow, qArrSongs_);
         }
         lv.setAdapter(qArray_);
 

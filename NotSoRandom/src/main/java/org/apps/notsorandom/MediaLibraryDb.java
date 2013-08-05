@@ -173,7 +173,11 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                         file = sdDir_ + file;
                     int sense = Integer.parseInt(cursor.getString(3));
                     String artist = cursor.getString(4);
+                    if (artist == null || artist.isEmpty())
+                        artist = artistFromFileName(cursor.getString(2));
+                    String album = albumFromFileName(cursor.getString(2));
                     SongInfo song = new SongInfo(title, file, sense, artist);
+                    song.setAlbum(album);
                     songs.add(song);
                 } while (cursor.moveToNext());
             }
@@ -451,6 +455,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         return songs_;
     }
 
+    @Override
     public Config getConfig(String user) {
         config_ = handler_.getConfig(user);
         return config_;
@@ -507,13 +512,17 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             String backDir = Environment.getExternalStorageDirectory().getAbsolutePath();
             Log.d(TAG, "Restoring Media DB from " + backDir + " to " + dbDir);
             try {
-                InputStream  is = new FileInputStream(new File(backDir, DATABASE_NAME + ".restore"));
+                File restFile = new File(backDir, DATABASE_NAME + ".restore");
+                InputStream  is = new FileInputStream(restFile);
                 OutputStream os = new FileOutputStream(new File(dbDir, DATABASE_NAME));
                 byte[] buffer = new byte[1024];
                 int read;
                 while((read = is.read(buffer)) != -1){
                     os.write(buffer, 0, read);
                 }
+                os.close();
+                is.close();
+                restFile.renameTo(new File(backDir, DATABASE_NAME + ".done"));
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
                 return -1;
@@ -599,21 +608,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             if (artist == null || artist.isEmpty()) {
                 String str = SongInfo.getRelativeFileName(file1.getAbsolutePath(), null);
-                int slash = str.lastIndexOf('/');
-                if (slash > 2) {
-                    int slash2 = str.lastIndexOf('/', slash - 1);
-                    if (slash2 >= 0) {
-                        artist = str.substring(slash2 + 1, slash);
-                        slash = str.lastIndexOf('/', slash2 - 1);
-                        if (slash >= 0) {
-                            str = str.substring(slash + 1, slash2);
-                            if (str.compareToIgnoreCase("0ther") == 0)
-                                artist = "Soundtrack";
-                            else if (str.compareToIgnoreCase("music") != 0)
-                                artist = str;
-                        }
-                    }
-                }
+                artist = artistFromFileName(str);
             }
 
             SongInfo song = new SongInfo(title, file1.getAbsolutePath(), sense, artist);
@@ -626,6 +621,81 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         mmr.release();
 
         return all.size();
+    }
+
+    private final static String MUSICSTR = "music/";
+    private final static String OTHERSTR = "0ther/";
+    private final static String SOUNDTRACKSRSTR = "soundtracks/";
+
+    public static String albumFromFileName(String pathName) {
+        String album = "";
+        pathName = pathName.toLowerCase();
+        if (!pathName.contains(MUSICSTR))
+            return album;
+
+        pathName = pathName.substring(pathName.indexOf(MUSICSTR) + MUSICSTR.length());
+        if (pathName.startsWith(OTHERSTR)) {
+            pathName = pathName.substring(OTHERSTR.length());
+            if (pathName.startsWith(SOUNDTRACKSRSTR)) {
+                pathName = pathName.substring(SOUNDTRACKSRSTR.length());
+                String[] strs = pathName.split("/");
+                album = strs.length > 1 ? strs[0] : "Soundtrack";
+            } else {
+                pathName = "Various/" + pathName;
+                String[] strs = pathName.split("/");
+                if (strs.length > 3) {
+                    album = strs[strs.length - 2];
+                }
+            }
+
+        } else {
+            String[] strs = pathName.split("/");
+            if (strs.length > 1)
+                album = strs[strs.length - 2];
+        }
+        return album;
+    }
+
+    /**
+     * Try to figure out the artist name from the file's pathname.
+     * This relies on a folder naming convention as:
+     *  [sdcard]/music/0ther/SoundTracks/name/song
+     *  [sdcard]/music/0ther/genre/artist/album/song
+     *  [sdcard]/music/0ther/collection/name/song
+     *  [sdcard]/music/0ther/collection/song
+     *  [sdcard]/music/artist/album/song
+     *
+     * @param pathName full or relative pathname of the song.
+     * @return a guess at the artist or name of soundtrack.
+     */
+    private static String artistFromFileName(String pathName) {
+        String artist = "";
+        pathName = pathName.toLowerCase();
+        if (!pathName.contains(MUSICSTR))
+            return artist;
+
+        pathName = pathName.substring(pathName.indexOf(MUSICSTR) + MUSICSTR.length());
+        if (pathName.startsWith(OTHERSTR)) {
+            pathName = pathName.substring(OTHERSTR.length());
+            if (pathName.startsWith(SOUNDTRACKSRSTR)) {
+                pathName = pathName.substring(SOUNDTRACKSRSTR.length());
+                artist = pathName.length() > 1
+                        ? pathName.substring(0, pathName.indexOf('/'))
+                        : "Various";
+            } else {
+                pathName = "Various/" + pathName;
+                String[] strs = pathName.split("/");
+                if (strs.length > 3) {
+                    artist = strs[strs.length - 3];
+                } else {
+                    artist = strs[strs.length - 2];
+                }
+            }
+
+        } else {
+            artist = pathName.substring(0, pathName.indexOf('/'));
+        }
+        return artist;
     }
 
     private static void _scanRecursive(File file, Collection<File> all) {

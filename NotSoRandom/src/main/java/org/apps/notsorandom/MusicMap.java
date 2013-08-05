@@ -113,7 +113,7 @@ public class MusicMap {
         int lastIndex = -1;
         int skipped = 0;
 
-        Config config = library_.getConfig(Config.DEFAULT_USER);
+        Config config = MusicPlayerApp.getConfig();
         SenseComponent xComp = config.getXcomponent();
         SenseComponent yComp = config.getYcomponent();
 
@@ -128,7 +128,8 @@ public class MusicMap {
             if (libCat == MusicPlayerApp.LibraryCategory.UNCATEGORIZED && !gutter)
                 continue;
 
-            int ii = song.getSenseIndex();
+            int ii = song.getSenseIndex(config);
+            // MusicPlayerApp.log(TAG, "SENSE " + song.getSenseString() + " = " + Integer.toHexString(ii));
             if (ii < 0 || ii >= MAPSIZE) {
                 MusicPlayerApp.log(TAG, "Sense index " + ii + " out of range for " + song.getFileName());
                 skipped++;
@@ -162,8 +163,9 @@ public class MusicMap {
      */
     public MapEntry[] fillShuffleEntries(SongInfo[] songs) {
         resetShuffle();
+        Config config = MusicPlayerApp.getConfig();
         for (SongInfo song : songs) {
-            int ii = song.getSenseIndex();
+            int ii = song.getSenseIndex(config);
 
             shuffleEntries_[ii].set(libEntries_[ii].getStart());
             shuffleEntries_[ii].addEntry();
@@ -266,14 +268,14 @@ public class MusicMap {
 
         if (songsInBox_ > 0) {
             int count = 0;
-            Config config = library_.getConfig(Config.DEFAULT_USER);
+            Config config = MusicPlayerApp.getConfig();
             SenseComponent xComp = config.getXcomponent();
             SenseComponent yComp = config.getYcomponent();
 
             ArrayList<SongInfo> shuffled = library_.getShuffledSongs(true);
             for (SongInfo song : shuffled) {
                 int sense = song.getSenseValue();
-                int idx = song.getSenseIndex();
+                int idx = song.getSenseIndex(config);
                 int x = xComp.getComponentValue(sense);
                 int y = yComp.getComponentValue(sense);
 

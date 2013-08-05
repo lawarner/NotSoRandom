@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,11 +34,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     private static MediaController controller_ = null;
 
     private static MediaPlayer player_ = null;
-
-    // Default XYZ components on music map
-    private static SenseComponent xComponent_;
-    private static SenseComponent yComponent_;
-    private static SenseComponent zComponent_;
+    private static SongInfo currSong_ = null;
 
     // Used to call back the Activity that attached us.
     private OnPlayerListener callback_ = null;
@@ -143,6 +140,19 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             super(context, true);
         }
 
+        @Override
+        public boolean dispatchKeyEvent(KeyEvent event) {
+            int keyCode = event.getKeyCode();
+            if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU) {
+                MusicPlayerApp.log(TAG, "dispatch key event from MyMediaController.");
+                hide_();
+                getActivity().finish();
+                return false;
+            }
+
+            return super.dispatchKeyEvent(event);
+        }
+
         public void hide() {
             // Nope
         }
@@ -153,12 +163,6 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     }
 
 
-    public static void setupComponents(Config config) {
-        xComponent_ = config.getXcomponent();
-        yComponent_ = config.getYcomponent();
-        zComponent_ = config.getZcomponent();
-    }
-
     public static void shutdown() {
         if (player_ != null) {
             try {
@@ -168,8 +172,10 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 //
             }
         }
-        controller_.setEnabled(false);
-        controller_ = null;
+        if (controller_ != null) {
+            controller_.setEnabled(false);
+            controller_ = null;
+        }
         player_ = null;
     }
 
@@ -193,14 +199,16 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         MusicPlayerApp.log(TAG, " onCreateView in MusicPlayer");
         View view = inflater.inflate(R.layout.fragment_music_player, container, false);
 
+        Config config = MusicPlayerApp.getConfig();
+
         // Deal with the column labels around the music map
         TextView tvrl = (TextView) view.findViewById(R.id.column_label);
-        tvrl.setText(xComponent_.getLabel());
+        tvrl.setText(config.getXcomponent().getLabel());
         tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
         tvrl.setTranslationX(-52);
         tvrl.setTranslationY(96);
-        tvrl.setText(yComponent_.getLabel());
+        tvrl.setText(config.getYcomponent().getLabel());
 
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(510, 510);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
@@ -301,7 +309,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     public void onDestroyView() {
         super.onDestroyView();
         Log.d(TAG, "onDestroyView in MusicPlayer");
-        ((MyMediaController) controller_).hide_();
+        if (controller_ != null)
+            ((MyMediaController) controller_).hide_();
 /*
         if (player_ != null) {
             try {
@@ -323,11 +332,13 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
         if (song != null) {
             int[] qpos = new int[2];
-            if (MusicQueue.getCurrQueuePos(qpos))
+            if (callback_ != null && callback_.getCurrQueuePos(qpos))
                 track = "" + qpos[0] + "/" + qpos[1];
 
             title = song.getTitle();
             artist = song.getArtist();
+            if (artist.length() < 32)
+                artist += song.getAlbum();
             MusicPlayerApp.log(TAG, "setTrackAndTitle with " + track + " " + title);
         }
 
@@ -382,6 +393,9 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             controller_.setMediaPlayer(this);
         }
 
+        if (currSong_ != null)
+            currSong_.setLongForm(false);
+
         boolean ret = true;
         try {
             if (!isFirstTime_ && player_.isPlaying()) {
@@ -398,6 +412,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 }
                 Log.d(TAG, "queueSong 3");
                 setTrackAndTitle(song);
+                currSong_ = song;
+                currSong_.setLongForm(true);
                 musicMapView_.invalidate();     // make the map redraw
             }
         } catch (IllegalStateException ise) {
@@ -481,7 +497,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         controller_.setMediaPlayer(this);
         controller_.setAnchorView(controlView_);
 
-        handler_.getLooper().getThread().setPriority(Thread.NORM_PRIORITY);
+        handler_.getLooper().getThread().setPriority(Thread.NORM_PRIORITY - 1);
         handler_.post(new Runnable() {
             public void run() {
                 controller_.setEnabled(true);

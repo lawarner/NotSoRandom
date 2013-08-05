@@ -36,7 +36,6 @@ public class SenseComponent {
             defaultValue_ = 0;
         else
             defaultValue_ = defaultValue << bitsPos_;
-
     }
 
 

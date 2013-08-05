@@ -48,7 +48,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
     private MusicPlayer.OnPlayerListener listener_;
 
-    // ------------------------------------------------------------------------
+    ///////////  static methods  ///////////
 
     private static PointF indexToPixel(int x, int y) {
         PointF fpt = new PointF(Math.round((float) x / calc_.x),
@@ -195,11 +195,6 @@ public class MusicMapView extends View implements View.OnTouchListener {
         canvas.drawBitmap(bitmap_, 0, 0, paint_);
         paint_.setStrokeWidth(0f);
 
-        int currIdx = -1;
-        SongInfo curr = listener_.getCurrSong();
-        if (curr != null)
-            currIdx = curr.getSenseIndex();
-
         if (!boxDraw_.isEmpty()) {
             paint_.setColor(Color.BLUE);
             paint_.setStyle(Paint.Style.STROKE);
@@ -208,13 +203,15 @@ public class MusicMapView extends View implements View.OnTouchListener {
             canvas.drawCircle(center_.x, center_.y, 1f, paint_);
         }
 
+        final int mapXYsize = MusicMap.MAPWIDTH * MusicMap.MAPHEIGHT;
+
         // The library map
         paint_.setStyle(Paint.Style.STROKE);
         paint_.setColor(Color.YELLOW);
         MusicMap.MapEntry[] me = musicMap_.getLibEntries();
-        for (int ii = 0; ii < 64; ii++) {
+        for (int ii = 0; ii < mapXYsize; ii++) {
             int count = 0;      // count all layers
-            for (int jj = ii; jj < me.length; jj += 64)
+            for (int jj = ii; jj < me.length; jj += mapXYsize)
                 count += me[jj].getCount();
             if (count > 0) {
                 PointF pt = indexToPixel(ii % 8, ii / 8);
@@ -226,26 +223,31 @@ public class MusicMapView extends View implements View.OnTouchListener {
             }
         }
 
+        int currSenseIdx = -1;
+        SongInfo song = listener_.getCurrSong();
+        if (song != null)
+            currSenseIdx = song.getSenseIndex(MusicPlayerApp.getConfig()) % mapXYsize;
+
         // The shuffle map
         paint_.setStyle(Paint.Style.FILL);
         paint_.setColor(Color.RED);
         me = musicMap_.getShuffleEntries();
-        for (int ii = 0; ii < 64; ii++) {
+        for (int ii = 0; ii < mapXYsize; ii++) {
             int count = 0;      // count all layers
-            for (int jj = ii; jj < me.length; jj += 64)
+            for (int jj = ii; jj < me.length; jj += mapXYsize)
                 count += me[jj].getCount();
             if (count > 0) {
                 PointF pt = indexToPixel(ii % 8, ii / 8);
                 float radius = calcRadius(count);
-                if (ii == currIdx)
+                if (ii == currSenseIdx)
                     paint_.setColor(placeMode_ ? Color.CYAN : Color.GREEN);
                 if (radius < 0.51f)
                     radius = 1f;
 
                 canvas.drawCircle(pt.x, pt.y, radius, paint_);
-                if (ii == currIdx) {
+                if (ii == currSenseIdx) {
                     paint_.setColor(Color.RED);
-                    currIdx = -1;
+                    currSenseIdx = -1;
                 }
             }
         }
@@ -275,8 +277,15 @@ public class MusicMapView extends View implements View.OnTouchListener {
                 MusicPlayerApp.log(TAG, "placeMode @ (" + x + "," + y + ")");
                 if (x >= 0 && x < 8 && y >= 0 && y < 8) {
                     MediaLibraryBaseImpl lib = (MediaLibraryBaseImpl) listener_.getLibrary();
-                    //TODO use SenseComponents for x y below
-                    if (lib.updateSenseValue(song, (x | (y << 4)))) {
+                    // Use SenseComponents for x y z
+                    Config config = MusicPlayerApp.getConfig();
+                    SenseComponent xcomp = config.getXcomponent();
+                    SenseComponent ycomp = config.getYcomponent();
+                    SenseComponent zcomp = config.getZcomponent();
+                    int sense = (song.getSenseValue() & zcomp.getMask())
+                              | (ycomp.getMaskedValue(y))
+                              | (xcomp.getMaskedValue(x));
+                    if (lib.updateSenseValue(song, sense)) {
                         musicMap_.fillLibEntries(listener_.getLibCategory());
                         musicMap_.fillShuffleEntries(listener_.getQueue());
                         MusicQueue.redrawQueue();

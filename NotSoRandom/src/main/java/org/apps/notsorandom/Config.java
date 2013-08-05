@@ -4,6 +4,7 @@ package org.apps.notsorandom;
  * Per user persistent app configuration data.
  */
 public class Config {
+    private static final String TAG = Config.class.getSimpleName();
 
     public static final String DEFAULT_USER = "0";
     public static final String DEFAULT_X_COMPONENT = "tempo";
@@ -47,14 +48,21 @@ public class Config {
         yComponent_ = yComponent;
         zComponent_ = zComponent;
         lastScan_ = lastScan;
+        MusicPlayerApp.log(TAG, "Config created. X mask=" + Integer.toHexString(xComponent.getMask())
+                + " Y mask=" + Integer.toHexString(yComponent.getMask())
+                + " Z mask=" + Integer.toHexString(zComponent.getMask()));
     }
 
-    public String getUser() {
-        return user_;
+    public long getLastScan() {
+        return lastScan_;
     }
 
     public String getRoot() {
         return root_;
+    }
+
+    public String getUser() {
+        return user_;
     }
 
     public SenseComponent getXcomponent() {
@@ -69,7 +77,9 @@ public class Config {
         return zComponent_;
     }
 
-    public long getLastScan() {
-        return lastScan_;
+    public int getXYZMask() {
+        return xComponent_.getMask()
+             | yComponent_.getMask()
+             | zComponent_.getMask();
     }
 }
