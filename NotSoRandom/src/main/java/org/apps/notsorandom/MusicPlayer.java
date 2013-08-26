@@ -2,6 +2,7 @@ package org.apps.notsorandom;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.MediaController;
@@ -26,7 +28,7 @@ import java.util.ArrayList;
  */
 public class MusicPlayer extends Fragment implements MediaController.MediaPlayerControl,
                                                         MediaPlayer.OnCompletionListener,
-                                                        MediaPlayer.OnPreparedListener {
+                                                        MediaPlayer.OnPreparedListener, View.OnTouchListener {
     private static final String TAG = "MusicPlayer";
 
     private static MusicMapView musicMapView_ = null;
@@ -204,11 +206,13 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         // Deal with the column labels around the music map
         TextView tvrl = (TextView) view.findViewById(R.id.column_label);
         tvrl.setText(config.getXcomponent().getLabel());
+        tvrl.setOnTouchListener(this);
         tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
         tvrl.setTranslationX(-52);
         tvrl.setTranslationY(96);
         tvrl.setText(config.getYcomponent().getLabel());
+        tvrl.setOnTouchListener(this);
 
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(510, 510);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
@@ -323,6 +327,46 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             }
         }
 */
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        int action = motionEvent.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN ||
+            action == MotionEvent.ACTION_POINTER_DOWN) {
+            return true;
+        } else
+        if (action == MotionEvent.ACTION_UP ||
+            action == MotionEvent.ACTION_POINTER_UP) {
+            SenseComponent xc;
+            SenseComponent yc;
+            SenseComponent zc;
+            Config config = MusicPlayerApp.getConfig();
+
+            TextView tvxc = (TextView) getView().findViewById(R.id.column_label);
+            TextView tvyc = (TextView) getView().findViewById(R.id.row_label);
+            if (tvxc == view) {
+                MusicPlayerApp.log(TAG, "X component touched");
+                xc = config.getZcomponent();
+                yc = config.getYcomponent();
+                zc = config.getXcomponent();
+                tvxc.setText(xc.getLabel());
+            } else
+            if (tvyc == view) {
+                MusicPlayerApp.log(TAG, "Y component touched");
+                xc = config.getXcomponent();
+                yc = config.getZcomponent();
+                zc = config.getYcomponent();
+                tvyc.setText(yc.getLabel());
+            } else
+                return false;
+
+            config.setXYZcomponents(xc, yc, zc);
+            musicMapView_.redrawMap();     // make the map redraw
+            return true;
+        }
+
+        return false;
     }
 
     private void setTrackAndTitle(SongInfo song) {

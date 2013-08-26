@@ -44,9 +44,7 @@ public class Config {
            SenseComponent yComponent, SenseComponent zComponent, long lastScan) {
         user_ = user;
         root_ = root;
-        xComponent_ = xComponent;
-        yComponent_ = yComponent;
-        zComponent_ = zComponent;
+        setXYZcomponents(xComponent, yComponent, zComponent);
         lastScan_ = lastScan;
         MusicPlayerApp.log(TAG, "Config created. X mask=" + Integer.toHexString(xComponent.getMask())
                 + " Y mask=" + Integer.toHexString(yComponent.getMask())
@@ -81,5 +79,12 @@ public class Config {
         return xComponent_.getMask()
              | yComponent_.getMask()
              | zComponent_.getMask();
+    }
+
+    public void setXYZcomponents(SenseComponent xComponent, SenseComponent yComponent,
+                                 SenseComponent zComponent) {
+        xComponent_ = xComponent;
+        yComponent_ = yComponent;
+        zComponent_ = zComponent;
     }
 }

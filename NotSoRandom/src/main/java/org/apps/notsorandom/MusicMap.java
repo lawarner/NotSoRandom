@@ -86,8 +86,8 @@ public class MusicMap {
 
         Log.d(TAG, "Initing MusicMap");
         for (int i = 0; i < MAPSIZE; i++) {
-            libEntries_[i] = new MapEntry(-1, 0);
-            shuffleEntries_[i] = new MapEntry(-1, 0);
+            libEntries_[i] = new MapEntry();
+            shuffleEntries_[i] = new MapEntry();
         }
         Log.d(TAG, "Done Initing MusicMap");
     }
@@ -116,6 +116,7 @@ public class MusicMap {
         Config config = MusicPlayerApp.getConfig();
         SenseComponent xComp = config.getXcomponent();
         SenseComponent yComp = config.getYcomponent();
+        int xyzMask = config.getXYZMask();
 
         // Fill in libEntries_ array from media library
         for (int idx = 0; idx < library_.getSongCount(); idx++) {
@@ -128,7 +129,7 @@ public class MusicMap {
             if (libCat == MusicPlayerApp.LibraryCategory.UNCATEGORIZED && !gutter)
                 continue;
 
-            int ii = song.getSenseIndex(config);
+            int ii = song.getSenseIndex(config) & 0x01ff;
             // MusicPlayerApp.log(TAG, "SENSE " + song.getSenseString() + " = " + Integer.toHexString(ii));
             if (ii < 0 || ii >= MAPSIZE) {
                 MusicPlayerApp.log(TAG, "Sense index " + ii + " out of range for " + song.getFileName());
@@ -165,7 +166,7 @@ public class MusicMap {
         resetShuffle();
         Config config = MusicPlayerApp.getConfig();
         for (SongInfo song : songs) {
-            int ii = song.getSenseIndex(config);
+            int ii = song.getSenseIndex(config) & 0x01ff;
 
             shuffleEntries_[ii].set(libEntries_[ii].getStart());
             shuffleEntries_[ii].addEntry();
@@ -275,7 +276,7 @@ public class MusicMap {
             ArrayList<SongInfo> shuffled = library_.getShuffledSongs(true);
             for (SongInfo song : shuffled) {
                 int sense = song.getSenseValue();
-                int idx = song.getSenseIndex(config);
+                int idx = song.getSenseIndex(config) & 0x01ff;
                 int x = xComp.getComponentValue(sense);
                 int y = yComp.getComponentValue(sense);
 

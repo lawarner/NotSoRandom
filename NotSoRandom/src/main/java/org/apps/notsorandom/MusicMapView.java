@@ -90,7 +90,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
         if (reshuffle || !musicMap_.isShuffled()) {
             if (newbox_.isEmpty()) {
                 boxDraw_.setEmpty();
-                return musicMap_.randomShuffle(20);
+                return musicMap_.randomShuffle(50);
             } else {
                 SongInfo[] mm = musicMap_.boxShuffle(newbox_);
                 Rect rc = musicMap_.getBox();
@@ -225,8 +225,10 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
         int currSenseIdx = -1;
         SongInfo song = listener_.getCurrSong();
-        if (song != null)
+        if (song != null) {
             currSenseIdx = song.getSenseIndex(MusicPlayerApp.getConfig()) % mapXYsize;
+            MusicPlayerApp.log(TAG, " Current sense index=" + currSenseIdx);
+        }
 
         // The shuffle map
         paint_.setStyle(Paint.Style.FILL);
@@ -286,10 +288,8 @@ public class MusicMapView extends View implements View.OnTouchListener {
                               | (ycomp.getMaskedValue(y))
                               | (xcomp.getMaskedValue(x));
                     if (lib.updateSenseValue(song, sense)) {
-                        musicMap_.fillLibEntries(listener_.getLibCategory());
-                        musicMap_.fillShuffleEntries(listener_.getQueue());
+                        redrawMap();
                         MusicQueue.redrawQueue();
-                        invalidate();
                     }
                 }
                 return true;
@@ -322,6 +322,11 @@ public class MusicMapView extends View implements View.OnTouchListener {
         return true;
     }
 
+    public void redrawMap() {
+        musicMap_.fillLibEntries(listener_.getLibCategory());
+        musicMap_.fillShuffleEntries(listener_.getQueue());
+        invalidate();
+    }
 /*        if (action == MotionEvent.ACTION_MOVE) {
             dragBox_ = true;
             stop_.set(motionEvent.getX(), motionEvent.getY());
