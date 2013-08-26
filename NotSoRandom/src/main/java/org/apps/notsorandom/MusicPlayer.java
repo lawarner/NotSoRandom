@@ -226,7 +226,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
         RelativeLayout rl = (RelativeLayout) view.findViewById(R.id.player_layout);
-        musicMapView_ = new MusicMapView(rl.getContext());
+        musicMapView_ = new MusicMap3DView(rl.getContext());
         rl.addView(musicMapView_, lp);
         musicMapView_.setId(R.id.music_map);
         musicMapView_.setTranslationX(-64);

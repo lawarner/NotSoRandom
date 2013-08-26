@@ -26,7 +26,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
     };
     private int currColor_ = 0;
 */
-    private static MusicMap musicMap_ = new MusicMap();
+    protected static MusicMap musicMap_ = new MusicMap();
 
     private static float height_ = 500f;
     private static float width_  = 500f;
@@ -35,10 +35,12 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private static PointF center_ = new PointF();
     private static Rect newbox_ = new Rect();
 
-    private static boolean placeMode_ = false;
+    protected static boolean placeMode_ = false;
 
-    private Bitmap bitmap_;
-    private Paint  paint_;
+    protected Bitmap bitmap_;
+    protected Paint  paint_;
+
+    protected boolean needRedraw_ = true;
 
     private PointF start_  = new PointF();
     private PointF stop_   = new PointF();
@@ -46,11 +48,11 @@ public class MusicMapView extends View implements View.OnTouchListener {
     private boolean dragBox_ = false;
 
 
-    private MusicPlayer.OnPlayerListener listener_;
+    protected MusicPlayer.OnPlayerListener listener_;
 
     ///////////  static methods  ///////////
 
-    private static PointF indexToPixel(int x, int y) {
+    protected static PointF indexToPixel(int x, int y) {
         PointF fpt = new PointF(Math.round((float) x / calc_.x),
                                 height_ - Math.round((float) y / calc_.y));
         return fpt;
@@ -187,6 +189,8 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
         newbox_.setEmpty();
         boxDraw_.setEmpty();
+
+        needRedraw_ = true;
     }
 
     @Override
