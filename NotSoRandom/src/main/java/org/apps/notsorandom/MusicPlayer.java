@@ -145,10 +145,15 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
             int keyCode = event.getKeyCode();
-            if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU) {
+            if (event.getAction() == KeyEvent.ACTION_UP &&
+                    (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU)) {
                 MusicPlayerApp.log(TAG, "dispatch key event from MyMediaController.");
-                hide_();
-                getActivity().finish();
+                if (isPlaying()) {
+                    getActivity().moveTaskToBack(true);
+                } else {
+                    hide_();
+                    getActivity().finish();
+                }
                 return false;
             }
 
