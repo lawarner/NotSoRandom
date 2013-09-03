@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -232,7 +233,27 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         musicMapView_.setTranslationX(-64);
         musicMapView_.setListener(callback_);
 
-        ArrayList<View> alv = new ArrayList<View>();
+        // labeled buttons for mode selection:
+        // Select, Place, 3D, Animate
+        LinearLayout ll = (LinearLayout) inflater.inflate(R.layout.mode_selector, container, false);
+        lp = new RelativeLayout.LayoutParams(520, 520);
+        lp.addRule(RelativeLayout.BELOW, R.id.music_map);
+        rl.addView(ll, lp);
+
+        ArrayList<View> alv = new ArrayList<View>(5);
+        TextView tv = (TextView) ll.findViewById(R.id.selectMode);
+        tv.setOnTouchListener(this);
+        alv.add(tv);
+        tv = (TextView) ll.findViewById(R.id.placeMode);
+        tv.setOnTouchListener(this);
+        alv.add(tv);
+        tv = (TextView) ll.findViewById(R.id.threeDMode);
+        tv.setOnTouchListener(this);
+        alv.add(tv);
+        tv = (TextView) ll.findViewById(R.id.animateMode);
+        tv.setOnTouchListener(this);
+        alv.add(tv);
+
         alv.add(musicMapView_);
         view.addTouchables(alv);
 
@@ -343,30 +364,55 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         } else
         if (action == MotionEvent.ACTION_UP ||
             action == MotionEvent.ACTION_POINTER_UP) {
-            SenseComponent xc;
-            SenseComponent yc;
-            SenseComponent zc;
-            Config config = MusicPlayerApp.getConfig();
 
-            TextView tvxc = (TextView) getView().findViewById(R.id.column_label);
-            TextView tvyc = (TextView) getView().findViewById(R.id.row_label);
-            if (tvxc == view) {
-                MusicPlayerApp.log(TAG, "X component touched");
-                xc = config.getZcomponent();
-                yc = config.getYcomponent();
-                zc = config.getXcomponent();
-                tvxc.setText(xc.getLabel());
-            } else
-            if (tvyc == view) {
-                MusicPlayerApp.log(TAG, "Y component touched");
-                xc = config.getXcomponent();
-                yc = config.getZcomponent();
-                zc = config.getYcomponent();
-                tvyc.setText(yc.getLabel());
-            } else
-                return false;
+            switch (view.getId()) {
+                case R.id.column_label:
+                case R.id.row_label:
+                    SenseComponent xc;
+                    SenseComponent yc;
+                    SenseComponent zc;
+                    Config config = MusicPlayerApp.getConfig();
 
-            config.setXYZcomponents(xc, yc, zc);
+                    TextView tvxc = (TextView) getView().findViewById(R.id.column_label);
+                    TextView tvyc = (TextView) getView().findViewById(R.id.row_label);
+                    if (tvxc == view) {
+                        MusicPlayerApp.log(TAG, "X component touched");
+                        xc = config.getZcomponent();
+                        yc = config.getYcomponent();
+                        zc = config.getXcomponent();
+                        tvxc.setText(xc.getLabel());
+                    } else
+                    if (tvyc == view) {
+                        MusicPlayerApp.log(TAG, "Y component touched");
+                        xc = config.getXcomponent();
+                        yc = config.getZcomponent();
+                        zc = config.getYcomponent();
+                        tvyc.setText(yc.getLabel());
+                    } else
+                        return false;
+
+                    config.setXYZcomponents(xc, yc, zc);
+                    break;
+                case R.id.selectMode:
+                    MusicPlayerApp.log(TAG, "Select Mode pressed");
+                    MusicMapView.setMapMode(MusicMapView.MapMode.SelectMode);
+                    MusicMapView.setPlaceMode(false);
+                    break;
+                case R.id.placeMode:
+                    MusicPlayerApp.log(TAG, "Place Mode pressed");
+                    MusicMapView.setMapMode(MusicMapView.MapMode.PlaceMode);
+                    MusicMapView.setPlaceMode(true);
+                    break;
+                case R.id.threeDMode:
+                    MusicMapView.setMapMode(MusicMapView.MapMode.ThreeDMode);
+                    break;
+                case R.id.animateMode:
+                    MusicMapView.setMapMode(MusicMapView.MapMode.AnimateMode);
+                    break;
+                default:
+                    MusicPlayerApp.log(TAG, "Unknown control pressed ID=" + view.getId());
+                    return false;
+            }
             musicMapView_.redrawMap();     // make the map redraw
             return true;
         }
@@ -463,7 +509,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 setTrackAndTitle(song);
                 currSong_ = song;
                 currSong_.setLongForm(true);
-                musicMapView_.invalidate();     // make the map redraw
+                musicMapView_.redrawMap();     // make the map redraw
             }
         } catch (IllegalStateException ise) {
             Log.e(TAG, "Illegal state in queueSong: " + ise);

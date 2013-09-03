@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text=" S "
+        android:id="@+id/selectMode"
+        android:layout_margin="8dp"
+        android:background="@android:color/black"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text=" P "
+        android:id="@+id/placeMode"
+        android:background="@android:color/black"
+        android:textColor="@android:color/white"
+        android:layout_margin="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="3D"
+        android:id="@+id/threeDMode"
+        android:background="@android:color/black"
+        android:textColor="@android:color/white"
+        android:layout_margin="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text=" A "
+        android:id="@+id/animateMode"
+        android:background="@android:color/black"
+        android:textColor="@android:color/white"
+        android:layout_margin="8dp" />
+</LinearLayout>

@@ -26,6 +26,14 @@ public class MusicMapView extends View implements View.OnTouchListener {
     };
     private int currColor_ = 0;
 */
+    public static enum MapMode {
+        SelectMode,
+        PlaceMode,
+        ThreeDMode,
+        AnimateMode;
+    }
+    protected static MapMode mapMode_ = MapMode.SelectMode;
+
     protected static MusicMap musicMap_ = new MusicMap();
 
     private static float height_ = 500f;
@@ -79,6 +87,15 @@ public class MusicMapView extends View implements View.OnTouchListener {
         int bottom  = (int) Math.ceil((height_ - scrn.top) * calc_.y);
 
         return new Rect(left, top, right, bottom);
+    }
+
+
+    public static MapMode getMapMode() {
+        return mapMode_;
+    }
+
+    public static void setMapMode(MapMode mapMode) {
+        mapMode_ = mapMode;
     }
 
     /**

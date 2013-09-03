@@ -13,7 +13,9 @@ import android.graphics.drawable.shapes.OvalShape;
 import android.util.Log;
 
 /**
- * Created by andy on 8/25/13.
+ * Subclass of MusicMapView that renders a 3D view.
+ * This structure is temporary and common code will be migrated later
+ * (when a third view is created).
  */
 public class MusicMap3DView extends MusicMapView {
     private final static String TAG = MusicMap3DView.class.getSimpleName();
@@ -30,6 +32,11 @@ public class MusicMap3DView extends MusicMapView {
     @Override
     protected void onDraw(Canvas canvas) {
         Log.d(TAG, "onDraw need redraw=" + needRedraw_);
+        if (getMapMode() != MapMode.ThreeDMode) {
+            super.onDraw(canvas);
+            return;
+        }
+
         if (needRedraw_) {
             redrawMap();
             needRedraw_ = false;
@@ -39,7 +46,12 @@ public class MusicMap3DView extends MusicMapView {
 
         final int mapXYsize = MusicMap.MAPWIDTH * MusicMap.MAPHEIGHT;
 
-        for (int depth = 0; depth < MusicMap.MAPDEPTH; depth++) {
+        for (int depth = MusicMap.MAPDEPTH - 1; depth >= 0; depth--) {
+            // for now, a pseudo 3d effect by scaling to depth
+            canvas.save();
+            // depth 0 - 7 = 1 - 0.5 scale = 1 - depth
+            float dist = 1f - depth / (MusicMap.MAPDEPTH * 3f);
+            canvas.scale(dist, dist);
             for (int ii = 0; ii < mapXYsize; ++ii) {
                 int idx = depth * mapXYsize + ii;
                 if (balls_[idx] != null) {
@@ -53,6 +65,7 @@ public class MusicMap3DView extends MusicMapView {
                     canvas.restore();
                 }
             }
+            canvas.restore();
         }
 
     }
@@ -72,6 +85,16 @@ public class MusicMap3DView extends MusicMapView {
         Log.d(TAG, " redrawMap called");
 
         super.redrawMap();
+        if (getMapMode() != MapMode.ThreeDMode) {
+            return;
+        }
+
+        int currSenseIdx = -1;
+        SongInfo song = listener_.getCurrSong();
+        if (song != null) {
+            currSenseIdx = song.getSenseIndex(MusicPlayerApp.getConfig());
+            MusicPlayerApp.log(TAG, " Current sense index=" + currSenseIdx);
+        }
 
         // The library map and shuffle entries
         MusicMap.MapEntry[] me = musicMap_.getLibEntries();
@@ -87,24 +110,22 @@ public class MusicMap3DView extends MusicMapView {
                 circle.resize(radius, radius);
                 ShapeDrawable drawable = new ShapeDrawable(circle);
                 Paint paint = drawable.getPaint();
-                int color = ms[ii].getCount() > 0 ? Color.RED : Color.YELLOW;
-                RadialGradient gradient = new RadialGradient(radius/2, radius/4,
+                int color = Color.YELLOW;   // Color of library ball
+                if (currSenseIdx == ii)
+                    color = placeMode_ ? Color.CYAN : Color.GREEN;
+                else if (ms[ii].getCount() > 0)
+                    color = Color.RED;
+                RadialGradient gradient = new RadialGradient(37.5f, radius/4,
                         radius, color, darken(color), Shader.TileMode.CLAMP);
                 paint.setShader(gradient);
                 drawable.getShape().resize(radius*2, radius*2);
                 balls_[ii] = drawable;
-            }
+            } else
+                balls_[ii] = null;
         }
 
-        invalidate();
+        super.invalidate();
 /*
-        int currSenseIdx = -1;
-        SongInfo song = listener_.getCurrSong();
-        if (song != null) {
-            currSenseIdx = song.getSenseIndex(MusicPlayerApp.getConfig()) % mapXYsize;
-            MusicPlayerApp.log(TAG, " Current sense index=" + currSenseIdx);
-        }
-
         // The shuffle map
         paint_.setStyle(Paint.Style.FILL);
         paint_.setColor(Color.RED);
