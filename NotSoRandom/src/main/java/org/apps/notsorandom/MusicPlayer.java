@@ -2,6 +2,7 @@ package org.apps.notsorandom;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -38,6 +39,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
     private static MediaPlayer player_ = null;
     private static SongInfo currSong_ = null;
+
+    private TextView[] modeButtons_ = null;
 
     // Used to call back the Activity that attached us.
     private OnPlayerListener callback_ = null;
@@ -238,24 +241,32 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         LinearLayout ll = (LinearLayout) inflater.inflate(R.layout.mode_selector, container, false);
         lp = new RelativeLayout.LayoutParams(520, 520);
         lp.addRule(RelativeLayout.BELOW, R.id.music_map);
+        lp.addRule(RelativeLayout.ALIGN_LEFT, R.id.music_map);
         rl.addView(ll, lp);
 
-        ArrayList<View> alv = new ArrayList<View>(5);
-        TextView tv = (TextView) ll.findViewById(R.id.selectMode);
-        tv.setOnTouchListener(this);
-        alv.add(tv);
-        tv = (TextView) ll.findViewById(R.id.placeMode);
-        tv.setOnTouchListener(this);
-        alv.add(tv);
-        tv = (TextView) ll.findViewById(R.id.threeDMode);
-        tv.setOnTouchListener(this);
-        alv.add(tv);
-        tv = (TextView) ll.findViewById(R.id.animateMode);
-        tv.setOnTouchListener(this);
-        alv.add(tv);
+        modeButtons_ = new TextView[MusicMapView.MapMode.values().length];
+        ArrayList<View> alv = new ArrayList<View>(1 + modeButtons_.length);
+        int idx = MusicMapView.MapMode.SelectMode.ordinal();
+        modeButtons_[idx] = (TextView) ll.findViewById(R.id.selectMode);
+        modeButtons_[idx].setOnTouchListener(this);
+        alv.add(modeButtons_[idx]);
+        idx = MusicMapView.MapMode.PlaceMode.ordinal();
+        modeButtons_[idx] = (TextView) ll.findViewById(R.id.placeMode);
+        modeButtons_[idx].setOnTouchListener(this);
+        alv.add(modeButtons_[idx]);
+        idx = MusicMapView.MapMode.ThreeDMode.ordinal();
+        modeButtons_[idx] = (TextView) ll.findViewById(R.id.threeDMode);
+        modeButtons_[idx].setOnTouchListener(this);
+        alv.add(modeButtons_[idx]);
+        idx = MusicMapView.MapMode.AnimateMode.ordinal();
+        modeButtons_[idx] = (TextView) ll.findViewById(R.id.animateMode);
+        modeButtons_[idx].setOnTouchListener(this);
+        alv.add(modeButtons_[idx]);
 
         alv.add(musicMapView_);
         view.addTouchables(alv);
+
+        modeButtons_[MusicMapView.getMapMode().ordinal()].setTextColor(Color.GREEN);
 
         controlView_ = view.findViewById(R.id.controlView);
         if (controller_ == null) {
@@ -365,6 +376,9 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         if (action == MotionEvent.ACTION_UP ||
             action == MotionEvent.ACTION_POINTER_UP) {
 
+            // save the old map mode
+            MusicMapView.MapMode oldMapMode = MusicMapView.getMapMode();
+
             switch (view.getId()) {
                 case R.id.column_label:
                 case R.id.row_label:
@@ -409,10 +423,21 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 case R.id.animateMode:
                     MusicMapView.setMapMode(MusicMapView.MapMode.AnimateMode);
                     break;
+                //TODO case R.id.fullScreenMode:
                 default:
                     MusicPlayerApp.log(TAG, "Unknown control pressed ID=" + view.getId());
                     return false;
             }
+
+            MusicMapView.MapMode newMapMode = MusicMapView.getMapMode();
+            if (oldMapMode != newMapMode) {
+                int idx = oldMapMode.ordinal();
+                if (idx >= 0 && idx < modeButtons_.length)
+                    modeButtons_[idx].setTextColor(Color.WHITE);
+            }
+
+            modeButtons_[newMapMode.ordinal()].setTextColor(Color.GREEN);
+
             musicMapView_.redrawMap();     // make the map redraw
             return true;
         }

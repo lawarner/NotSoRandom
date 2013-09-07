@@ -31,13 +31,15 @@ public class MusicMapView extends View implements View.OnTouchListener {
         PlaceMode,
         ThreeDMode,
         AnimateMode;
+        //TODO FullScreenMode
     }
     protected static MapMode mapMode_ = MapMode.SelectMode;
 
     protected static MusicMap musicMap_ = new MusicMap();
 
-    private static float height_ = 500f;
-    private static float width_  = 500f;
+    protected static float height_ = 500f;
+    protected static float width_  = 500f;
+
     private static PointF calc_ = new PointF(7.5f/500f, 7.5f/500f);
     private static RectF  boxDraw_ = new RectF();
     private static PointF center_ = new PointF();
@@ -66,7 +68,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
         return fpt;
     }
 
-    private static RectF boxToPixelBox(Rect box) {
+    protected static RectF boxToPixelBox(Rect box) {
         float halfX = width_ / 15f;
         float halfY = height_ / 15f;
         float left = ((float) box.left / calc_.x) - halfX;
@@ -75,6 +77,21 @@ public class MusicMapView extends View implements View.OnTouchListener {
         float bottom = height_ - ((float) box.top / calc_.y) + halfY;
 
         RectF rc = new RectF(left, top, right, bottom);
+        return rc;
+    }
+
+    protected static RectF inBoxToPixelBox(Rect box) {
+        float calcX = 8f / width_;
+        float calcY = 8f / height_;
+        float left = ((float) box.left / calcX);
+        //float top  = height_ - Math.max(height_, (float) box.bottom / calc_.y);
+        float top  = height_ - ((float) box.bottom / calcY);
+        float right = (float) box.right / calcX;
+        float bottom = height_ - ((float) box.top / calcY);
+
+        RectF rc = new RectF(left, top, right, bottom);
+        if (left < 0 || top < 0 || right < 0 || bottom < 0)
+            MusicPlayerApp.log(TAG, "Error NEGATIVE in pixel box calculation rect=" + rc);
         return rc;
     }
 

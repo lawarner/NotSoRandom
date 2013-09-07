@@ -8,21 +8,29 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text=" S "
+        android:text="S"
         android:id="@+id/selectMode"
         android:layout_margin="8dp"
         android:background="@android:color/black"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text=" P "
+        android:text="P"
         android:id="@+id/placeMode"
         android:background="@android:color/black"
         android:textColor="@android:color/white"
-        android:layout_margin="8dp" />
+        android:layout_margin="8dp"
+        android:paddingLeft="8dp"
+        android:paddingTop="6dp"
+        android:paddingRight="7dp"
+        android:paddingBottom="6dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -32,15 +40,23 @@
         android:id="@+id/threeDMode"
         android:background="@android:color/black"
         android:textColor="@android:color/white"
-        android:layout_margin="8dp" />
+        android:layout_margin="8dp"
+        android:paddingLeft="4dp"
+        android:paddingTop="6dp"
+        android:paddingRight="4dp"
+        android:paddingBottom="6dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text=" A "
+        android:text="A"
         android:id="@+id/animateMode"
         android:background="@android:color/black"
         android:textColor="@android:color/white"
-        android:layout_margin="8dp" />
+        android:layout_margin="8dp"
+        android:paddingLeft="8dp"
+        android:paddingTop="6dp"
+        android:paddingRight="8dp"
+        android:paddingBottom="6dp" />
 </LinearLayout>
