@@ -137,17 +137,6 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
                     lib.scanForMedia("CLEANUP", true);
                     MusicPlayerApp.log(TAG, "Cleanup complete.");
     */
-        // Add a checkbox
-        CheckBox placeMode = (CheckBox) view.findViewById(R.id.placeOnMap);
-        placeMode.setChecked(MusicMapView.getPlaceMode());
-        placeMode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                CheckBox cb = (CheckBox) view;
-                MusicMapView.setPlaceMode(cb.isChecked());
-            }
-        });
-
         // radio buttons for Library selection
         RadioButton rb = (RadioButton) view.findViewById(R.id.selectAll);
         rb.setChecked(true);

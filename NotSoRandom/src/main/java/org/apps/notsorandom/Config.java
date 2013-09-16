@@ -19,6 +19,9 @@ public class Config {
      */
     private String root_;
 
+    private SenseComponent[] standardComponents_;
+    private SenseComponent[] adHocComponents_;
+
     /**
      * Sense component to show on X axis.
      */

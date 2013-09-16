@@ -16,8 +16,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="false"
-            android:layout_above="@+id/placeOnMap"
-            android:layout_marginBottom="32dp">
+        android:layout_marginBottom="32dp"
+        android:layout_above="@+id/scanForMedia">
 
         <TextView
                 android:layout_width="wrap_content"
@@ -47,21 +47,14 @@
             android:layout_toRightOf="@+id/scanForMedia"
             android:layout_marginLeft="8dp"/>
 
-    <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Edit songs directly on map."
-            android:id="@+id/placeOnMap"
-            android:layout_above="@+id/scanForMedia"
-            android:layout_alignLeft="@+id/scrollView"/>
-
     <RadioGroup
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/placeOnMap"
-            android:layout_alignParentLeft="true"
+        android:layout_alignParentLeft="true"
             android:layout_alignParentRight="true"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+        android:layout_above="@+id/scanForMedia"
+        android:id="@+id/radioGroup">
 
         <RadioButton
                 android:layout_width="wrap_content"
@@ -99,5 +92,20 @@
             android:id="@+id/backupDb"
             android:layout_alignTop="@+id/showLog"
             android:layout_alignParentRight="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Queue size:"
+        android:id="@+id/textView"
+        android:layout_above="@+id/radioGroup"
+        android:layout_alignParentLeft="true" />
+
+    <ExpandableListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/queueSizes"
+        android:layout_above="@+id/radioGroup"
+        android:layout_toRightOf="@+id/textView" />
 
 </RelativeLayout>
