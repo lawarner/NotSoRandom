@@ -93,8 +93,6 @@ public class MusicPlayerApp extends FragmentActivity
         MusicQueue.setLibrary(library_);
         MusicMap.setLibrary(library_);
 
-        // Start with 200 in the queue
-//        MusicQueue.refreshQueue(200);
         if (savedInstanceState != null)
             log("-restored from saved state.");
 

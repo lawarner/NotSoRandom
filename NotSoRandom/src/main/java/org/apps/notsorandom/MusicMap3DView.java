@@ -22,7 +22,7 @@ import android.util.Log;
 public class MusicMap3DView extends MusicMapView {
     private final static String TAG = MusicMap3DView.class.getSimpleName();
 
-    private final static int BallColor = Color.argb(0x7e, 0xff, 0xff, 0x03); //argb
+    private final static int BallColor = Color.argb(0x81, 0xff, 0xff, 0x09); //argb
 
     private ShapeDrawable[] balls_;
     private ShapeDrawable[] ballsSelected_;
@@ -151,7 +151,7 @@ public class MusicMap3DView extends MusicMapView {
         ShapeDrawable drawable = new ShapeDrawable(circle);
         Paint paint = drawable.getPaint();
 
-        RadialGradient gradient = new RadialGradient(radius/1.6f, radius/4,
+        RadialGradient gradient = new RadialGradient(radius/1.6f, radius/3,
                 radius, color, darken(color), Shader.TileMode.CLAMP);
         paint.setShader(gradient);
         drawable.getShape().resize(radius*2, radius*2);

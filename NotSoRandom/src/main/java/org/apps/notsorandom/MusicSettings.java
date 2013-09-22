@@ -13,6 +13,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
@@ -25,7 +27,13 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
 
     private static String statusStr_ = "";
 
+    private static int queueSizeLimit_ = 2000;
+
+    private static QueueSizeListAdapter qsAdapter_ = null;
+
     private TextView statusView_ = null;
+
+    private ExpandableListView queueSizeView_ = null;
 
     private boolean isScanning_ = false;
 
@@ -34,6 +42,13 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
     // Used to call back the Activity that attached us.
     private MusicPlayer.OnPlayerListener callback_ = null;
 
+
+    public static int getQueueSizeLimit() {
+        if (qsAdapter_ != null)
+            queueSizeLimit_ = qsAdapter_.getCurrent();
+
+        return queueSizeLimit_;
+    }
 
     public static void log(String msg) {
         statusStr_ += msg;
@@ -70,11 +85,24 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
         statusView_ = (TextView) view.findViewById(R.id.statusText);
         statusView_.setOnLongClickListener(this);
 
+        queueSizeView_ = (ExpandableListView) view.findViewById(R.id.queueSizes);
+        qsAdapter_ = new QueueSizeListAdapter(this.getActivity());
+        queueSizeView_.setAdapter(qsAdapter_);
+        queueSizeView_.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View view,
+                                        int group, int child, long id) {
+                qsAdapter_.setCurrent(child);
+                queueSizeView_.setSelectedChild(group, child, false);
+                queueSizeView_.collapseGroup(group);
+                return true;
+            }
+        });
+
         Button but = (Button) view.findViewById(R.id.scanForMedia);
         but.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 view.setEnabled(false);
                 isScanning_ = true;
                 AsyncTask<View, Void, Void> at = new AsyncTask<View, Void, Void>() {

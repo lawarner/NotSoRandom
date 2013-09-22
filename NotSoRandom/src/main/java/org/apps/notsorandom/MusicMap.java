@@ -265,10 +265,13 @@ public class MusicMap {
         MusicPlayerApp.log(TAG, " + BOX SHUFFLE AT: " + box_.toString()
                            + ", Lib songs=" + library_.getSongCount() + ", in box=" + songsInBox_);
 
-        SongInfo[] ret = new SongInfo[songsInBox_];
+        SongInfo[] ret;
 
         if (songsInBox_ > 0) {
             int count = 0;
+            int limit = getLimitedQueueSize(songsInBox_);
+            ret = new SongInfo[limit];
+
             Config config = MusicPlayerApp.getConfig();
             SenseComponent xComp = config.getXcomponent();
             SenseComponent yComp = config.getYcomponent();
@@ -284,17 +287,22 @@ public class MusicMap {
 //                    MusicPlayerApp.log(TAG, "song @ " + idx + " (" + x + "," + y + ") "
 //                                            + song.getSenseString() + ": " + song.getTitle());
                     ret[count++] = song;
-                    if (count >= songsInBox_)
+                    if (count >= limit)
                         break;
                 }
             }
-        }
+        } else
+            ret = new SongInfo[0];
 
         fillShuffleEntries(ret);
         shuffleIndices_ = ret;
         return ret;
     }
 
+
+    public SongInfo[] randomShuffle() {
+        return randomShuffle(library_.getSongCount());
+    }
 
     public SongInfo[] randomShuffle(int count) {
         MusicPlayerApp.log(TAG, "RANDOM SHUFFLE " + count);
@@ -306,6 +314,7 @@ public class MusicMap {
 
         if (count > arr.size())
             count = arr.size();
+        count = getLimitedQueueSize(count);
 
         SongInfo[] ret = new SongInfo[count];
         arr.subList(0, count).toArray(ret);
@@ -315,6 +324,18 @@ public class MusicMap {
         return ret;
     }
 
+
+    protected int getLimitedQueueSize(int count) {
+        int limit = MusicSettings.getQueueSizeLimit();
+        if (limit == -1)
+            limit = count;
+        else if (limit == -2)
+            limit = (count + 1) / 2;
+        else if (limit > count)
+            limit = count;
+
+        return limit;
+    }
 }
 /* ----------------
     public int[] puddleShuffle(int center) {

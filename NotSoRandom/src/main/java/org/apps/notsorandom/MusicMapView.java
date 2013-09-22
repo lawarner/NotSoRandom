@@ -126,7 +126,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
         if (reshuffle || !musicMap_.isShuffled()) {
             if (newbox_.isEmpty()) {
                 boxDraw_.setEmpty();
-                return musicMap_.randomShuffle(50);
+                return musicMap_.randomShuffle();
             } else {
                 SongInfo[] mm = musicMap_.boxShuffle(newbox_);
                 Rect rc = musicMap_.getBox();

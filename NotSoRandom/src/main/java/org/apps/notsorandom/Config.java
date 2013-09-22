@@ -21,6 +21,7 @@ public class Config {
 
     private SenseComponent[] standardComponents_;
     private SenseComponent[] adHocComponents_;
+    private SenseComponent[] autoComponents_;
 
     /**
      * Sense component to show on X axis.

@@ -191,6 +191,21 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     }
 
 
+    public void setLabels() {
+        View view = getView();
+        if (view == null)
+            return;
+
+        Config config = MusicPlayerApp.getConfig();
+
+        // Deal with the column labels around the music map
+        TextView tvrl = (TextView) view.findViewById(R.id.column_label);
+        tvrl.setText(config.getXcomponent().getLabel());
+        tvrl = (TextView) view.findViewById(R.id.row_label);
+        tvrl.setText(config.getYcomponent().getLabel());
+    }
+
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -322,7 +337,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             musicMapView_.initLibrary(callback_.getLibCategory());
             musicMapView_.getShuffledList(false);
 
-            callback_.refreshQueue(30);
+            callback_.refreshQueue(MusicSettings.getQueueSizeLimit());
 //            setTrackAndTitle(callback_.getCurrSong());
             song = callback_.getNextSong(true);
             MusicPlayerApp.log(TAG, " first time Song.");
