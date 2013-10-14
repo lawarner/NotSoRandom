@@ -56,8 +56,8 @@ public class MusicMap3DView extends MusicMapView {
         for (int depth = MusicMap.MAPDEPTH - 1; depth >= 0; depth--) {
             // for now, a pseudo 3d effect by scaling to depth
             canvas.save();
-            final float halfH = height_ / 16f;
-            final float halfW = width_ / 16f;
+            float halfH = height_ / 17f;
+            float halfW = width_ / 17f;
             canvas.translate(depth * halfW * 0.5f, depth * halfH * 0.5f);
             // depth 0 - 7 = 1 - 0.5 scale = 1 - depth
             float dist = 1f - depth / (MusicMap.MAPDEPTH * 2.6f);
@@ -72,12 +72,17 @@ public class MusicMap3DView extends MusicMapView {
                 canvas.drawRect(pixBox, paint_);
             }
 
+            halfH = height_ / 15f;
+            halfW = width_ / 15f;
+
             for (int ixy = 0; ixy < mapXYsize; ++ixy) {
                 int idx = depth * mapXYsize + ixy;
                 if (balls_[idx] != null || ballsSelected_[idx] != null) {
                     canvas.save();
                     PointF pt = indexToPixel(ixy % 8, ixy / 8);
-                    canvas.translate(pt.x - halfW, pt.y - halfH);
+                    canvas.translate(pt.x + halfW - balls_[idx].getIntrinsicWidth(),
+                                     pt.y - halfH + balls_[idx].getIntrinsicHeight() / 2);
+//                    canvas.translate(pt.x - halfW, pt.y - halfH);
                     //canvas.drawPaint(balls_[ixy].getPaint());
                     if (balls_[idx] != null) {
                         //Log.d(TAG, "Put lib ball at " + idx);

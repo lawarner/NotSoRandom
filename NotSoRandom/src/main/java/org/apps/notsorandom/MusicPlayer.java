@@ -245,7 +245,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
         RelativeLayout rl = (RelativeLayout) view.findViewById(R.id.player_layout);
-        musicMapView_ = new MusicMap3DView(rl.getContext());
+        musicMapView_ = new MusicMapGLView(rl.getContext());
+        //musicMapView_ = new MusicMap3DView(rl.getContext());
         rl.addView(musicMapView_, lp);
         musicMapView_.setId(R.id.music_map);
         musicMapView_.setTranslationX(-64);
@@ -260,26 +261,26 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         rl.addView(ll, lp);
 
         modeButtons_ = new TextView[MusicMapView.MapMode.values().length];
-        ArrayList<View> alv = new ArrayList<View>(1 + modeButtons_.length);
+        ArrayList<View> arrTouchables = new ArrayList<View>(modeButtons_.length + 1);
         int idx = MusicMapView.MapMode.SelectMode.ordinal();
         modeButtons_[idx] = (TextView) ll.findViewById(R.id.selectMode);
         modeButtons_[idx].setOnTouchListener(this);
-        alv.add(modeButtons_[idx]);
+        arrTouchables.add(modeButtons_[idx]);
         idx = MusicMapView.MapMode.PlaceMode.ordinal();
         modeButtons_[idx] = (TextView) ll.findViewById(R.id.placeMode);
         modeButtons_[idx].setOnTouchListener(this);
-        alv.add(modeButtons_[idx]);
+        arrTouchables.add(modeButtons_[idx]);
         idx = MusicMapView.MapMode.ThreeDMode.ordinal();
         modeButtons_[idx] = (TextView) ll.findViewById(R.id.threeDMode);
         modeButtons_[idx].setOnTouchListener(this);
-        alv.add(modeButtons_[idx]);
+        arrTouchables.add(modeButtons_[idx]);
         idx = MusicMapView.MapMode.AnimateMode.ordinal();
         modeButtons_[idx] = (TextView) ll.findViewById(R.id.animateMode);
         modeButtons_[idx].setOnTouchListener(this);
-        alv.add(modeButtons_[idx]);
+        arrTouchables.add(modeButtons_[idx]);
 
-        alv.add(musicMapView_);
-        view.addTouchables(alv);
+        arrTouchables.add(musicMapView_);
+        view.addTouchables(arrTouchables);
 
         modeButtons_[MusicMapView.getMapMode().ordinal()].setTextColor(Color.GREEN);
 
