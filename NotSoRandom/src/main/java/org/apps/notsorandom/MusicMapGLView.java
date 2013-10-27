@@ -16,6 +16,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
+import android.view.View;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -181,14 +182,6 @@ public class MusicMapGLView extends MusicMapView {
         }
     }
 
-    private void checkGlError(String op) {
-        int error;
-        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-            Log.e(TAG, op + ": glError " + error);
-            throw new RuntimeException(op + ": glError " + error);
-        }
-    }
-
 
     public static int loadShader(int type, String code) {
         int shader = GLES20.glCreateShader(type);
@@ -211,6 +204,10 @@ public class MusicMapGLView extends MusicMapView {
         glView_.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         glView_.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR);
 
+    }
+
+    public GLSurfaceView getGlView() {
+        return glView_;
     }
 
     @Override
@@ -238,17 +235,6 @@ public class MusicMapGLView extends MusicMapView {
         glView_.draw(canvas);
     }
 
-    private static int darken(int color) {
-        int alpha = color & 0xff000000;
-        int red = (color & 0x00ff0000) >> 16;
-        int green = (color & 0x0000ff00) >> 8;
-        int blue = color & 0x000000ff;
-        int darkColor = alpha | red/4 << 16
-                | green/4 << 8
-                | blue/4;
-        return darkColor;
-    }
-
     @Override
     public void redrawMap() {
         Log.d(TAG, " redrawMap called");
@@ -270,6 +256,14 @@ public class MusicMapGLView extends MusicMapView {
         MusicMap.MapEntry[] ms = musicMap_.getShuffleEntries();
 
         super.invalidate();
+    }
+
+    private void checkGlError(String op) {
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.e(TAG, op + ": glError " + error);
+            throw new RuntimeException(op + ": glError " + error);
+        }
     }
 
 }

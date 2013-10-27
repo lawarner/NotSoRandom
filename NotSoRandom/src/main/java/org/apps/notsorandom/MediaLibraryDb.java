@@ -524,7 +524,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 is.close();
                 restFile.renameTo(new File(backDir, DATABASE_NAME + ".done"));
             } catch (FileNotFoundException ex) {
-                ex.printStackTrace();
+                Log.d(TAG, "- Restore file not found.  Skipping.");
                 return -1;
             } catch (IOException ioe) {
                 ioe.printStackTrace();
