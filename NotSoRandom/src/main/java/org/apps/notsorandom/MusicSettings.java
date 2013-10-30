@@ -126,7 +126,6 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
                         final View view = views[0];
                         handler_.post(new Runnable() {
                             public void run() {
-                                MusicPlayer.initLibrary(MusicPlayerApp.LibraryCategory.ALL);
                                 view.setEnabled(true);
                             }
                         });

@@ -10,27 +10,6 @@
     android:id="@+id/player_layout">
 
     <TextView
-        android:id="@+id/column_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal|top"
-        android:text="slower / faster"
-        android:singleLine="true"
-        android:textAlignment="center"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentLeft="true"/>
-
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="softer / harder"
-            android:id="@+id/row_label"
-            android:layout_below="@+id/column_label"
-            android:layout_alignParentLeft="true"
-            android:layout_marginTop="57dp"
-            android:gravity="fill_vertical"/>
-
-    <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=" --"
@@ -62,15 +41,15 @@
             android:layout_alignBottom="@+id/trackCounter"
             android:layout_alignParentLeft="true"/>
 
-    <FrameLayout
+    <org.apps.notsorandom.MusicMapWidget
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:id="@+id/controlView"
-        android:layout_marginBottom="100dp"
+        android:layout_marginBottom="88dp"
         android:layout_above="@+id/current_song"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"></FrameLayout>
+        android:layout_alignParentRight="true" />
 
 </RelativeLayout>

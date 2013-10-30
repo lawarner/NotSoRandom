@@ -158,7 +158,7 @@ public class MusicPlayerApp extends FragmentActivity
         }
 
         MusicLibrary.updateDb(true, libCat_);
-        MusicPlayer.initLibrary(libCat_);
+        playerFrag_.initLibrary(libCat_);
     }
 
     // -----------------------------------------------------------------

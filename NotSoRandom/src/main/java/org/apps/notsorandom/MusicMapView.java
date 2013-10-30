@@ -8,9 +8,18 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.opengl.GLSurfaceView;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import java.util.ArrayList;
 
 /**
  * Custom view that handles rendering and drawing of the Music Map.
@@ -19,7 +28,8 @@ import android.view.View;
  */
 public class MusicMapView extends View implements View.OnTouchListener {
     private static final String TAG = "MusicMapView";
-/*
+
+    /*
     private static final int colors_[] = {
         Color.RED, Color.BLUE, Color.GREEN,
         Color.CYAN, Color.MAGENTA, Color.YELLOW
@@ -115,6 +125,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
         mapMode_ = mapMode;
     }
 
+
     /**
      * Get the order of song indices in the shufflelist.
      * Public interface to this view's data model.
@@ -205,7 +216,6 @@ public class MusicMapView extends View implements View.OnTouchListener {
         newbox_.set(pointsToRect(rc));
         newbox_.sort();
     }
-
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
