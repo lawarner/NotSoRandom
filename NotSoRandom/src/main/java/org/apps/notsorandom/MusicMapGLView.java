@@ -9,14 +9,10 @@ import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
-import android.view.View;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -67,7 +63,7 @@ public class MusicMapGLView extends MusicMapView {
 
         private final String fragmentShaderCode =
                 "precision mediump float;" +
-                        "uniform vec4 vColor;" +
+                        "uniform vec4 vColor; " +
                         "void main() {" +
                         "  gl_FragColor = vColor;" +
                         "}\n";
@@ -127,10 +123,11 @@ public class MusicMapGLView extends MusicMapView {
                     COORDS_PER_VERTEX * 4, vertexBuffer);
 
             // Enable a handle to the triangle vertices
-            GLES20.glEnableVertexAttribArray(ATTR_VPOSITION);
+            GLES20.glEnableVertexAttribArray(attr_vposition);
 
             // Draw the triangle
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, COORDS_PER_VERTEX * 4);
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+//            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, COORDS_PER_VERTEX * 4);
             checkGlError("glDrawArrays");
 
             // Disable vertex array
@@ -151,7 +148,7 @@ public class MusicMapGLView extends MusicMapView {
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-            GLES20.glClearColor(0f, 0f, 0.6f, 1f);
+            GLES20.glClearColor(0f, 0f, 0.4f, 1f);
 
             triangle_ = new Triangle();
 
@@ -166,13 +163,17 @@ public class MusicMapGLView extends MusicMapView {
             Matrix.frustumM(matProjection_, 0, -ratio, ratio, -1, 1, 1, 12);
         }
 
+        int frames = 0;
         int angle = 90;
         @Override
         public void onDrawFrame(GL10 gl10) {
             Log.d(TAG, "onDrawFrame");
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-            angle = angle == 359 ? 0 : angle++;
+            if (frames++ > 10) {
+                frames = 0;
+                angle = angle == 359 ? 0 : angle++;
+            }
             Matrix.setIdentityM(matModel_, 0);
             Matrix.rotateM(matModel_, 0, angle, 0f, 0f, 1f);
             Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);

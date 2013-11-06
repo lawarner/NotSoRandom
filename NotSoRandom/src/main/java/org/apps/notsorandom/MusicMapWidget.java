@@ -52,18 +52,18 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
         TextView tvrl = (TextView) view.findViewById(R.id.column_label);
         tvrl.setText(xLabel);
         tvrl.setOnTouchListener(this);
-        tvrl.setTranslationX(40);
-        tvrl.setTranslationY(-12);
+        tvrl.setTranslationX(44);
+//        tvrl.setTranslationY(-12);
         tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
-        tvrl.setTranslationX(-60);   // nudge left
-        tvrl.setTranslationY(-80);   // nudge up
+        tvrl.setTranslationX(-54);   // nudge left
+        tvrl.setTranslationY(-108);   // nudge up
         tvrl.setText(yLabel);
         tvrl.setOnTouchListener(this);
 
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(516, 516);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
-        lp.setMargins(50, 26, 0, 0);
+        lp.setMargins(50, 50, 0, 0);
         lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         lp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
@@ -195,7 +195,7 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
                     modeButtons_[idx].setTextColor(Color.WHITE);
 
                 if (newMapMode == MusicMapView.MapMode.ThreeDMode) {
-                    musicMapView_.setVisibility(View.GONE);
+                    musicMapView_.setVisibility(View.INVISIBLE);
                     glView_.setVisibility(View.VISIBLE);
                 } else if (oldMapMode == MusicMapView.MapMode.ThreeDMode) {
                     musicMapView_.setVisibility(View.VISIBLE);

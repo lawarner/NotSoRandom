@@ -197,7 +197,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        MusicPlayerApp.log(TAG, " onCreateView in MusicPlayer");
+        MusicPlayerApp.log(TAG, "+onCreateView in MusicPlayer");
         View view = inflater.inflate(R.layout.fragment_music_player, container, false);
 
         musicMapWidget_ = (MusicMapWidget) view.findViewById(R.id.controlView);
@@ -260,10 +260,10 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
         if (queueSong(song)) {
 //            if (!isFirstTime_)
-            if (getView() != null) {
+            //if (getView() != null) {
                 MusicPlayerApp.log(TAG, "Show controller. player is in view.");
                 controller_.show(0);
-            }
+            //}
         }
         else
             MusicPlayerApp.log(TAG, "Unable to queue song " + song);
@@ -303,7 +303,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
             title = song.getTitle();
             artist = song.getArtist();
-            if (artist.length() < 32)
+            if (artist.length() < 34)
                 artist += song.getAlbum();
             MusicPlayerApp.log(TAG, "setTrackAndTitle with " + track + " " + title);
         }
@@ -311,7 +311,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         if (trackCounter_ != null)
             trackCounter_.setText(track);
         if (title_ != null)
-            title_.setText(title);
+            title_.setText(title.length() > 94 ? title.substring(0,94) : title);
         if (artist_ != null)
             artist_.setText(artist);
     }
