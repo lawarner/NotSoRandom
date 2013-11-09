@@ -2,13 +2,6 @@ package org.apps.notsorandom;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PointF;
-import android.graphics.RadialGradient;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.Shader;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -30,6 +23,13 @@ public class MusicMapGLView extends MusicMapView {
     private final static String TAG = MusicMapGLView.class.getSimpleName();
 
     private GLSurfaceView glView_;
+
+    private static final int MAT4x4 = 16;
+
+    private float[] matModel_ = new float[MAT4x4];
+    private float[] matView_ = new float[MAT4x4];
+    private float[] matProjection_ = new float[MAT4x4];
+    private float[] matWorld_ = new float[MAT4x4];
 
 
     class Triangle {
@@ -89,10 +89,6 @@ public class MusicMapGLView extends MusicMapView {
             GLES20.glAttachShader(glProgram_, vertexShader);
             GLES20.glAttachShader(glProgram_, fragShader);
 
-//            GLES20.glBindAttribLocation(glProgram_, ATTR_MATWORLD, "matWorld");
-//            GLES20.glBindAttribLocation(glProgram_, ATTR_VPOSITION, "vPosition");
-//            GLES20.glBindAttribLocation(glProgram_, ATTR_VCOLOR, "vColor");
-
             GLES20.glLinkProgram(glProgram_);
 
             attr_vposition = GLES20.glGetAttribLocation(glProgram_, "vPosition");
@@ -117,13 +113,23 @@ public class MusicMapGLView extends MusicMapView {
 
             vertexBuffer.position(0);
 
-            // Prepare the triangle coordinate data
-            GLES20.glVertexAttribPointer(attr_vposition, COORDS_PER_VERTEX,
-                    GLES20.GL_FLOAT, true,
-                    COORDS_PER_VERTEX * 4, vertexBuffer);
-
             // Enable a handle to the triangle vertices
             GLES20.glEnableVertexAttribArray(attr_vposition);
+
+            // Prepare the triangle coordinate data
+            GLES20.glVertexAttribPointer(attr_vposition, COORDS_PER_VERTEX,
+                    GLES20.GL_FLOAT, false,
+                    COORDS_PER_VERTEX * 4, vertexBuffer);
+
+            // Draw the triangle
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+//            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, COORDS_PER_VERTEX * 4);
+            checkGlError("glDrawArrays");
+
+            Matrix.translateM(matModel_, 0, 0.2f, 0.5f, 0f);
+            Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
+            Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
+            GLES20.glUniformMatrix4fv(attr_matworld, 1, false, matWorld_, 0);
 
             // Draw the triangle
             GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
@@ -137,22 +143,16 @@ public class MusicMapGLView extends MusicMapView {
 
     private class MusicMapRenderer implements GLSurfaceView.Renderer {
 
-        private static final int MAT4x4 = 16;
-
-        private float[] matModel_ = new float[MAT4x4];
-        private float[] matView_ = new float[MAT4x4];
-        private float[] matProjection_ = new float[MAT4x4];
-        private float[] matWorld_ = new float[MAT4x4];
-
         private Triangle triangle_;
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-            GLES20.glClearColor(0f, 0f, 0.4f, 1f);
+            GLES20.glClearColor(0.001f, 0f, 0.2f, 1f);
 
             triangle_ = new Triangle();
 
-            Matrix.setLookAtM(matView_, 0, 0, 0, -5, 0f, 0f, 0f, 0f, 1f, 0f);
+            //                      offset, eyeXYZ,  centerXYZ,    upXYZ
+            Matrix.setLookAtM(matView_, 0, 0, 0, -4, 0f, 0f, 0f, 0f, 1f, 0f);
         }
 
         @Override
@@ -164,22 +164,28 @@ public class MusicMapGLView extends MusicMapView {
         }
 
         int frames = 0;
-        int angle = 90;
+        float offset = 0f;
         @Override
         public void onDrawFrame(GL10 gl10) {
-            Log.d(TAG, "onDrawFrame");
+            //Log.d(TAG, "onDrawFrame");
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-            if (frames++ > 10) {
+            if (frames++ > 20) {
                 frames = 0;
-                angle = angle == 359 ? 0 : angle++;
+                offset = offset >= 359f ? 0f : offset++;
             }
             Matrix.setIdentityM(matModel_, 0);
-            Matrix.rotateM(matModel_, 0, angle, 0f, 0f, 1f);
+            Matrix.rotateM(matModel_, 0, 90, 0f, 0f, 1f);
             Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
             Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
 
             triangle_.draw(matWorld_);
+/*
+            Matrix.translateM(matModel_, 0, offset, offset, 0f);
+            Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
+            Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
+            triangle_.draw(matWorld_);
+*/
         }
     }
 

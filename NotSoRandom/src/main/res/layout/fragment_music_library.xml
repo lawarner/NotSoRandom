@@ -21,7 +21,8 @@
             android:text="tempo:"
             android:id="@+id/xLabel"
             android:layout_alignTop="@+id/xSeekBar"
-            android:layout_alignParentLeft="true"/>
+            android:layout_alignParentLeft="true"
+        android:visibility="gone" />
 
     <SeekBar
             android:layout_width="wrap_content"
@@ -32,7 +33,8 @@
             android:max="6"
             android:layout_alignLeft="@+id/zSeekBar"
             android:layout_marginTop="6dp"
-            android:layout_marginRight="4dp"/>
+            android:layout_marginRight="4dp"
+        android:visibility="gone" />
 
     <TextView
             android:layout_width="wrap_content"
@@ -40,7 +42,8 @@
             android:text="roughness:"
             android:id="@+id/yLabel"
             android:layout_alignTop="@+id/ySeekBar"
-            android:layout_alignParentLeft="true"/>
+            android:layout_alignParentLeft="true"
+        android:visibility="gone" />
 
     <SeekBar
             android:layout_width="wrap_content"
@@ -51,7 +54,8 @@
             android:max="6"
             android:layout_above="@+id/zSeekBar"
             android:layout_marginTop="6dp"
-            android:layout_marginRight="4dp"/>
+            android:layout_marginRight="4dp"
+        android:visibility="gone" />
 
     <TextView
             android:layout_width="wrap_content"
@@ -59,7 +63,8 @@
             android:text="humor:"
             android:id="@+id/zLabel"
             android:layout_alignParentLeft="true"
-            android:layout_alignTop="@+id/zSeekBar"/>
+            android:layout_alignTop="@+id/zSeekBar"
+        android:visibility="gone" />
 
     <SeekBar
             android:layout_width="fill_parent"
@@ -72,7 +77,8 @@
             android:layout_marginLeft="26dp"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="4dp"
-            android:layout_marginRight="4dp"/>
+            android:layout_marginRight="4dp"
+        android:visibility="gone" />
 
     <SearchView
             android:layout_width="wrap_content"

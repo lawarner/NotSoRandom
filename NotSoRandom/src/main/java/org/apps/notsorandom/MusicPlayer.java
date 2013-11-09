@@ -291,6 +291,18 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 */
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        musicMapWidget_.getGlView().onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        musicMapWidget_.getGlView().onPause();
+    }
+
     private void setTrackAndTitle(SongInfo song) {
         String track = "-/-";
         String title = "";

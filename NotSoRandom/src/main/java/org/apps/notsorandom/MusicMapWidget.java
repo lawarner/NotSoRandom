@@ -61,7 +61,7 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
         tvrl.setText(yLabel);
         tvrl.setOnTouchListener(this);
 
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(516, 516);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(600, 600);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
         lp.setMargins(50, 50, 0, 0);
         lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
@@ -78,7 +78,7 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
         // labeled buttons for mode selection:
         // Select, Place, 3D, Animate
         LinearLayout ll = (LinearLayout) inflater.inflate(R.layout.mode_selector, null);
-        lp = new RelativeLayout.LayoutParams(520, 100);
+        lp = new RelativeLayout.LayoutParams(560, 100);
         lp.addRule(RelativeLayout.BELOW, R.id.music_map);
         lp.addRule(RelativeLayout.ALIGN_LEFT, R.id.music_map);
         addView(ll, lp);
@@ -120,6 +120,10 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
 
     public MusicMapView getMusicMapView() {
         return musicMapView_;
+    }
+
+    public GLSurfaceView getGlView() {
+        return glView_;
     }
 
     /**

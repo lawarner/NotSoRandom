@@ -38,6 +38,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/artist"
             android:textSize="12dp"
+            android:layout_marginLeft="4dp"
             android:layout_alignBottom="@+id/trackCounter"
             android:layout_alignParentLeft="true"/>
 
