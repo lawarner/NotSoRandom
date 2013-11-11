@@ -25,16 +25,106 @@ public class MusicMapGLView extends MusicMapView {
     private GLSurfaceView glView_;
 
     private static final int MAT4x4 = 16;
+    private static final double DEG = Math.PI / 180;
 
     private float[] matModel_ = new float[MAT4x4];
     private float[] matView_ = new float[MAT4x4];
     private float[] matProjection_ = new float[MAT4x4];
     private float[] matWorld_ = new float[MAT4x4];
+    private float[] matNormal_ = new float[MAT4x4];
+    private float[] eyePos_ = { 0f, 0f, -4f };
+    private float[] lightPos_ = { 9f, 4f, -5f, 1 };
+    private float[] lightColor_ = { 0.8f, 0.8f, 0.8f, 1 };
 
+    private float[] matAmbient_ = { 1f, 0.2f, 0.2f, 1f };
+    private float[] matDiffuse_ = { 0.6f, 0.5f, 0.5f, 1f };
+    private float[] matSpecular_ = { 1f, 1f, 1f, 1f };
+
+    private int attr_matnormal;
+    private int attr_matworld;
+    private int attr_vposition;
+    //private int attr_vcolor;
+
+
+    class Sphere {
+        // number of coordinates per vertex in this array
+        static private final int COORDS_PER_VERTEX = 3;
+
+        private FloatBuffer vertexBuffer_;
+
+        private int points_;
+
+        public Sphere(int segments, int slices) {
+            points_ = setup(segments, slices);
+        }
+
+        private int setup(int segments, int slices) {
+            int sz = (segments * slices /*+ 2*/) * COORDS_PER_VERTEX;
+
+            // initialize vertex byte buffer for shape coordinates
+            // (number of coordinate values * 4 bytes per float)
+            ByteBuffer bb = ByteBuffer.allocateDirect(sz * 4);
+
+            // create a floating point buffer in native order from the ByteBuffer
+            vertexBuffer_ = bb.order(ByteOrder.nativeOrder()).asFloatBuffer();
+
+            double radius = 1;
+
+            double dTheta = Math.PI * 2 / slices;
+            double dPhi = Math.PI * 2 / segments;
+            int points = 0;
+
+            // start in center for triangle fan
+/*            vertexBuffer_.put(0f);
+            vertexBuffer_.put(0f);
+            vertexBuffer_.put(0f);
+            points++;
+*/
+            for (double phi = 0; phi < 2 * Math.PI; phi += dPhi) {
+                //for each stage calculating the slices
+                for (double theta = 2 * Math.PI; theta > 0.0; theta -= dTheta) {
+                    Log.d(TAG, " vb put " + points + ": " + phi + ", " + theta);
+
+                    vertexBuffer_.put((float) (radius * Math.sin(phi) * Math.cos(theta)) );
+                    vertexBuffer_.put((float) (radius * Math.sin(phi) * Math.sin(theta)) );
+                    vertexBuffer_.put((float) (radius * Math.cos(phi)) );
+                    points++;
+                }
+            }
+
+            // close the shape
+/*            double phi = 2 * Math.PI;
+            double theta = 2 * Math.PI;
+            vertexBuffer_.put((float) (radius * Math.sin(phi) * Math.cos(theta)) );
+            vertexBuffer_.put((float) (radius * Math.sin(phi) * Math.sin(theta)) );
+            vertexBuffer_.put((float) (radius * Math.cos(phi)) );
+            points++;
+*/
+            // set the buffer to read the first coordinate
+            vertexBuffer_.position(0);
+
+            return points;
+        }
+
+        public void draw(int attrVposition) {
+
+            vertexBuffer_.position(0);
+
+            // Prepare the shape coordinate data
+            GLES20.glVertexAttribPointer(attrVposition, COORDS_PER_VERTEX,
+                    GLES20.GL_FLOAT, false,
+                    COORDS_PER_VERTEX * 4, vertexBuffer_);
+
+            // Draw the sphere
+            //GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, points_);
+            GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, points_);
+            checkGlError("glDrawArrays");
+        }
+    }
 
     class Triangle {
 
-        private FloatBuffer vertexBuffer;
+        private FloatBuffer vertexBuffer_;
 
         // number of coordinates per vertex in this array
         static final int COORDS_PER_VERTEX = 3;
@@ -44,19 +134,40 @@ public class MusicMapGLView extends MusicMapView {
                 0.5f, -0.311004243f, 0.0f    // bottom right
         };
 
-        // Set color with red, green, blue and alpha (opacity) values
-        float color_[] = { 0.63671875f, 0.76953125f, 0.22265625f, 1.0f };
 
-        private static final int ATTR_MATWORLD  = 0;
-        private static final int ATTR_VPOSITION = 1;
-        private static final int ATTR_VCOLOR    = 2;
-        private int attr_matworld;
-        private int attr_vposition;
-        private int attr_vcolor;
+        public Triangle() {
+            // initialize vertex byte buffer for shape coordinates
+            // (number of coordinate values * 4 bytes per float)
+            ByteBuffer bb = ByteBuffer.allocateDirect(triangleCoords.length * 4);
+
+            // create a floating point buffer in native order from the ByteBuffer
+            vertexBuffer_ = bb.order(ByteOrder.nativeOrder()).asFloatBuffer();
+            // add the coordinates to the FloatBuffer
+            vertexBuffer_.put(triangleCoords);
+            // set the buffer to read the first coordinate
+            vertexBuffer_.position(0);
+        }
+
+        public void draw(int attrVposition) {
+
+            vertexBuffer_.position(0);
+
+            // Prepare the triangle coordinate data
+            GLES20.glVertexAttribPointer(attrVposition, COORDS_PER_VERTEX,
+                    GLES20.GL_FLOAT, false,
+                    COORDS_PER_VERTEX * 4, vertexBuffer_);
+
+            // Draw the triangle
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+            checkGlError("glDrawArrays");
+        }
+    }
+
+    private class MusicMapRenderer implements GLSurfaceView.Renderer {
 
         private final String vertexShaderCode =
                 "uniform mat4 matWorld; " +
-                "attribute vec4 vPosition; " +
+                        "attribute vec4 vPosition; " +
                         "void main() {" +
                         "  gl_Position = matWorld * vPosition;" +
                         "}\n";
@@ -68,23 +179,74 @@ public class MusicMapGLView extends MusicMapView {
                         "  gl_FragColor = vColor;" +
                         "}\n";
 
+        private final String litVertexShaderCode =
+            "uniform mat4 matWorld; " +
+            "uniform mat4 normalMatrix; " +
+            "uniform vec3 eyePos; " +
+
+            "attribute vec4 vPosition; " +
+
+            "uniform vec4 lightPos; " +
+            "uniform vec4 lightColor; " +
+
+            "varying vec3 EyespaceNormal; " +
+            "varying vec3 lightDir, eyeVec; " +
+
+            "void main() { " +
+                "vec3 vNormal = normalize(vPosition.xyz); " +
+                "EyespaceNormal = vec3(normalMatrix * vec4(vNormal, 1.0)); " +
+
+                "vec4 position = matWorld * vPosition; " +
+                "lightDir = lightPos.xyz - position.xyz; " +
+                "eyeVec = -position.xyz; " +
+
+                "gl_Position = matWorld * vPosition; " +
+             "}\n";
+
+        private final String litFragmentShaderCode =
+            "precision mediump float; " +
+
+            "uniform vec4 lightPos; " +
+            "uniform vec4 lightColor; " +
+
+            "uniform vec4 matAmbient; " +
+            "uniform vec4 matDiffuse; " +
+            "uniform vec4 matSpecular; " +
+
+            "uniform vec3 eyePos; " +
+
+            "varying vec3 EyespaceNormal; " +
+            "varying vec3 lightDir, eyeVec; " +
+
+            "void main() { " +
+            "    vec3 N = normalize(EyespaceNormal); " +
+            "    vec3 E = normalize(eyeVec); " +
+            "    vec3 L = normalize(lightDir); " +
+            "    vec3 reflectV = reflect(-L, N); " +
+
+            "    vec4 ambientTerm = matAmbient * lightColor; " +
+            "    vec4 diffuseTerm = matDiffuse * max(dot(N, L), 0.0); " +
+            "    vec4 specularTerm = matSpecular * pow(max(dot(reflectV, E), 0.0), 5.0); " +
+
+            "    gl_FragColor =  ambientTerm + diffuseTerm + specularTerm; " +
+            "}\n";
+
+        // Set color with red, green, blue and alpha (opacity) values
+        private final float green_[] = { 0.63671875f, 0.76953125f, 0.22265625f, 1.0f };
+        private final float red_[] = { 0.998f, 0f, 0f, 1.0f };
+        private final float cyan_[] = { 0f, 0.998f, 0.998f, 1.0f };
+
         private int glProgram_;
 
+        private Sphere sphere_;
+        private Triangle triangle_;
 
-        public Triangle() {
-            // initialize vertex byte buffer for shape coordinates
-            // (number of coordinate values * 4 bytes per float)
-            ByteBuffer bb = ByteBuffer.allocateDirect(triangleCoords.length * 4);
+        @Override
+        public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
+            GLES20.glClearColor(0.001f, 0f, 0.2f, 1f);
 
-            // create a floating point buffer in native order from the ByteBuffer
-            vertexBuffer = bb.order(ByteOrder.nativeOrder()).asFloatBuffer();
-            // add the coordinates to the FloatBuffer
-            vertexBuffer.put(triangleCoords);
-            // set the buffer to read the first coordinate
-            vertexBuffer.position(0);
-
-            int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
-            int fragShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+            int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, litVertexShaderCode);
+            int fragShader = loadShader(GLES20.GL_FRAGMENT_SHADER, litFragmentShaderCode);
             glProgram_ = GLES20.glCreateProgram();
             GLES20.glAttachShader(glProgram_, vertexShader);
             GLES20.glAttachShader(glProgram_, fragShader);
@@ -93,66 +255,16 @@ public class MusicMapGLView extends MusicMapView {
 
             attr_vposition = GLES20.glGetAttribLocation(glProgram_, "vPosition");
             attr_matworld = GLES20.glGetUniformLocation(glProgram_, "matWorld");
-            attr_vcolor  = GLES20.glGetUniformLocation(glProgram_, "vColor");
-        }
+            attr_matnormal = GLES20.glGetUniformLocation(glProgram_, "matNormal");
+            //attr_vcolor  = GLES20.glGetUniformLocation(glProgram_, "vColor");
 
-        public void draw(float[] worldMatrix) {
-            // Add program to OpenGL ES environment
-            GLES20.glUseProgram(glProgram_);
-
-            // get handle to vertex shader's vPosition member
-            //mPositionHandle = GLES20.glGetAttribLocation(glProgram_, "vPosition");
-
-            // get handle to fragment shader's vColor member
-            //mColorHandle = GLES20.glGetUniformLocation(glProgram_, "vColor");
-
-            // Set color for drawing the triangle
-            GLES20.glUniform4f(attr_vcolor, color_[0], color_[1], color_[2], color_[3]);
-
-            GLES20.glUniformMatrix4fv(attr_matworld, 1, false, worldMatrix, 0);
-
-            vertexBuffer.position(0);
-
-            // Enable a handle to the triangle vertices
-            GLES20.glEnableVertexAttribArray(attr_vposition);
-
-            // Prepare the triangle coordinate data
-            GLES20.glVertexAttribPointer(attr_vposition, COORDS_PER_VERTEX,
-                    GLES20.GL_FLOAT, false,
-                    COORDS_PER_VERTEX * 4, vertexBuffer);
-
-            // Draw the triangle
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-//            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, COORDS_PER_VERTEX * 4);
-            checkGlError("glDrawArrays");
-
-            Matrix.translateM(matModel_, 0, 0.2f, 0.5f, 0f);
-            Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
-            Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
-            GLES20.glUniformMatrix4fv(attr_matworld, 1, false, matWorld_, 0);
-
-            // Draw the triangle
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-//            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, COORDS_PER_VERTEX * 4);
-            checkGlError("glDrawArrays");
-
-            // Disable vertex array
-            GLES20.glDisableVertexAttribArray(attr_vposition);
-        }
-    }
-
-    private class MusicMapRenderer implements GLSurfaceView.Renderer {
-
-        private Triangle triangle_;
-
-        @Override
-        public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-            GLES20.glClearColor(0.001f, 0f, 0.2f, 1f);
-
+            sphere_ = new Sphere(12, 12);
             triangle_ = new Triangle();
 
-            //                      offset, eyeXYZ,  centerXYZ,    upXYZ
-            Matrix.setLookAtM(matView_, 0, 0, 0, -4, 0f, 0f, 0f, 0f, 1f, 0f);
+            //                      offset,         eyeXYZ,
+            Matrix.setLookAtM(matView_, 0, eyePos_[0], eyePos_[1], eyePos_[2],
+            //      centerXYZ,    upXYZ
+                    0f, 0f, 0f, 0f, 1f, 0f);
         }
 
         @Override
@@ -160,7 +272,9 @@ public class MusicMapGLView extends MusicMapView {
             GLES20.glViewport(0, 0, width, height);
 
             float ratio = (float) width / height;
-            Matrix.frustumM(matProjection_, 0, -ratio, ratio, -1, 1, 1, 12);
+            Matrix.frustumM(matProjection_, 0, -ratio, ratio, -1, 1, 3, 8);
+            // android bug
+            //matProjection_[8] /= 2;
         }
 
         int frames = 0;
@@ -176,19 +290,88 @@ public class MusicMapGLView extends MusicMapView {
             }
             Matrix.setIdentityM(matModel_, 0);
             Matrix.rotateM(matModel_, 0, 90, 0f, 0f, 1f);
-            Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
-            Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
 
-            triangle_.draw(matWorld_);
-/*
-            Matrix.translateM(matModel_, 0, offset, offset, 0f);
-            Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
-            Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
-            triangle_.draw(matWorld_);
-*/
+            setupDraw(true);
+
+            GLES20.glUniform3f(GLES20.glGetUniformLocation(glProgram_, "eyePos"),
+                    eyePos_[0], eyePos_[1], eyePos_[2]);
+
+            GLES20.glUniform4f(GLES20.glGetUniformLocation(glProgram_, "lightColor"),
+                    lightColor_[0], lightColor_[1], lightColor_[2], lightColor_[3]);
+
+            float lightPos[] = new float[4];
+            Matrix.multiplyMV(lightPos, 0, matModel_, 0, lightPos_, 0);
+            GLES20.glUniform4f(GLES20.glGetUniformLocation(glProgram_, "lightPos"),
+                    lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
+
+
+            GLES20.glUniform4f(GLES20.glGetUniformLocation(glProgram_, "matAmbient"),
+                    matAmbient_[0], matAmbient_[1], matAmbient_[2], matAmbient_[3]);
+            GLES20.glUniform4f(GLES20.glGetUniformLocation(glProgram_, "matDiffuse"),
+                    matDiffuse_[0], matDiffuse_[1], matDiffuse_[2], matDiffuse_[3]);
+            GLES20.glUniform4f(GLES20.glGetUniformLocation(glProgram_, "matSpecular"),
+                    matSpecular_[0], matSpecular_[1], matSpecular_[2], matSpecular_[3]);
+
+            // Set color for drawing the triangle
+            //GLES20.glUniform4f(attr_vcolor, green_[0], green_[1], green_[2], green_[3]);
+
+            modelToWorld();
+            sphere_.draw(attr_vposition);
+
+            // Set color for drawing the triangle
+            //GLES20.glUniform4f(attr_vcolor, red_[0], red_[1], red_[2], red_[3]);
+
+            Matrix.translateM(matModel_, 0, 1.7f, 1.2f, 0f);
+            modelToWorld();
+            triangle_.draw(attr_vposition);
+
+            // Set color for sphere
+            //GLES20.glUniform4f(attr_vcolor, cyan_[0], cyan_[1], cyan_[2], cyan_[3]);
+
+            Matrix.setIdentityM(matModel_, 0);
+            Matrix.setRotateM(matModel_, 0, offset, 0f, 0f, 1f);
+            Matrix.translateM(matModel_, 0, -1.9f, -1.5f, 0f);
+            Matrix.scaleM(matModel_, 0, 0.8f, 0.8f, 0.8f);
+            modelToWorld();
+            sphere_.draw(attr_vposition);
+
+            Matrix.translateM(matModel_, 0, 2f, 3f, 1f);
+            modelToWorld();
+            sphere_.draw(attr_vposition);
+
+            setupDraw(false);
+        }
+
+        private void setupDraw(boolean begin) {
+            if (begin) {
+                // Add program to OpenGL ES environment
+                GLES20.glUseProgram(glProgram_);
+
+                // get handle to vertex shader's vPosition member
+                //mPositionHandle = GLES20.glGetAttribLocation(glProgram_, "vPosition");
+
+                // get handle to fragment shader's vColor member
+                //mColorHandle = GLES20.glGetUniformLocation(glProgram_, "vColor");
+
+                // Enable a handle to the triangle vertices
+                GLES20.glEnableVertexAttribArray(attr_vposition);
+            } else {
+                // Disable vertex array
+                GLES20.glDisableVertexAttribArray(attr_vposition);
+            }
         }
     }
 
+    private void modelToWorld() {
+        Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
+        Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
+        GLES20.glUniformMatrix4fv(attr_matworld, 1, false, matWorld_, 0);
+
+        float normalT[] = new float[MAT4x4];
+        Matrix.invertM(normalT, 0, matWorld_, 0);
+        Matrix.transposeM(matNormal_, 0, normalT, 0);
+        GLES20.glUniformMatrix4fv(attr_matnormal, 1, false, matNormal_, 0);
+    }
 
     public static int loadShader(int type, String code) {
         int shader = GLES20.glCreateShader(type);

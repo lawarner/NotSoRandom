@@ -27,7 +27,7 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
 
     private static String statusStr_ = "";
 
-    private static int queueSizeLimit_ = 2000;
+    private static int queueSizeLimit_ = 1000;
 
     private static QueueSizeListAdapter qsAdapter_ = null;
 

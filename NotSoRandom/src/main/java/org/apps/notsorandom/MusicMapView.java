@@ -173,7 +173,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
 
 
     protected float calcRadius(int count) {
-        float maxRadius = Math.max((float) bitmap_.getWidth() / 14f, 10f);
+        float maxRadius = Math.max((float) Math.min(height_, width_) / 15f, 10f);
         int maxDups = Math.max(1, musicMap_.getMaxMapEntry());
         float pos = (float) maxDups - Math.max(0, Math.min(count, maxDups));
 

@@ -28,7 +28,7 @@ public class QueueSizeListAdapter extends BaseExpandableListAdapter {
     private int current_;
 
     public QueueSizeListAdapter(Context context) {
-        this(context, 3);
+        this(context, 2);  // default to 1000
     }
 
     public QueueSizeListAdapter(Context context, int start) {
