@@ -6,6 +6,8 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -39,7 +41,7 @@ public class MusicMapGLView extends MusicMapView {
 
     private float[] matAmbient_ = { 1f, 0.2f, 0.2f, 1f };
     private float[] matDiffuse_ = { 0.6f, 0.5f, 0.5f, 1f };
-    private float[] matSpecular_ = { 1f, 1f, 1f, 1f };
+    private float[] matSpecular_ = { 0.99f, 0.98f, 1f, 1f };
 
     private int attr_matnormal;
     private int attr_matworld;
@@ -47,6 +49,45 @@ public class MusicMapGLView extends MusicMapView {
     //private int attr_vcolor;
     private int attr_eyepos;
 
+
+    private class MyGLSurfaceView extends GLSurfaceView {
+        private float startX_;
+        private float startY_;
+
+        public MyGLSurfaceView(Context context) {
+            super(context);
+
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent e) {
+            // MotionEvent reports input details from the touch screen
+            // and other input controls. In this case, you are only
+            // interested in events where the touch position changed.
+
+            float x = e.getX();
+            float y = e.getY();
+
+            switch (e.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    startX_ = x;
+                    startY_ = y;
+                    eyePos_[0] = 0f;
+                    eyePos_[1] = 0f;
+                    break;
+                case MotionEvent.ACTION_MOVE:
+
+                    float dx = (x - startX_) / 20f;
+                    float dy = (y - startY_) / 20f;
+                    eyePos_[0] = dx;
+                    eyePos_[1] = dy;
+
+                    requestRender();
+            }
+
+            return true;
+        }
+    }
 
     class Sphere {
         // number of coordinates per vertex in this array
@@ -79,7 +120,79 @@ public class MusicMapGLView extends MusicMapView {
             double radius = 1;
             double fudge = 0.27;
 
-            double dTheta = Math.PI * 2 / segments;
+            double dTheta = Math.PI * 2 / (segments - 1);
+            double dPhi = (Math.PI - fudge * 2) / (slices - 1);
+
+            // start in center for triangle fan
+            if (filled_) {
+                vertexBuffer_.put(0f);
+                vertexBuffer_.put(0f);
+                vertexBuffer_.put(0f);
+            }
+
+            float xyz[] = new float[3];
+            float saveFirst[] = new float[3];
+            double phi = Math.PI - fudge;
+            for (int slice = 0; slice < slices; slice++, phi -= dPhi) {
+                Log.d(TAG, "Slice: " + out(Math.cos(phi)));
+
+                //for each stage calculating the segments
+                double theta = 0;
+                for (int segment = 0; segment < segments; segment++, theta += dTheta) {
+                    xyz[0] = (float) (radius * Math.sin(phi) * Math.cos(theta));
+                    xyz[1] = (float) (radius * Math.sin(phi) * Math.sin(theta));
+                    xyz[2] = (float) (radius * Math.cos(phi));
+
+                    if (segment == 0) {
+                        saveFirst[0] = xyz[0];
+                        saveFirst[1] = xyz[1];
+                        saveFirst[2] = xyz[2];
+                    }
+
+                    vertexBuffer_.put(xyz[0]);
+                    vertexBuffer_.put(xyz[1]);
+                    vertexBuffer_.put(xyz[2]);
+                    Log.d(TAG, " pt " + segment + ": " + out(phi) + ", " + out(theta) +
+                            " :  " + out(xyz[0]) + "  " + out(xyz[1]) + "  " + out(xyz[2]));
+                }
+                // Close loop by reconnecting to first point
+                vertexBuffer_.put(saveFirst[0]);
+                vertexBuffer_.put(saveFirst[1]);
+                vertexBuffer_.put(saveFirst[2]);
+            }
+
+            // close the shape
+            if (filled_) {
+                vertexBuffer_.put(0f);
+                vertexBuffer_.put(0f);
+                vertexBuffer_.put(0f);
+            }
+
+            // set the buffer to read the first coordinate
+            vertexBuffer_.position(0);
+
+            Log.d(TAG, "Sphere has " + points + " points.");
+            return points;
+        }
+
+
+        private int oldsetup(int segments, int slices) {
+            int points = ((segments + 1) * slices);
+            if (filled_) points += 2;
+
+            int sz = points * COORDS_PER_VERTEX;
+
+            // initialize vertex byte buffer for shape coordinates
+            // (number of coordinate values * 4 bytes per float)
+            ByteBuffer bb = ByteBuffer.allocateDirect(sz * BYTES_PER_FLOAT);
+
+            // create a floating point buffer in native order from the ByteBuffer
+            vertexBuffer_ = bb.order(ByteOrder.nativeOrder()).asFloatBuffer();
+
+            double radius = 1;
+            double fudge = 0.27;
+
+            double dTheta = Math.PI * 2 / (segments - 1);
             double dPhi = (Math.PI - fudge * 2) / (slices - 1);
 
             // start in center for triangle fan
@@ -119,7 +232,6 @@ public class MusicMapGLView extends MusicMapView {
                 vertexBuffer_.put(saveFirst[0]);
                 vertexBuffer_.put(saveFirst[1]);
                 vertexBuffer_.put(saveFirst[2]);
-
             }
 
             // close the shape
@@ -168,46 +280,6 @@ public class MusicMapGLView extends MusicMapView {
         }
     }
 
-    class Triangle {
-
-        private FloatBuffer vertexBuffer_;
-
-        // number of coordinates per vertex in this array
-        static final int COORDS_PER_VERTEX = 3;
-        float triangleCoords[] = { // in counterclockwise order:
-                0.0f,  0.622008459f, 0.0f,   // top
-                -0.5f, -0.311004243f, 0.0f,   // bottom left
-                0.5f, -0.311004243f, 0.0f    // bottom right
-        };
-
-
-        public Triangle() {
-            // initialize vertex byte buffer for shape coordinates
-            // (number of coordinate values * 4 bytes per float)
-            ByteBuffer bb = ByteBuffer.allocateDirect(triangleCoords.length * 4);
-
-            // create a floating point buffer in native order from the ByteBuffer
-            vertexBuffer_ = bb.order(ByteOrder.nativeOrder()).asFloatBuffer();
-            // add the coordinates to the FloatBuffer
-            vertexBuffer_.put(triangleCoords);
-            // set the buffer to read the first coordinate
-            vertexBuffer_.position(0);
-        }
-
-        public void draw(int attrVposition) {
-
-            vertexBuffer_.position(0);
-
-            // Prepare the triangle coordinate data
-            GLES20.glVertexAttribPointer(attrVposition, COORDS_PER_VERTEX,
-                    GLES20.GL_FLOAT, false,
-                    COORDS_PER_VERTEX * 4, vertexBuffer_);
-
-            // Draw the triangle
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
-            checkGlError("glDrawArrays");
-        }
-    }
 
     private class MusicMapRenderer implements GLSurfaceView.Renderer {
 
@@ -288,7 +360,8 @@ public class MusicMapGLView extends MusicMapView {
         private int glProgram_;
 
         private Sphere sphere_;
-        private Triangle triangle_;
+        private GlShapes.BasicShape cube_;
+        private GlShapes.BasicShape triangle_;
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
@@ -323,8 +396,9 @@ public class MusicMapGLView extends MusicMapView {
             checkGlError("uniformloc eyePos");
             //attr_vcolor  = GLES20.glGetUniformLocation(glProgram_, "vColor");
 
-            sphere_ = new Sphere(8, 6, false);
-            triangle_ = new Triangle();
+            sphere_ = new Sphere(12, 6, false);
+            triangle_ = GlShapes.genShape(GlShapes.ShapeType.TRIANGLE, true);
+            cube_ = GlShapes.genShape(GlShapes.ShapeType.CUBE, true);
 
             //                      offset,         eyeXYZ,
             Matrix.setLookAtM(matView_, 0, eyePos_[0], eyePos_[1], eyePos_[2],
@@ -383,24 +457,30 @@ public class MusicMapGLView extends MusicMapView {
             checkGlError("load uniform matSpecular");
 
             // Set color for drawing the triangle
-            //GLES20.glUniform4f(attr_vcolor, green_[0], green_[1], green_[2], green_[3]);
+            //GLES20.glUniform4f(attr_vcolor, red_[0], red_[1], red_[2], red_[3]);
+
+            for (int z = 2; z >= -2; z -= 2) {
+                for (int row = -4; row < 4; row++) {
+                    for (int col = -4; col < 4; col++) {
+                        stackModel(true);
+                        Matrix.translateM(matModel_, 0, (float) row, (float) col, (float) z);
+                        setModel(0.92f, false);
+                        modelToWorld();
+                        //triangle_.draw(attr_vposition);
+                        cube_.draw(attr_vposition);
+                        stackModel(false);
+                    }
+                }
+            }
+
+            GLES20.glUniform4f(GLES20.glGetUniformLocation(glProgram_, "matAmbient"),
+                    green_[0], green_[1], green_[2], green_[3]);
             stackModel(true);
             setModel(2.2f, false);
+            Matrix.rotateM(matModel_, 0, offset, 1, 0, 0);
             modelToWorld();
             sphere_.draw(attr_vposition);
             stackModel(false);
-            // Set color for drawing the triangle
-            //GLES20.glUniform4f(attr_vcolor, red_[0], red_[1], red_[2], red_[3]);
-
-            for (int row = -4; row <= 4; row++) {
-                for (int col = -4; col < 4; col++) {
-                    stackModel(true);
-                    Matrix.translateM(matModel_, 0, (float) row, (float) col, 0f);
-                    modelToWorld();
-                    triangle_.draw(attr_vposition);
-                    stackModel(false);
-                }
-            }
 
             // Set color for sphere
             //GLES20.glUniform4f(attr_vcolor, cyan_[0], cyan_[1], cyan_[2], cyan_[3]);
@@ -448,6 +528,10 @@ public class MusicMapGLView extends MusicMapView {
     }
 
     private void modelToWorld() {
+        //                      offset,         eyeXYZ,
+        Matrix.setLookAtM(matView_, 0, eyePos_[0], eyePos_[1], eyePos_[2],
+                //      centerXYZ,    upXYZ
+                0f, 0f, 0f, 0f, 1f, 0f);
         Matrix.multiplyMM(matWorld_, 0, matView_, 0, matModel_, 0);
         Matrix.multiplyMM(matWorld_, 0, matProjection_, 0, matWorld_, 0);
         GLES20.glUniformMatrix4fv(attr_matworld, 1, false, matWorld_, 0);
@@ -489,14 +573,14 @@ public class MusicMapGLView extends MusicMapView {
     public MusicMapGLView(Context context) {
         super(context);
 
-        glView_ = new GLSurfaceView(this.getContext());
+        glView_ = new MyGLSurfaceView(this.getContext());
         glView_.setEGLContextClientVersion(2);
         glView_.setPreserveEGLContextOnPause(true);
         glView_.setRenderer(new MusicMapRenderer());
-        //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-        glView_.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        glView_.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        //glView_.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        // the gl view seems to ignore this flag:
         glView_.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR);
-
     }
 
     public GLSurfaceView getGlView() {
@@ -525,8 +609,10 @@ public class MusicMapGLView extends MusicMapView {
             needRedraw_ = false;
         }
 
-        glView_.draw(canvas);
+        //glView_.draw(canvas);
+        glView_.requestRender();
     }
+
 
     @Override
     public void redrawMap() {
@@ -551,12 +637,14 @@ public class MusicMapGLView extends MusicMapView {
         super.invalidate();
     }
 
-    private void checkGlError(String op) {
+    public static void checkGlError(String op) {
         int error;
+        boolean toss = false;
         while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            toss = true;
             Log.e(TAG, op + ": glError " + error);
-            throw new RuntimeException(op + ": glError " + error);
         }
+        if (toss) throw new RuntimeException(op + ": glError " + error);
     }
 
 }
