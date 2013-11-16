@@ -10,13 +10,15 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="S"
         android:id="@+id/selectMode"
-        android:layout_margin="8dp"
         android:background="@android:color/black"
         android:textColor="@android:color/white"
         android:paddingLeft="8dp"
         android:paddingRight="8dp"
         android:paddingTop="6dp"
-        android:paddingBottom="6dp" />
+        android:paddingBottom="6dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="8dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -26,11 +28,11 @@
         android:id="@+id/placeMode"
         android:background="@android:color/black"
         android:textColor="@android:color/white"
-        android:layout_margin="8dp"
         android:paddingLeft="8dp"
         android:paddingTop="6dp"
         android:paddingRight="7dp"
-        android:paddingBottom="6dp" />
+        android:paddingBottom="6dp"
+        android:layout_margin="8dp" />
 
     <TextView
         android:layout_width="wrap_content"

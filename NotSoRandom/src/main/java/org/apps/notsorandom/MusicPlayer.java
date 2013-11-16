@@ -28,7 +28,6 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
     // Place in layout to attach (floating) media controller
     private static MusicMapWidget musicMapWidget_ = null;
-
     private static MediaController controller_ = null;
 
     private static MediaPlayer player_ = null;
@@ -41,6 +40,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     private TextView title_ = null;
     private TextView trackCounter_ = null;
     private TextView artist_ = null;
+
+    private View anchorView_ = null;
 
     private Handler handler_ = new Handler();
 
@@ -209,6 +210,9 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         musicMapView_ = musicMapWidget_.getMusicMapView();
         musicMapView_.setLibrary(callback_.getLibrary());
 
+//        anchorView_ = title_; // gets out of way for s4
+        anchorView_ = musicMapWidget_;
+
         if (controller_ == null) {
             isFirstTime_ = true;
             controller_  = new MyMediaController(getActivity());
@@ -230,8 +234,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
             controller_.setPrevNextListeners(next, prev);
         } else {
             isFirstTime_ = false;
-            MusicPlayerApp.log(TAG, " Set AnchorView with control " + musicMapWidget_);
-            controller_.setAnchorView(musicMapWidget_);
+            MusicPlayerApp.log(TAG, " Set AnchorView with control " + anchorView_);
+            controller_.setAnchorView(anchorView_);
         }
         controller_.setMediaPlayer(this);
 
@@ -473,7 +477,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         }
         Log.d(TAG, "onPrepared in MusicPlayer - show player controls.");
         controller_.setMediaPlayer(this);
-        controller_.setAnchorView(musicMapWidget_);
+        controller_.setAnchorView(anchorView_);
 
         handler_.getLooper().getThread().setPriority(Thread.NORM_PRIORITY - 1);
         handler_.post(new Runnable() {

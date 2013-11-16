@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -35,6 +36,8 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.music_map_widget, this, true);
 
+        FrameLayout mapFrame = (FrameLayout) view.findViewById(R.id.music_map_frame);
+
         musicMapView_ = new MusicMapGLView(context);
         glView_ = musicMapView_.getGlView();
 
@@ -53,36 +56,42 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
         tvrl.setText(xLabel);
         tvrl.setOnTouchListener(this);
         tvrl.setTranslationX(44);
-//        tvrl.setTranslationY(-12);
         tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
-        tvrl.setTranslationX(-54);   // nudge left
-        tvrl.setTranslationY(-108);   // nudge up
+        tvrl.setTranslationX(-50);   // nudge left
+//        tvrl.setTranslationX(-80);   // nudge left (for S4)
+        tvrl.setTranslationY(-62);   // nudge up
         tvrl.setText(yLabel);
         tvrl.setOnTouchListener(this);
-
+/*
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(600, 600);
         lp.addRule(RelativeLayout.BELOW, R.id.column_label);
         lp.setMargins(50, 50, 0, 0);
         lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         lp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-
         addView(musicMapView_, lp);
         addView(glView_, lp);
+*/
+        mapFrame.addView(musicMapView_);
+        mapFrame.addView(glView_);
+
         glView_.setVisibility(View.GONE);
         //RelativeLayout rl = (RelativeLayout) view.findViewById(R.id.player_layout);
         //rl.addView(musicMapView_, lp);
         musicMapView_.setId(R.id.music_map);
 
-        // labeled buttons for mode selection:
+        // Labeled Mode Buttons:
         // Select, Place, 3D, Animate
         LinearLayout ll = (LinearLayout) inflater.inflate(R.layout.mode_selector, null);
-        lp = new RelativeLayout.LayoutParams(560, 100);
-        lp.addRule(RelativeLayout.BELOW, R.id.music_map);
-        lp.addRule(RelativeLayout.ALIGN_LEFT, R.id.music_map);
+        FrameLayout modeFrame = (FrameLayout) view.findViewById(R.id.mode_button_frame);
+        modeFrame.addView(ll);
+/*
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(560, 100);
+        lp.addRule(RelativeLayout.BELOW, R.id.music_map_frame);
+        lp.addRule(RelativeLayout.ALIGN_LEFT, R.id.music_map_frame);
         addView(ll, lp);
-
+*/
         modeButtons_ = new TextView[MapMode.values().length];
         ArrayList<View> arrTouchables = new ArrayList<View>(modeButtons_.length + 1);
         int idx = MapMode.SelectMode.ordinal();
@@ -198,10 +207,15 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
                 if (idx >= 0 && idx < modeButtons_.length)
                     modeButtons_[idx].setTextColor(Color.WHITE);
 
-                if (newMapMode == MusicMapView.MapMode.ThreeDMode) {
+                if (newMapMode == MapMode.ThreeDMode) {
                     musicMapView_.setVisibility(View.INVISIBLE);
+                    glView_.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
                     glView_.setVisibility(View.VISIBLE);
-                } else if (oldMapMode == MusicMapView.MapMode.ThreeDMode) {
+                } else if (newMapMode == MapMode.AnimateMode) {
+                    musicMapView_.setVisibility(View.INVISIBLE);
+                    glView_.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+                    glView_.setVisibility(View.VISIBLE);
+                } else if (newMapMode == MapMode.SelectMode || newMapMode == MapMode.PlaceMode) {
                     musicMapView_.setVisibility(View.VISIBLE);
                     glView_.setVisibility(View.GONE);
                 }

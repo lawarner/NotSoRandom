@@ -192,6 +192,21 @@ public class MusicMapView extends View implements View.OnTouchListener {
         return ret;
     }
 
+    protected float calcUnitRadius(int count) {
+        float maxRadius = 1f;
+        int maxDups = Math.max(1, musicMap_.getMaxMapEntry());
+        float pos = (float) maxDups - Math.max(0, Math.min(count, maxDups));
+
+        // Make a curve from 0 to maxDups
+        float posExp = (float) maxDups - (pos * pos / maxDups);
+        if (posExp > maxDups) {
+            MusicPlayerApp.log(TAG, "WARN Radius " + posExp + " bigger than " + maxDups);
+        }
+
+        float ret = posExp * maxRadius / maxDups;
+        return ret;
+    }
+
     public boolean initLibrary(MusicPlayerApp.LibraryCategory libCat) {
         return musicMap_.fillLibEntries(libCat);
     }
@@ -220,6 +235,10 @@ public class MusicMapView extends View implements View.OnTouchListener {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        if (w == 0 || h == 0) {
+            Log.d(TAG, "Size change to zero");
+            return;
+        }
         bitmap_ = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         bitmap_.eraseColor(Color.BLACK);
 //        canvas_ = new Canvas(bitmap_);
