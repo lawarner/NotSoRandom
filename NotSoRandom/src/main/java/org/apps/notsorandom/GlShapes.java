@@ -89,7 +89,7 @@ public class GlShapes {
         }
 
         /**
-         * Default implementation draws the vertex array as GL_TRIANGLES
+         * Default implementation draws the vertex array according to the draw algorithm
          *
          * @param attrVposition vertex attribute pointer to use for position
          * @param attrVnormal vertex attribute pointer to use for normals
@@ -117,8 +117,12 @@ public class GlShapes {
                     MusicMapGLView.checkGlError("glDrawArrays line loop");
                     break;
                 case TRIANGLE_FAN:
+                    GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, points_);
+                    MusicMapGLView.checkGlError("glDrawArrays triangle fan");
+                    break;
                 case TRIANGLE_STRIP:
-                    Log.e(TAG, "Draw algorithm: " + drawAlgorithm_ + " not yet implemented.");
+                    GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, points_);
+                    MusicMapGLView.checkGlError("glDrawArrays triangle fan");
                     break;
                 case CUSTOM:
                     throw new RuntimeException("Subclass must implement custom draw() method");
@@ -216,12 +220,11 @@ public class GlShapes {
                     {  one,  one,  one }  // 7 right,top,back
             };
             int indicesA[] = {  0, 1, 2, 3, 4, 5, 6, 1, 0 };
-            int normalsA[] = { -3,-3,-3,-2,-2,-1,-1,-1,-3 };
+            int normalsA[] = { -3,-3,-3,-1,-1,-2,-2,-2,-3 };
             int indicesB[] = {  7, 2, 1, 6, 5, 4, 3, 2, 7 };
             int normalsB[] = {  1, 1, 1, 3, 3, 2, 2, 2, 1 };
             for (int i = 0; i < indicesA.length; i++) {
                 int idx = indicesA[i];
-                Log.d(TAG, "putXyz, i=" + i + ", idx=" + idx);
                 putXYZ(vertices[idx]);
                 putNormal(normalsA[i]);
             }
@@ -372,15 +375,99 @@ public class GlShapes {
 
     static class Sphere extends BasicShape {
 
+        int endCapPoints_;
+
         public Sphere(boolean filled, int segments, int slices) {
             super(0, filled, DrawAlgorithm.CUSTOM);
-            setup(segments, slices);
+            if (filled)
+                setupFilled(segments, slices);
+            else
+                setup(segments, slices);
+        }
+
+        private void setupFilled(int segments, int slices) {
+            if (slices < 2) {
+                throw new RuntimeException("Sphere must have at leaset 2 slices");
+            }
+
+            // Each sphere will be 2 triangle fans (one at each pole),
+            //             and # slices bands of triangle strips
+            endCapPoints_ = segments + 3;
+            points_ = 2 * endCapPoints_ + (slices - 2) * ((segments + 1) * 2);
+            Log.d(TAG, "Sphere has " + points_ + " points.");
+
+            initVertexBuffer();
+
+            float radius = 1;
+            // radius of slices go from endcapRadius to radius to endcapRadius
+            // the slice angle goes from s to (180 - s)
+            //     where s = 180 / # slices
+            double deltaSliceAngle = Math.PI / slices;
+            double deltaSegment = Math.PI * 2 / segments;
+
+            final float endcapRadius = (float) (radius * Math.sin(deltaSliceAngle));
+            float currZ = (float) (radius * Math.cos(deltaSliceAngle));
+            float xyz[] = new float[3];
+
+            // Beginning endcap
+            putXYZ2(0, 0, -radius);
+            xyz[2] = -currZ;
+            float angle = 0;
+            for (int segment = 0; segment <= segments; segment++, angle += deltaSegment) {
+                xyz[0] = (float) (endcapRadius * Math.sin(angle));
+                xyz[1] = (float) (endcapRadius * Math.cos(angle));
+                putXYZ2(xyz);
+            }
+            putXYZ2(0, 0, -radius);
+
+            // Closing endcap
+            putXYZ2(0, 0, radius);
+            xyz[2] = currZ;
+            angle = (float) Math.PI * 2;
+            for (int segment = 0; segment <= segments; segment++, angle -= deltaSegment) {
+                xyz[0] = (float) (endcapRadius * Math.sin(angle));
+                xyz[1] = (float) (endcapRadius * Math.cos(angle));
+                putXYZ2(xyz);
+            }
+            putXYZ2(0, 0, radius);
+
+            // bands of triangle strips
+            double currAngle = deltaSliceAngle;
+            for (int slice = 0; slice < slices - 2; slice++, currAngle += deltaSliceAngle) {
+                float nextAngle = (float) (currAngle + deltaSliceAngle);
+
+                float currRadius = (float) (radius * Math.sin(currAngle));
+                currZ = (float) (radius * Math.cos(currAngle));
+                float nextRadius = (float) (radius * Math.sin(nextAngle));
+                float nextZ = (float) (radius * Math.cos(nextAngle));
+
+                Log.d(TAG, "TriangleStrip  Curr: R0=" + out(currRadius) + ", z0=" + out(currZ)
+                                     + ",  Next: R1=" + out(nextRadius) + ", z1=" + out(nextZ));
+                angle = (float) Math.PI * 2;
+                for (int segment = 0; segment <= segments; segment++, angle -= deltaSegment) {
+                    xyz[0] = (float) (currRadius * Math.sin(angle));
+                    xyz[1] = (float) (currRadius * Math.cos(angle));
+                    putXYZ2(xyz[0], xyz[1], currZ);
+                    xyz[0] = (float) (nextRadius * Math.sin(angle));
+                    xyz[1] = (float) (nextRadius * Math.cos(angle));
+                    putXYZ2(xyz[0], xyz[1], nextZ);
+                }
+
+            }
+        }
+
+        private void putXYZ2(float x, float y, float z) {
+            putXYZ(x, y, z);
+            putXYZ(x, y, z);
+        }
+        private void putXYZ2(float[] xyz) {
+            putXYZ(xyz);
+            putXYZ(xyz);
         }
 
         private void setup(int segments, int slices) {
             points_ = ((segments + 1) * slices);
-            if (filled_) points_ += 2;
-            Log.d(TAG, "Sphere has " + points_ + " points.");
+            Log.d(TAG, "Sphere wireframe has " + points_ + " points.");
 
             initVertexBuffer();
 
@@ -389,12 +476,6 @@ public class GlShapes {
 
             double dTheta = Math.PI * 2 / (segments - 1);
             double dPhi = (Math.PI - fudge * 2) / (slices - 1);
-
-            // start in center for triangle fan
-            if (filled_) {
-                putXYZ(0, 0, 0);
-                putXYZ(0, 0, -1);
-            }
 
             float xyz[] = new float[3];
             float saveFirst[] = new float[3];
@@ -425,27 +506,8 @@ public class GlShapes {
                 putXYZ(saveFirst);
             }
 
-            // close the shape
-            if (filled_) {
-                putXYZ(0, 0, 0);
-                putXYZ(0, 0, -1);
-            }
-
             // set the buffer to read the first coordinate
             vertexBuffer_.position(VERTEX_POSITION_OFFSET);
-        }
-
-        private String out(double d) {
-            // round to positions
-            boolean neg = (d < 0) ? true : false;
-            long lval = Math.round(Math.abs(d) * 1000);
-            String deci = "000" + (lval % 1000);
-            deci = "." + deci.substring(deci.length() - 3);
-
-            if (lval < 1000)
-                return (neg ? "-0" : "0") + deci;
-            else
-                return (neg ? "-" : "") + (lval / 1000) + deci;
         }
 
         public void draw(int attrVposition, int attrVnormal) {
@@ -463,12 +525,31 @@ public class GlShapes {
 
             // Draw the sphere
             if (filled_) {
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, points_);
+                int pts = endCapPoints_;
+                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, pts);
+                MusicMapGLView.checkGlError("glDrawArrays sphere fan 1");
+                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, pts, pts);
+                if (points_ > pts * 2) {
+                    GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, pts * 2, points_ - pts * 2);
+                    MusicMapGLView.checkGlError("glDrawArrays sphere line strip");
+                }
             } else {
                 GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, points_);
             }
             MusicMapGLView.checkGlError("glDrawArrays sphere");
         }
-    }
 
+        private String out(double d) {
+            // round to positions
+            boolean neg = (d < 0) ? true : false;
+            long lval = Math.round(Math.abs(d) * 1000);
+            String deci = "000" + (lval % 1000);
+            deci = "." + deci.substring(deci.length() - 3);
+
+            if (lval < 1000)
+                return (neg ? "-0" : "0") + deci;
+            else
+                return (neg ? "-" : "") + (lval / 1000) + deci;
+        }
+    }
 }

@@ -3,6 +3,7 @@ package org.apps.notsorandom;
 import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
@@ -210,8 +211,11 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         musicMapView_ = musicMapWidget_.getMusicMapView();
         musicMapView_.setLibrary(callback_.getLibrary());
 
-//        anchorView_ = title_; // gets out of way for s4
-        anchorView_ = musicMapWidget_;
+        if (Build.VERSION.SDK_INT > 17) {
+            anchorView_ = title_; // gets out of way for s4
+        } else {
+            anchorView_ = musicMapWidget_;
+        }
 
         if (controller_ == null) {
             isFirstTime_ = true;

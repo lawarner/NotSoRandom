@@ -99,11 +99,13 @@ public class MusicMap {
      * @return  false if the media library has not yet been set, otherwise true.
      */
     public boolean fillLibEntries(MusicPlayerApp.LibraryCategory libCat) {
-        libCat_ = libCat;
         if (library_ == null)
             return false;
 
-        library_.sortSongs();
+//        if (libCat_ != libCat) {
+            libCat_ = libCat;
+            library_.sortSongs();
+//        }
 
         for (int i = 0; i < libEntries_.length; i++) {
             libEntries_[i].set(-1, 0);

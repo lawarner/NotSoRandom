@@ -57,6 +57,8 @@ public class MusicMapGLView extends MusicMapView {
 
     private float ratio_;
 
+    private boolean initAnim_ = false;
+
     private class MyGLSurfaceView extends GLSurfaceView {
         private float startX_;
         private float startY_;
@@ -86,11 +88,12 @@ public class MusicMapGLView extends MusicMapView {
                     look_[0] = 0f;
                     look_[1] = 0f;
                     look_[2] = 0f;
+                    initAnim_ = false;
                     break;
                 case MotionEvent.ACTION_MOVE:
                     float radius = 4f;
-                    float dx = (x - startX_) / 40f;
-                    float dy = (y - startY_) / 40f;
+                    float dx = (x - startX_) / 43f;
+                    float dy = (y - startY_) / 43f;
                     // x,y,z  0,0,-1   1,0,0  1,1,0
                     eyePos_[0] = (float) (radius * Math.sin(dx));
                     eyePos_[1] = (float) (radius * Math.sin(dy));
@@ -304,6 +307,9 @@ public class MusicMapGLView extends MusicMapView {
         private int glProgram_;
 
         private GlShapes.BasicShape sphere_;
+        private GlShapes.BasicShape sphereLR_;
+        private GlShapes.BasicShape sphereHR_;
+        private GlShapes.BasicShape sphereWire_;
         private GlShapes.BasicShape cube_;
         private GlShapes.BasicShape triangle_;
 
@@ -317,7 +323,7 @@ public class MusicMapGLView extends MusicMapView {
 
             GLES20.glCullFace(GLES20.GL_BACK);
 //            GLES20.glFrontFace(GLES20.GL_CW);
-            GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+//            GLES20.glDepthFunc(GLES20.GL_LEQUAL);
 
 //            int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
 //            int fragShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
@@ -349,7 +355,11 @@ public class MusicMapGLView extends MusicMapView {
             attr_eyepos = GLES20.glGetUniformLocation(glProgram_, "eyePos");
             checkGlError("uniformloc eyePos");
 
-            sphere_ = GlShapes.genSphere(false, 12, 6);
+//            sphere_ = GlShapes.genSphere(true, 12, 3);
+            sphere_ = GlShapes.genSphere(true, 16, 9);
+            sphereLR_ = GlShapes.genSphere(true, 7, 3);
+            sphereHR_ = GlShapes.genSphere(true, 32, 13);
+            sphereWire_ = GlShapes.genSphere(false, 12, 6);
             triangle_ = GlShapes.genShape(GlShapes.ShapeType.TRIANGLE, true);
             cube_ = GlShapes.genShape(GlShapes.ShapeType.CUBE, true);
 
@@ -362,7 +372,10 @@ public class MusicMapGLView extends MusicMapView {
         @Override
         public void onSurfaceChanged(GL10 gl10, int width, int height) {
             GLES20.glViewport(0, 0, width, height);
-
+            if (width <= 0 || height <= 0) {
+                Log.e(TAG, "surface size: " + width + "x" + height);
+                return;
+            }
             ratio_ = (float) width / height;
             if (getMapMode() == MapMode.AnimateMode) {
                 Matrix.frustumM(matProjection_, 0, -ratio_, ratio_, -1, 1, 0, 5);
@@ -373,7 +386,9 @@ public class MusicMapGLView extends MusicMapView {
             //matProjection_[8] /= 2;
         }
 
-        private boolean initAnim = false;
+        private long startTime_;
+        private long lastTime_;
+        private float[] direct_ = new float[3];
 
         @Override
         public void onDrawFrame(GL10 gl10) {
@@ -382,6 +397,68 @@ public class MusicMapGLView extends MusicMapView {
             checkGlError("glClear");
 
             if (getMapMode() == MapMode.AnimateMode) {
+                // set off in a direction and only change when reaching max distance from center
+                if (!initAnim_) {
+                    startTime_ = SystemClock.uptimeMillis();
+                    lastTime_ = startTime_;
+                    eyePos_[0] = 0;
+                    eyePos_[1] = 0;
+                    eyePos_[2] = -4;
+                    direct_[0] = 0;
+                    direct_[1] = 0;
+                    direct_[2] = 1;
+                    initAnim_ = true;
+                }
+
+                final float BOUNDS = 4;
+
+                long currTime = SystemClock.uptimeMillis();
+                float moved = (currTime - lastTime_) / 1800f;   // moved since last time
+                eyePos_[0] += direct_[0] * moved;
+                eyePos_[1] += direct_[1] * moved;
+                eyePos_[2] += direct_[2] * moved;
+//                Log.d(TAG, "eyepos=" + eyePos_[0] + "," + eyePos_[1] + "," + eyePos_[2]);
+
+                int maxIdx = 0;
+                float maxEyePos = 0;
+                for (int i = 0; i < 3; i++) {
+                    if (Math.abs(eyePos_[i]) > maxEyePos) {
+                        maxIdx = i;
+                        maxEyePos = eyePos_[i];
+                    }
+                }
+
+                int i = maxIdx;
+                if (Math.abs(eyePos_[i]) > BOUNDS) {
+                     if (direct_[i] == 0) {
+                         direct_[i] = -(float)(Math.signum(eyePos_[i]) * 0.3);
+                     } else {
+//                     if (Math.signum(eyePos_[i]) == Math.signum(direct_[i])) {
+                        float unit = (float) (Math.signum(eyePos_[i]) * 0.12);
+                        direct_[i] -= unit;
+                        Random rand = new Random();
+                        Log.d(TAG, "eyepos[" + i + "]=" + eyePos_[i] + ", " + direct_[i]);
+                        if (rand.nextInt(3) == 0) {
+                            int ii = rand.nextInt(3);
+                            if (ii != i)
+                                direct_[ii] += unit * 0.47;
+                        }
+                     }
+                }
+
+                // (manually!) normalize direction vector
+                double len = Math.sqrt(direct_[0] * direct_[0] + direct_[1] * direct_[1]
+                        + direct_[2] * direct_[2]);
+                direct_[0] /= len;
+                direct_[1] /= len;
+                direct_[2] /= len;
+
+//                look_[0] = eyePos_[0] + direct_[0] * 4;     // stare blankly ahead
+//                look_[1] = eyePos_[1] + direct_[1] * 4;
+//                look_[2] = eyePos_[2] + direct_[2] * 4;
+
+                lastTime_ = currTime;
+                /*
                 // frame time runs from 0 to totaltime-1, but remains 0 if not animating
                 long frameTime = 0;
                 final long BEGINTIME = 2000L;
@@ -420,6 +497,7 @@ public class MusicMapGLView extends MusicMapView {
 
                     initAnim = false;
                 }
+                */
             }
 
             setupDraw(true);
@@ -454,19 +532,52 @@ public class MusicMapGLView extends MusicMapView {
                 MusicPlayerApp.log(TAG, " Current sense index=" + currSenseIdx);
             }
 
-            // The shuffle map
-            renderColor(red_, 1);
-            MusicMap.MapEntry[] me = musicMap_.getShuffleEntries();
-            for (int xyz = 0; xyz < me.length; xyz++) {
+            MusicMap.MapEntry[] me = musicMap_.getLibEntries();            // The library map
+            MusicMap.MapEntry[] ms = musicMap_.getShuffleEntries();        // The shuffle map
+            for (int xyz = 0; xyz < ms.length; xyz++) {
                 int count = me[xyz].getCount();
+                int scount = ms[xyz].getCount();
                 if (count > 0) {
                     int row = xyz % 8;
                     int col = (xyz % mapXYsize) / 8;
                     int z   = xyz / mapXYsize;
+                    float sradius = calcUnitRadius(scount);
                     float radius = calcUnitRadius(count);
+                    if (count != scount && radius >= 0.009f) {
+                        renderColor(yellow_, 0.3f);
+                        stackModel(true);
+                        setModel(radius * 0.8f, (float) col - 4, (float) row - 4, (float) z - 4, false);
+                        modelToWorld(true);
+                        if (radius > 0.78) {
+                            sphereHR_.draw(attr_vposition, attr_vnormal);
+                        } else if (radius > 0.19) {
+                            sphere_.draw(attr_vposition, attr_vnormal);
+                        } else {
+                            sphereLR_.draw(attr_vposition, attr_vnormal);
+                        }
+                        stackModel(false);
+                    }
+                    if (sradius >= 0.009f) {
+                        if (xyz == currSenseIdx)
+                            renderColor(placeMode_ ? cyan_ : green_, 1);
+                        else
+                            renderColor(red_, 1);
+                        stackModel(true);
+                        setModel(sradius * 0.8f, (float) col - 4, (float) row - 4, (float) z - 4, false);
+                        modelToWorld(true);
+                        if (sradius > 0.78) {
+                            sphereHR_.draw(attr_vposition, attr_vnormal);
+                        } else if (sradius > 0.19) {
+                            sphere_.draw(attr_vposition, attr_vnormal);
+                        } else {
+                            sphereLR_.draw(attr_vposition, attr_vnormal);
+                        }
+                        stackModel(false);
+                    }
+/*
                     if (xyz == currSenseIdx) {
                         renderColor(yellow_, 1);
-                        float ballRadius = Math.min(radius, 0.9f);
+                        float ballRadius = Math.min(sradius, 0.9f);
                         stackModel(true);
                         setModel(ballRadius, (float) col - 4, (float) row - 4, (float) z - 4, false);
                         modelToWorld(true);
@@ -475,37 +586,7 @@ public class MusicMapGLView extends MusicMapView {
 
                         renderColor(placeMode_ ? cyan_ : green_, 1);
                     }
-                    if (radius >= 0.009f) {
-                        stackModel(true);
-                        setModel(radius, (float) col - 4, (float) row - 4, (float) z - 4, false);
-                        modelToWorld(true);
-                        cube_.draw(attr_vposition, attr_vnormal);
-                        stackModel(false);
-                    }
-                    if (xyz == currSenseIdx) {
-                        renderColor(red_, 1);
-                        currSenseIdx = -1;
-                    }
-                }
-            }
-
-            // The library map
-            renderColor(yellow_, 0.3f);
-            me = musicMap_.getLibEntries();
-            for (int xyz = 0; xyz < me.length; xyz++) {
-                int count = me[xyz].getCount();
-                if (count > 0) {
-                    int row = xyz % 8;
-                    int col = (xyz % mapXYsize) / 8;
-                    int z   = xyz / mapXYsize;
-                    float radius = calcUnitRadius(count);
-                    if (radius >= 0.009f) {
-                        stackModel(true);
-                        setModel(radius, (float) col - 4, (float) row - 4, (float) z - 4, false);
-                        modelToWorld(true);
-                        cube_.draw(attr_vposition, attr_vnormal);
-                        stackModel(false);
-                    }
+*/
                 }
             }
 
