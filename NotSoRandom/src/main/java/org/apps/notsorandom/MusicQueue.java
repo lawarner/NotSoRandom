@@ -104,7 +104,7 @@ public class MusicQueue extends Fragment {
     }
 
     public static SongInfo getCurrItem() {
-        MusicPlayerApp.log(TAG, "+getCurrItem=" + currItem_ + " size=" + qArrSongs_.size());
+        //MusicPlayerApp.log(TAG, "+getCurrItem=" + currItem_ + " size=" + qArrSongs_.size());
         if (currItem_ < 0 || currItem_ >= qArrSongs_.size())
             return null;
 

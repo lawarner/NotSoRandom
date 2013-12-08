@@ -7,6 +7,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,6 +31,8 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
 
     private static int queueSizeLimit_ = 1000;
 
+    private static float gravity_ = 0.07f;
+
     private static QueueSizeListAdapter qsAdapter_ = null;
 
     private TextView statusView_ = null;
@@ -48,6 +52,10 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
             queueSizeLimit_ = qsAdapter_.getCurrent();
 
         return queueSizeLimit_;
+    }
+
+    public static float getGravity() {
+        return gravity_;
     }
 
     public static void log(String msg) {
@@ -96,6 +104,31 @@ public class MusicSettings extends Fragment implements View.OnLongClickListener 
                 queueSizeView_.setSelectedChild(group, child, false);
                 queueSizeView_.collapseGroup(group);
                 return true;
+            }
+        });
+
+        TextView tv = (TextView) view.findViewById(R.id.gravity);
+        tv.setText("" + gravity_);
+        tv.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String str = editable.toString();
+                try {
+                    gravity_ = Float.valueOf(str);
+                } catch (NumberFormatException e) {
+                    gravity_ = 0.07f;
+                }
+
             }
         });
 

@@ -675,25 +675,27 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             return artist;
 
         pathName = pathName.substring(pathName.indexOf(MUSICSTR) + MUSICSTR.length());
-        if (pathName.startsWith(OTHERSTR)) {
-            pathName = pathName.substring(OTHERSTR.length());
-            if (pathName.startsWith(SOUNDTRACKSRSTR)) {
-                pathName = pathName.substring(SOUNDTRACKSRSTR.length());
-                artist = pathName.length() > 1
-                        ? pathName.substring(0, pathName.indexOf('/'))
-                        : "Various";
-            } else {
-                pathName = "Various/" + pathName;
-                String[] strs = pathName.split("/");
-                if (strs.length > 3) {
-                    artist = strs[strs.length - 3];
+        if (pathName.indexOf('/') >= 0) {
+            if (pathName.startsWith(OTHERSTR)) {
+                pathName = pathName.substring(OTHERSTR.length());
+                if (pathName.startsWith(SOUNDTRACKSRSTR)) {
+                    pathName = pathName.substring(SOUNDTRACKSRSTR.length());
+                    artist = pathName.length() > 1
+                            ? pathName.substring(0, pathName.indexOf('/'))
+                            : "Various";
                 } else {
-                    artist = strs[strs.length - 2];
+                    pathName = "Various/" + pathName;
+                    String[] strs = pathName.split("/");
+                    if (strs.length > 3) {
+                        artist = strs[strs.length - 3];
+                    } else {
+                        artist = strs[strs.length - 2];
+                    }
                 }
-            }
 
-        } else {
-            artist = pathName.substring(0, pathName.indexOf('/'));
+            } else {
+                artist = pathName.substring(0, pathName.indexOf('/'));
+            }
         }
         return artist;
     }

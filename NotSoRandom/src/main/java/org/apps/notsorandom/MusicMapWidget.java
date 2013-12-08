@@ -125,6 +125,12 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
         this(context, null);
     }
 
+    public void cleanupViews() {
+        if (musicMapView_ != null) {
+            musicMapView_.cleanupGlView();
+        }
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -213,10 +219,12 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
 
                 if (newMapMode == MapMode.ThreeDMode) {
                     musicMapView_.setVisibility(View.INVISIBLE);
+                    musicMapView_.setFrustum();
                     glView_.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
                     glView_.setVisibility(View.VISIBLE);
                 } else if (newMapMode == MapMode.AnimateMode) {
                     musicMapView_.setVisibility(View.INVISIBLE);
+                    musicMapView_.setFrustum();
                     glView_.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
                     glView_.setVisibility(View.VISIBLE);
                 } else if (newMapMode == MapMode.SelectMode || newMapMode == MapMode.PlaceMode) {

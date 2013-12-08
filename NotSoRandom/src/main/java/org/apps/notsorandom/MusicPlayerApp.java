@@ -170,8 +170,8 @@ public class MusicPlayerApp extends FragmentActivity
     @Override
     public SongInfo getCurrSong() {
         SongInfo song = MusicQueue.getCurrItem();
-        if (song != null)
-            log("getCurrSong returns " + song.getTitle());
+        //if (song != null)
+        //    log("getCurrSong returns " + song.getTitle());
 
         return song;
     }

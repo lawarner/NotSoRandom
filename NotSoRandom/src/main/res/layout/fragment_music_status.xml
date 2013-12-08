@@ -109,4 +109,22 @@
         android:layout_toRightOf="@+id/textView"
         android:stackFromBottom="true" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gravity: "
+        android:id="@+id/textView2"
+        android:layout_alignBottom="@+id/scrollView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="numberSigned"
+        android:ems="10"
+        android:id="@+id/gravity"
+        android:layout_above="@+id/textView"
+        android:layout_toRightOf="@+id/textView2" />
+
 </RelativeLayout>

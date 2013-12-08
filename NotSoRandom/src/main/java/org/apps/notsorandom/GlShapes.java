@@ -29,6 +29,13 @@ public class GlShapes {
     static private final int VERTEX_NORMAL_OFFSET = 3;
 
 
+    /**
+     * Factory method to create shapes
+     * @param type type of shape to create.
+     * @param filled If true, a solid model is created, otherwise a wireframe model is created.
+     *               of shape.  Shapes that take parameters are created using default values.
+     * @return reference to new instance of shape
+     */
     public static BasicShape genShape(ShapeType type, boolean filled) {
         switch (type) {
             case TRIANGLE:
@@ -44,13 +51,45 @@ public class GlShapes {
                 + type + ", filled=" + filled);
     }
 
+    /**
+     * Factory method that takes an array of general purpose float parameters.
+     *
+     * @param type type of shape to create.
+     * @param filled If true, a solid model is created, otherwise a wireframe model is created.
+     * @param params Array of parameters.  The meaning of parameters are determined by the type
+     *               of shape.  Shapes that take no parameters cannot be created using this method.
+     * @return reference to new instance of shape
+     */
+    public static BasicShape genShape(ShapeType type, boolean filled, float[] params) {
+        switch (type) {
+            case SPHERE:
+                return new Sphere(filled, (int) params[0], (int) params[1]);
+            default:
+                Log.e(TAG, "Invalid shape type or does not take parameters: " + type);
+        }
+        throw new RuntimeException("unable to generate shape with parameters, type "
+                + type + ", filled=" + filled);
+    }
+
+    /**
+     * Specialized factory method, taylored for particular shape's parameters.
+     *
+     * @param filled If true, a solid model is created, otherwise a wireframe model is created.
+     * @param segments Number of segments (triangles) to draw per slice.
+     * @param slices Number slices through the sphere.
+     * @return reference to new instance of shape
+     */
     public static BasicShape genSphere(boolean filled, int segments, int slices) {
         return new Sphere(filled, segments, slices);
     }
 
+
     /**
-     * Common base class of all shapes.  It is expected most subclasses
-     * will override the draw() method.
+     * Common base class of all shapes.
+     *
+     * This class's draw() method will handle the DrawAlgorithm types in one draw.
+     * Subclasses can override the draw() method if needed for more complex objects,
+     * by setting the shape type to CUSTOM.
      */
     static public class BasicShape {
         public enum DrawAlgorithm {
@@ -86,6 +125,10 @@ public class GlShapes {
 
             // create a floating point buffer in native order from the ByteBuffer
             vertexBuffer_ = bb.order(ByteOrder.nativeOrder()).asFloatBuffer();
+        }
+
+        public void freeBuffers() {
+
         }
 
         /**
@@ -170,7 +213,7 @@ public class GlShapes {
     static class TriangleFanCube extends BasicShape {
 
         public TriangleFanCube(boolean filled) {
-            super(18, true, DrawAlgorithm.CUSTOM);
+            super(filled ? 18 : mLineOrder.length, filled, DrawAlgorithm.CUSTOM);
 
             initVertexBuffer();
             putArrays();
@@ -178,6 +221,7 @@ public class GlShapes {
             vertexBuffer_.position(VERTEX_POSITION_OFFSET);
         }
 
+        @Override
         public void draw(int attrVposition, int attrVnormal) {
 
             // Prepare the shape's coordinate data
@@ -201,37 +245,52 @@ public class GlShapes {
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, pts, pts);
                 MusicMapGLView.checkGlError("glDrawArrays triangle fan");
             } else {
-                GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, points_);
-                MusicMapGLView.checkGlError("glDrawArrays line loop");
+                GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, points_);
+                MusicMapGLView.checkGlError("glDrawArrays line strip");
             }
         }
 
-        private void putArrays() {
-            final float one = 0.5f;
+        private static final float one = 0.5f;
+        private static final float mVertices[][] = {
+                { -one, -one, -one }, // 0 left,bottom,front
+                {  one, -one, -one }, // 1 right,bottom,front
+                {  one,  one, -one }, // 2 right,top,front
+                { -one,  one, -one }, // 3 left,top,front
+                { -one,  one,  one }, // 4 left,top,back
+                { -one, -one,  one }, // 5 left,bottom,back
+                {  one, -one,  one }, // 6 right,bottom,back
+                {  one,  one,  one }  // 7 right,top,back
+        };
+        //(0,3) (3,2) (2,1) (1,0) (0,5) (5,4) (4,7) (7,6) (6,1) (1,2) (2,7) (7,6) (6,5) (5,4) (4,3)
+        private static final int mLineOrder[]   = { 0, 2, 1, 0, 5, 4, 7, 6, 1, 2, 7, 6, 5, 4, 3 };
+        private static final int mLineNormals[] = {-3,-3,-3,-1, 3, 2, 1,-2, 1, 2, 3, 3,-1,-1,-1 };
+        //private static final int mLineOrder[] = { 0, 1, 2, 3, 0, 5, 6, 7, 4, 5 };
+        //private static final int mLineNormals[] = {-3,-3,-3,-3,-1, 3, 3, 3, 3, 3 };
+        //private static final int mLineOrder[]   = { 0, 1, 2, 7, 8, 5, 3, 0, 5, 6, 7, 4, 5 };
+        private static final int mIndicesA[] = {  0, 1, 2, 3, 4, 5, 6, 1, 0 };
+        private static final int mNormalsA[] = { -3,-3,-3,-1,-1,-2,-2,-2,-3 };
+        private static final int mIndicesB[] = {  7, 2, 1, 6, 5, 4, 3, 2, 7 };
+        private static final int mNormalsB[] = {  1, 1, 1, 3, 3, 2, 2, 2, 1 };
 
-            float vertices[][] = {
-                    { -one, -one, -one }, // 0 left,bottom,front
-                    {  one, -one, -one }, // 1 right,bottom,front
-                    {  one,  one, -one }, // 2 right,top,front
-                    { -one,  one, -one }, // 3 left,top,front
-                    { -one,  one,  one }, // 4 left,top,back
-                    { -one, -one,  one }, // 5 left,bottom,back
-                    {  one, -one,  one }, // 6 right,bottom,back
-                    {  one,  one,  one }  // 7 right,top,back
-            };
-            int indicesA[] = {  0, 1, 2, 3, 4, 5, 6, 1, 0 };
-            int normalsA[] = { -3,-3,-3,-1,-1,-2,-2,-2,-3 };
-            int indicesB[] = {  7, 2, 1, 6, 5, 4, 3, 2, 7 };
-            int normalsB[] = {  1, 1, 1, 3, 3, 2, 2, 2, 1 };
-            for (int i = 0; i < indicesA.length; i++) {
-                int idx = indicesA[i];
-                putXYZ(vertices[idx]);
-                putNormal(normalsA[i]);
-            }
-            for (int i = 0; i < indicesB.length; i++) {
-                int idx = indicesB[i];
-                putXYZ(vertices[idx]);
-                putNormal(normalsB[i]);
+        private void putArrays() {
+
+            if (filled_) {
+                for (int i = 0; i < mIndicesA.length; i++) {
+                    int idx = mIndicesA[i];
+                    putXYZ(mVertices[idx]);
+                    putNormal(mNormalsA[i]);
+                }
+                for (int i = 0; i < mIndicesB.length; i++) {
+                    int idx = mIndicesB[i];
+                    putXYZ(mVertices[idx]);
+                    putNormal(mNormalsB[i]);
+                }
+            } else {
+                for (int i = 0; i < mLineOrder.length; i++) {
+                    int idx = mLineOrder[i];
+                    putXYZ(mVertices[idx]);
+                    putNormal(mLineNormals[i]);
+                }
             }
         }
 

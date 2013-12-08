@@ -285,6 +285,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         Log.d(TAG, "onDestroyView in MusicPlayer");
         if (controller_ != null)
             ((MyMediaController) controller_).hide_();
+        if (musicMapWidget_ != null)
+            musicMapWidget_.cleanupViews();
 /*
         if (player_ != null) {
             try {
@@ -451,7 +453,9 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
 
     @Override
     public int getCurrentPosition() {
-        return player_.getCurrentPosition();
+        if (player_ != null)
+            return player_.getCurrentPosition();
+        return 0;
     }
 
     @Override
