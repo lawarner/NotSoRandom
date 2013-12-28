@@ -152,7 +152,7 @@ public class MusicMapGLView extends MusicMapView {
             "varying vec3 lightDir, eyeVec; " +
 
             "void main() { " +
-                "EyespaceNormal = vec3(normalMatrix * vec4(vNormal, 1.0)); " +
+                "EyespaceNormal = vec3(normalMatrix * vec4(vNormal, 0.0)); " +
 
                 "vec4 position = matWorld * vPosition; " +
                 "lightDir = lightPos.xyz - position.xyz; " +
@@ -192,7 +192,7 @@ public class MusicMapGLView extends MusicMapView {
         private final float blue_[] = { 0f, 0.001f, 0.997f };
         private final float green_[] = { 0f, 0.998f, 0f };
         private final float yellow_[] = { 0.8f, 0.8f, 0f };
-        private final float red_[] = { 0.998f, 0f, 0.02f };
+        private final float red_[] = { 0.998f, 0f, 0.01f };
         private final float cyan_[] = { 0f, 0.998f, 0.998f };
         private final float purple_[] = { 0.998f, 0f, 0.998f };
         private float blend_[] = new float[3];
@@ -305,9 +305,9 @@ public class MusicMapGLView extends MusicMapView {
 
             setupDraw(true);
             if (getMapMode() == MapMode.AnimateMode)
-                setModel(2f/3.2f, mLook[0] + 0.4f, mLook[1] + 0.05f, mLook[2], true);
+                setModel(2f/3.2f, mLook[0] + 0.2f, mLook[1] + 0.05f, mLook[2], true);
             else
-                setModel(2f/3.2f, 0.4f, 0.05f, 0, true);
+                setModel(2f/3.2f, 0.2f, 0.05f, 0, true);
 
             modelToWorld(false);
 
@@ -475,7 +475,7 @@ public class MusicMapGLView extends MusicMapView {
                         stackModel(false);
                     }
 
-                    if (radius >= 0.008f) {
+                    if (radius >= 0.007f) {
                         stackModel(true);
                         setModel(radius * 0.8f, (float) col - 4, (float) row - 4, (float) z - 4, false);
                         modelToWorld(true);
@@ -484,9 +484,9 @@ public class MusicMapGLView extends MusicMapView {
                         else
                             if (scount > 0) {
                                 int maxDups = Math.max(1, musicMap_.getMaxMapEntry());
-                                float ratio = 0.13f * scount / count;
+                                float ratio = 0.85f * scount / count;
                                 blend_[0] = Math.min(1f, yellow_[0] + ratio * red_[0]);
-                                blend_[1] = Math.max(0f, red_[1] - ratio * yellow_[1]);
+                                blend_[1] = yellow_[1] - ratio;
                                 blend_[2] = (red_[2] + yellow_[2]) / 2;
 
                                 renderColor(blend_, 0.6f);

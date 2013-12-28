@@ -2,12 +2,15 @@ package org.apps.notsorandom;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -59,7 +62,11 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
         tvrl.setTranslationX(44);
         tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
-        if (Build.VERSION.SDK_INT > 17) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        if (size.x > 720) {
             tvrl.setTranslationX(-80);   // nudge left (for S4)
         } else {
             tvrl.setTranslationX(-50);   // nudge left

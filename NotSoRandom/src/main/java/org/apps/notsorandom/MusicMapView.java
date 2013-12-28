@@ -193,7 +193,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
     }
 
     protected float calcUnitRadius(int count) {
-        float maxRadius = 1f;
+        float maxRadius = 0.991f;
         int maxDups = Math.max(1, musicMap_.getMaxMapEntry());
         float pos = (float) maxDups - Math.max(0, Math.min(count, maxDups));
 
@@ -204,7 +204,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
         }
 
         float ret = posExp * maxRadius / maxDups;
-        return ret;
+        return Math.min(maxRadius, ret);
     }
 
     public boolean initLibrary(MusicPlayerApp.LibraryCategory libCat) {
@@ -291,7 +291,7 @@ public class MusicMapView extends View implements View.OnTouchListener {
         }
 
         int currSenseIdx = -1;
-        SongInfo song = listener_.getCurrSong();
+        SongInfo song = listener_ == null ? null : listener_.getCurrSong();
         if (song != null) {
             currSenseIdx = song.getSenseIndex(MusicPlayerApp.getConfig()) % mapXYsize;
             MusicPlayerApp.log(TAG, " Current sense index=" + currSenseIdx);

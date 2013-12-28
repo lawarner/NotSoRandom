@@ -211,11 +211,14 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         musicMapView_ = musicMapWidget_.getMusicMapView();
         musicMapView_.setLibrary(callback_.getLibrary());
 
+        anchorView_ = view.findViewById(R.id.anchorView);
+        /*
         if (Build.VERSION.SDK_INT > 17) {
             anchorView_ = title_; // gets out of way for s4
         } else {
             anchorView_ = musicMapWidget_;
         }
+        */
 
         if (controller_ == null) {
             isFirstTime_ = true;

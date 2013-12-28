@@ -53,4 +53,13 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true" />
 
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/controlView"
+        android:layout_alignLeft="@+id/controlView"
+        android:layout_alignParentRight="true"
+        android:id="@+id/anchorView"
+        android:layout_marginTop="-88dp"></FrameLayout>
+
 </RelativeLayout>
