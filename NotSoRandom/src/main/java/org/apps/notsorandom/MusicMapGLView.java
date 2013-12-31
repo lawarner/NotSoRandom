@@ -152,11 +152,12 @@ public class MusicMapGLView extends MusicMapView {
             "varying vec3 lightDir, eyeVec; " +
 
             "void main() { " +
-                "EyespaceNormal = vec3(normalMatrix * vec4(vNormal, 0.0)); " +
+                "EyespaceNormal = vec3(normalMatrix * vec4(vNormal, 1.0)); " +
 
                 "vec4 position = matWorld * vPosition; " +
                 "lightDir = lightPos.xyz - position.xyz; " +
-                "eyeVec = eyePos - position.xyz; " +
+                "eyeVec = -position.xyz; " +
+//                "eyeVec = eyePos - position.xyz; " +
 
                 "gl_Position = matWorld * vPosition; " +
              "}\n";
@@ -183,7 +184,7 @@ public class MusicMapGLView extends MusicMapView {
 
             "    vec4 ambientTerm = matAmbient * lightColor; " +
             "    vec4 diffuseTerm = matDiffuse * max(dot(N, L), 0.0); " +
-            "    vec4 specularTerm = matSpecular * pow(max(dot(reflectV, E), 0.0), 5.0); " +
+            "    vec4 specularTerm = matSpecular * pow(max(dot(reflectV, E), 0.0), 3.0); " +
 
             "    gl_FragColor =  ambientTerm + diffuseTerm + specularTerm; " +
             "}\n";
@@ -449,10 +450,10 @@ public class MusicMapGLView extends MusicMapView {
             // Draw spot where eye is looking
             renderColor(purple_, 0.6f);
             stackModel(true);
-            setModel(0.8f, mLook[0], mLook[1], mLook[2], false);
+            setModel(1f, mLook[0], mLook[1], mLook[2], false);
             //setModel(Math.max(0.5f, radius * 0.4f), 1, 3, -4, false);
             modelToWorld(true);
-            sphereWire_.draw(attr_vposition, attr_vnormal);
+            cubeWire_.draw(attr_vposition, attr_vnormal);
             stackModel(false);
 
             MusicMap.MapEntry[] me = musicMap_.getLibEntries();            // The library map
@@ -465,6 +466,7 @@ public class MusicMapGLView extends MusicMapView {
                     int col = (xyz % mapXYsize) / 8;
                     int z   = xyz / mapXYsize;
                     float radius = calcUnitRadius(count);
+                    /*
                     if (xyz == currSenseIdx) {
                         // Draw blue box at current song or center (0,0,0)
                         renderColor(blue_, 0.4f);
@@ -474,6 +476,7 @@ public class MusicMapGLView extends MusicMapView {
                         cubeWire_.draw(attr_vposition, attr_vnormal);
                         stackModel(false);
                     }
+                    */
 
                     if (radius >= 0.007f) {
                         stackModel(true);
@@ -542,13 +545,13 @@ public class MusicMapGLView extends MusicMapView {
 
         void renderColor(float[] color, float alpha) {
             for (int i = 0; i < 3; i++) {
-                matAmbient_[i] = color[i] * 0.88f;
-                matDiffuse_[i] = color[i] * 0.75f;
-                matSpecular_[i] = color[i] * 0.9f;
+                matAmbient_[i] = color[i] * 0.85f;
+                matDiffuse_[i] = color[i] * 0.78f;
+                matSpecular_[i] = color[i] * 0.91f;
             }
             matAmbient_[3] = alpha;
             matDiffuse_[3] = alpha;
-            matSpecular_[3] = alpha;
+            matSpecular_[3] = 1f;
 
             GLES20.glUniform4f(GLES20.glGetUniformLocation(glProgram_, "matAmbient"),
                     matAmbient_[0], matAmbient_[1], matAmbient_[2], matAmbient_[3]);
@@ -570,6 +573,7 @@ public class MusicMapGLView extends MusicMapView {
             }
             return true;
         }
+
         private void setupDraw(boolean begin) {
             if (begin) {
                 // Add program to OpenGL ES environment
