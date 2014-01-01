@@ -10,6 +10,7 @@ public class Config {
     public static final String DEFAULT_X_COMPONENT = "tempo";
     public static final String DEFAULT_Y_COMPONENT = "roughness";
     public static final String DEFAULT_Z_COMPONENT = "humor";
+    public static final String DEFAULT_W_COMPONENT = "taste";
 
     private String user_;
 
@@ -38,6 +39,8 @@ public class Config {
      */
     private SenseComponent zComponent_;
 
+    private SenseComponent wComponent_;
+
     /**
      * Timestamp of the last time the media library has been scanned.
      */
@@ -45,10 +48,11 @@ public class Config {
 
 
     Config(String user, String root, SenseComponent xComponent,
-           SenseComponent yComponent, SenseComponent zComponent, long lastScan) {
+           SenseComponent yComponent, SenseComponent zComponent,
+           SenseComponent wComponent, long lastScan) {
         user_ = user;
         root_ = root;
-        setXYZcomponents(xComponent, yComponent, zComponent);
+        setXYZWcomponents(xComponent, yComponent, zComponent, wComponent);
         lastScan_ = lastScan;
         MusicPlayerApp.log(TAG, "Config created. X mask=" + Integer.toHexString(xComponent.getMask())
                 + " Y mask=" + Integer.toHexString(yComponent.getMask())
@@ -78,6 +82,9 @@ public class Config {
     public SenseComponent getZcomponent() {
         return zComponent_;
     }
+    public SenseComponent getWcomponent() {
+        return wComponent_;
+    }
 
     public int getXYZMask() {
         return xComponent_.getMask()
@@ -85,10 +92,11 @@ public class Config {
              | zComponent_.getMask();
     }
 
-    public void setXYZcomponents(SenseComponent xComponent, SenseComponent yComponent,
-                                 SenseComponent zComponent) {
+    public void setXYZWcomponents(SenseComponent xComponent, SenseComponent yComponent,
+                                  SenseComponent zComponent, SenseComponent wComponent) {
         xComponent_ = xComponent;
         yComponent_ = yComponent;
         zComponent_ = zComponent;
+        wComponent_ = wComponent;
     }
 }

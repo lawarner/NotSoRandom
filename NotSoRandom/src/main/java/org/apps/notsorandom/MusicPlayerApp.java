@@ -1,7 +1,5 @@
 package org.apps.notsorandom;
 
-import android.app.SearchManager;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -9,20 +7,23 @@ import android.support.v4.app.FragmentTabHost;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.view.Window;
+import android.widget.TabWidget;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MusicPlayerApp extends FragmentActivity
         implements MusicPlayer.OnPlayerListener, NSRMediaLibrary.OnLibraryChangedListener {
     private static final String TAG = "MusicPlayerApp";
 
-    private static Config config_;
+    private static Config mConfig;
 
-    private MediaLibraryBaseImpl library_;
+    private static List<PlayerEvents> mEvents = new ArrayList<PlayerEvents>();
 
-    private FragmentTabHost tabHost_;
+    private MediaLibraryBaseImpl mLibrary;
+
+    private FragmentTabHost mTabHost;
 
     private MusicPlayer playerFrag_ = null;
 
@@ -33,6 +34,13 @@ public class MusicPlayerApp extends FragmentActivity
     }
     private LibraryCategory libCat_ = LibraryCategory.ALL;
 
+    /**
+     * Callback interface.  Listeners register to be called back on certain events.
+     * Listeners are called when a new song starts playing.
+     */
+    public interface PlayerEvents {
+        public void songChanged(SongInfo song);
+    }
 
     ///////////  static methods used throughout app. ///////////
 
@@ -41,7 +49,7 @@ public class MusicPlayerApp extends FragmentActivity
      * @return Configuration for current user.
      */
     public static Config getConfig() {
-        return config_;
+        return mConfig;
     }
 
     public static void log(String tag, String msg) {
@@ -53,6 +61,14 @@ public class MusicPlayerApp extends FragmentActivity
         log(TAG, msg);
     }
 
+    public static void registerPlayerEvents(PlayerEvents events) {
+        if (mEvents.indexOf(events) >= 0) {
+            log("Register player events: already in callback list " + events);
+        } else {
+            mEvents.add(events);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,43 +76,49 @@ public class MusicPlayerApp extends FragmentActivity
 //        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.main_player);
 
-        tabHost_ = (FragmentTabHost) findViewById(R.id.mytabHost);
-        if (tabHost_ != null /*&& savedInstanceState == null*/) {
-            tabHost_.setId(R.id.mytabHost);
-            tabHost_.setup(this, getSupportFragmentManager(), R.id.realTabContent);
+        mTabHost = (FragmentTabHost) findViewById(R.id.mytabHost);
+        if (mTabHost != null /*&& savedInstanceState == null*/) {
+            mTabHost.setId(R.id.mytabHost);
+            mTabHost.setup(this, getSupportFragmentManager(), R.id.realTabContent);
 
             // Manually add the fragments as tabs
-            tabHost_.addTab(tabHost_.newTabSpec("player").setIndicator(getString(R.string.title_section1)), MusicPlayer.class, null);
-            tabHost_.addTab(tabHost_.newTabSpec("queue").setIndicator(getString(R.string.title_section2)), MusicQueue.class, null);
-            tabHost_.addTab(tabHost_.newTabSpec("library").setIndicator(getString(R.string.title_section3)), MusicLibrary.class, null);
-            tabHost_.addTab(tabHost_.newTabSpec("settings").setIndicator(getString(R.string.title_section4)), MusicSettings.class, null);
+            mTabHost.addTab(mTabHost.newTabSpec("player").setIndicator(getString(R.string.title_section1)), MusicPlayer.class, null);
+            mTabHost.addTab(mTabHost.newTabSpec("queue").setIndicator(getString(R.string.title_section2)), MusicQueue.class, null);
+            mTabHost.addTab(mTabHost.newTabSpec("library").setIndicator(getString(R.string.title_section3)), MusicLibrary.class, null);
+            mTabHost.addTab(mTabHost.newTabSpec("settings").setIndicator(getString(R.string.title_section4)), MusicSettings.class, null);
+
+            TabWidget tw = mTabHost.getTabWidget();
+            View vw = tw.getChildTabViewAt(3);  // settings, I hope
+            if (vw != null) {
+                vw.setMinimumWidth(vw.getWidth() + 8);
+            }
         }
 
-        library_ = new MediaLibraryDb(this);  // = new MediaLibraryTest();
+        mLibrary = new MediaLibraryDb(this);  // = new MediaLibraryTest();
         //log(TAG, "Attempt to restore db from sdcard");
-        library_.scanForMedia("RESTORE", false);
+        mLibrary.scanForMedia("RESTORE", false);
 
-        library_.initialize();
+        mLibrary.initialize();
         //TODO if library empty, popup to run media scan
-//        library_.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
-        config_ = library_.getConfig(Config.DEFAULT_USER);
-        if (config_ != null) {
-            log("Got config, x=" + config_.getXcomponent().getName() + ", y=" + config_.getYcomponent().getName()
-                    + ", z=" + config_.getZcomponent().getName());
+//        mLibrary.scanForMedia(Environment.getExternalStorageDirectory().getAbsolutePath(), true);
+        mConfig = mLibrary.getConfig(Config.DEFAULT_USER);
+        if (mConfig != null) {
+            log("Got config, x=" + mConfig.getXcomponent().getName() + ", y=" + mConfig.getYcomponent().getName()
+                    + ", z=" + mConfig.getZcomponent().getName());
         }
 
-        library_.registerOnLibraryChanged(this);
-        library_.getAllSongs();
-        library_.sortSongs();
+        mLibrary.registerOnLibraryChanged(this);
+        mLibrary.getAllSongs();
+        mLibrary.sortSongs();
 
-        MusicLibrary.initDb(library_);
-        MusicQueue.setLibrary(library_);
-        MusicMap.setLibrary(library_);
+        MusicLibrary.initDb(mLibrary);
+        MusicQueue.setLibrary(mLibrary);
+        MusicMap.setLibrary(mLibrary);
 
         if (savedInstanceState != null)
             log("-restored from saved state.");
 
-        log("Player has initialized.\n");
+        log("Player has initialized.");
     }
 
     @Override
@@ -132,7 +154,7 @@ public class MusicPlayerApp extends FragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
-        log("MusicPlayerApp.onResume called.\n");
+        log("MusicPlayerApp.onResume called.");
     }
 
     @Override
@@ -178,7 +200,7 @@ public class MusicPlayerApp extends FragmentActivity
 
     @Override
     public NSRMediaLibrary getLibrary() {
-        return library_;
+        return mLibrary;
     }
 
     @Override
@@ -205,10 +227,16 @@ public class MusicPlayerApp extends FragmentActivity
         return song;
     }
 
+    /**
+     * Method from OnPlayerListener interface.  Calls all listeners that have registered.
+     * @param song The info of the song.
+     */
     @Override
     public void onNewSong(SongInfo song) {
-        log("Got call from Player onNewSong = " + song.getTitle() + "\n");
-
+        log("Got call from Player onNewSong = " + song.getTitle());
+        for (PlayerEvents event : mEvents) {
+            event.songChanged(song);
+        }
     }
 
     @Override

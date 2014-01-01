@@ -77,7 +77,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         /**
          * Called to retrieve the next song to play.
          * TODO: rewrite this to Iterator interface.
-         * @param first If true will return the the first in list
+         * @param first If true will return the first in list
          * @return Info of next song to play. The implementation should
          *     return null when no more songs are in the queue.
          */

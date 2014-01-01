@@ -20,7 +20,7 @@ import javax.microedition.khronos.opengles.GL10;
  * This structure is temporary and common code will be migrated later
  * (when a third view is created).
  */
-public class MusicMapGLView extends MusicMapView {
+public class MusicMapGLView extends MusicMapView implements MusicPlayerApp.PlayerEvents {
     private final static String TAG = MusicMapGLView.class.getSimpleName();
 
     private GLSurfaceView glView_;
@@ -29,6 +29,8 @@ public class MusicMapGLView extends MusicMapView {
     private static final int MAT4x4 = 16;
     private static final float RADIUS = 7f;    // outer radius (where eye lives)
     private static final float BOUNDS = 9.3f;
+
+    private static final int MAP_XY_SIZE = MusicMap.MAPWIDTH * MusicMap.MAPHEIGHT;
 
     private float[] saveMatModel_ = new float[MAT4x4];
     private float[] matModel_ = new float[MAT4x4];
@@ -62,6 +64,10 @@ public class MusicMapGLView extends MusicMapView {
 
     private float ratio_;
 
+    private int mCurrSenseIdx;
+    private GlVec3f mCurrSongVec = new GlVec3f(0, 0, 0);
+
+
     private class MyGLSurfaceView extends GLSurfaceView {
         private float startX_;
         private float startY_;
@@ -69,6 +75,8 @@ public class MusicMapGLView extends MusicMapView {
         public MyGLSurfaceView(Context context) {
             super(context);
             ratio_ = 1;
+            SongInfo song = listener_ == null ? null : listener_.getCurrSong();
+            songChanged(song);
         }
 
         @Override
@@ -96,6 +104,7 @@ public class MusicMapGLView extends MusicMapView {
                 case MotionEvent.ACTION_MOVE:
                     float dx = (x - startX_) / 43f;
                     float dy = (y - startY_) / 43f;
+                    Log.d(TAG, " motion event has " + dx + ", " + dy);
                     // x,y,z  0,0,-1   1,0,0  1,1,0
                     /*
                     mEyePos.set((float) (RADIUS * Math.sin(dx)),
@@ -208,12 +217,10 @@ public class MusicMapGLView extends MusicMapView {
         private GlShapes.BasicShape sphereWire_;
         private GlShapes.BasicShape cube_;
         private GlShapes.BasicShape cubeWire_;
-        private GlShapes.BasicShape triangle_;
 
         private long mStartTime;
         private long mLastTime;
         private GlVec3f mSpeed = new GlVec3f(0, 0f, 0.2f);
-        private GlVec3f mCurrSongVec = new GlVec3f(0, 0, 0);
 
         @Override
         public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
@@ -261,7 +268,7 @@ public class MusicMapGLView extends MusicMapView {
             sphereLR_ = GlShapes.genSphere(true, 7, 3);
             sphereHR_ = GlShapes.genSphere(true, 32, 13);
             sphereWire_ = GlShapes.genSphere(false, 12, 6);
-            triangle_ = GlShapes.genShape(GlShapes.ShapeType.TRIANGLE, true);
+//            triangle_ = GlShapes.genShape(GlShapes.ShapeType.TRIANGLE, true);
             cube_ = GlShapes.genShape(GlShapes.ShapeType.CUBE, true);
             cubeWire_ = GlShapes.genShape(GlShapes.ShapeType.CUBE, false);
 
@@ -289,20 +296,6 @@ public class MusicMapGLView extends MusicMapView {
             //Log.d(TAG, "onDrawFrame");
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
             checkGlError("glClear");
-
-            final int mapXYsize = MusicMap.MAPWIDTH * MusicMap.MAPHEIGHT;
-
-            int currSenseIdx = 3 + 3 * MusicMap.MAPWIDTH + 3 * mapXYsize;
-            SongInfo song = listener_.getCurrSong();
-            if (song != null) {
-                currSenseIdx = song.getSenseIndex(MusicPlayerApp.getConfig());
-            } else {
-                Log.d(TAG, "current song null");
-            }
-            int ix = ((currSenseIdx % mapXYsize) / 8);
-            int iy = (currSenseIdx % 8);
-            int iz   = currSenseIdx / mapXYsize;
-            mCurrSongVec.set(ix - 4, iy - 4, iz - 4);
 
             setupDraw(true);
             if (getMapMode() == MapMode.AnimateMode)
@@ -463,8 +456,8 @@ public class MusicMapGLView extends MusicMapView {
                 int scount = ms[xyz].getCount();
                 if (count > 0) {
                     int row = xyz % 8;
-                    int col = (xyz % mapXYsize) / 8;
-                    int z   = xyz / mapXYsize;
+                    int col = (xyz % MAP_XY_SIZE) / 8;
+                    int z   = xyz / MAP_XY_SIZE;
                     float radius = calcUnitRadius(count);
                     /*
                     if (xyz == currSenseIdx) {
@@ -482,7 +475,7 @@ public class MusicMapGLView extends MusicMapView {
                         stackModel(true);
                         setModel(radius * 0.8f, (float) col - 4, (float) row - 4, (float) z - 4, false);
                         modelToWorld(true);
-                        if (xyz == currSenseIdx)
+                        if (xyz == mCurrSenseIdx)
                             renderColor(placeMode_ ? cyan_ : green_, 1);
                         else
                             if (scount > 0) {
@@ -698,6 +691,8 @@ public class MusicMapGLView extends MusicMapView {
 //        glView_.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         // the gl view seems to ignore this flag:
         glView_.setDebugFlags(GLSurfaceView.DEBUG_CHECK_GL_ERROR);
+
+        MusicPlayerApp.registerPlayerEvents(this);
     }
 
     public GLSurfaceView getGlView() {
@@ -762,5 +757,20 @@ public class MusicMapGLView extends MusicMapView {
         if (lastError != GLES20.GL_NO_ERROR) {
             throw new RuntimeException(op + ": glError " + lastError);
         }
+    }
+
+    @Override
+    public void songChanged(SongInfo song) {
+        mCurrSenseIdx = 3 + 3 * MusicMap.MAPWIDTH + 3 * MusicMap.MAPWIDTH * MusicMap.MAPHEIGHT;
+        if (song != null) {
+            mCurrSenseIdx = song.getSenseIndex(MusicPlayerApp.getConfig());
+        } else {
+            Log.d(TAG, "current song null");
+        }
+
+        int ix = ((mCurrSenseIdx % MAP_XY_SIZE) / 8);
+        int iy = (mCurrSenseIdx % 8);
+        int iz   = mCurrSenseIdx / MAP_XY_SIZE;
+        mCurrSongVec.set(ix - 4, iy - 4, iz - 4);
     }
 }

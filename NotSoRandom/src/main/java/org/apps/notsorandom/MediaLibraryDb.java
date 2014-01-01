@@ -228,7 +228,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 SenseComponent xComp = getComponent(db, xName);
                 SenseComponent yComp = getComponent(db, yName);
                 SenseComponent zComp = getComponent(db, zName);
-                config = new Config(user, root, xComp, yComp, zComp, lastScan);
+                config = new Config(user, root, xComp, yComp, zComp, null, lastScan);
             }
 
             db.close();
@@ -373,14 +373,16 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             addComponent(db, zComponent);
             SenseComponent component = new SenseComponent("feelings", "love / hate", 0x0000f000, 4, 4);
             addComponent(db, component);
-            component = new SenseComponent("taste", "sweeter / sourer",   0x000f0000, 5, 4);
+            SenseComponent wComponent
+                = new SenseComponent("taste", "sweeter / sourer",   0x000f0000, 5, 4);
             addComponent(db, component);
             component = new SenseComponent("mood", "sadder / happier",    0x00f00000, 6, 4);
             addComponent(db, component);
             component = new SenseComponent("depth", "shallower / deeper", 0x0f000000, 7, 4);
             addComponent(db, component);
 
-            Config config = new Config(Config.DEFAULT_USER, root, xComponent, yComponent, zComponent, 0);
+            Config config = new Config(Config.DEFAULT_USER, root, xComponent, yComponent,
+                    zComponent, wComponent, 0);
             addConfig(db, config);
 
             db.close(); // Close database connection

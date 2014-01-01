@@ -26,7 +26,7 @@ import java.util.ArrayList;
  *
  * TODO incorporate labels, mode buttons
  */
-public class MusicMapView extends View implements View.OnTouchListener {
+public class MusicMapView extends View implements View.OnTouchListener, MusicPlayerApp.PlayerEvents {
     private static final String TAG = "MusicMapView";
 
     /*
@@ -322,7 +322,6 @@ public class MusicMapView extends View implements View.OnTouchListener {
         }
     }
 
-
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         int action = motionEvent.getActionMasked();
@@ -420,4 +419,9 @@ public class MusicMapView extends View implements View.OnTouchListener {
                                      ") ==> (" + pt.x + "," + cy + ")");
             }
         } */
+
+    @Override
+    public void songChanged(SongInfo song) {
+
+    }
 }
