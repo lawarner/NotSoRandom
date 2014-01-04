@@ -38,7 +38,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
     private DbHandler handler_;
 
     public class DbHandler extends SQLiteOpenHelper {
-        private static final int    DATABASE_VERSION = 4;
+        private static final int    DATABASE_VERSION = 5;
         private static final String TABLE_SONGS = "songs";
         private static final String TABLE_COMPONENT = "component";
         private static final String TABLE_CONFIG = "config";
@@ -49,6 +49,13 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         private static final String COL_FILE   = "file";
         private static final String COL_SENSE  = "sense";
         private static final String COL_ARTIST = "artist";
+        private static final String COL_ALBUM  = "album";
+        private static final String COL_SENSETIME  = "sensetime";
+        private static final String COL_AUTOSENSE  = "autosense";
+        private static final String COL_AUTOTIME  = "autotime";
+        private static final String COL_CLOUDSENSE  = "cloudsense";
+        private static final String COL_CLOUDTIME  = "cloudtime";
+
         // Database layout components
         // COL_ID
         private static final String COL_NAME  = "name";
@@ -64,6 +71,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
         private static final String COL_Y_COMP   = "ycomponent";
         private static final String COL_LASTSCAN = "lastscan";
         private static final String COL_Z_COMP   = "zcomponent";
+        private static final String COL_W_COMP   = "wcomponent";
 
 
         DbHandler(Context context) {
@@ -114,6 +122,8 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             values.put(COL_Y_COMP, (component == null) ? "" : component.getName());
             component = config.getZcomponent();
             values.put(COL_Z_COMP, (component == null) ? "" : component.getName());
+            component = config.getWcomponent();
+            values.put(COL_W_COMP, (component == null) ? "" : component.getName());
             values.put(COL_LASTSCAN, config.getLastScan());
             try {   //TODO change to insertWithOnConflict()
                 db.insertOrThrow(TABLE_CONFIG, null, values);
@@ -136,9 +146,12 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             String fileName = song.getFileName();
             if (sdDir_ != null && fileName.startsWith(sdDir_))
                 fileName = fileName.substring(sdDir_.length());
-            values.put(COL_FILE,   fileName);
-            values.put(COL_SENSE,  song.getSenseValue());
-            values.put(COL_ARTIST, song.getArtist());
+            values.put(COL_FILE,      fileName);
+            values.put(COL_SENSE,     0);
+            values.put(COL_ARTIST,    song.getArtist());
+            values.put(COL_ALBUM,     song.getAlbum());
+            values.put(COL_AUTOSENSE, song.getSenseValue());
+            values.put(COL_AUTOTIME,  System.currentTimeMillis());
 
             boolean ret = true;
             try {   //TODO change to insertWithOnConflict()
@@ -175,7 +188,9 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                     String artist = cursor.getString(4);
                     if (artist == null || artist.isEmpty())
                         artist = artistFromFileName(cursor.getString(2));
-                    String album = albumFromFileName(cursor.getString(2));
+                    String album = cursor.getString(5);
+                    if (album == null || album.isEmpty())
+                        album = albumFromFileName(cursor.getString(2));
                     SongInfo song = new SongInfo(title, file, sense, artist);
                     song.setAlbum(album);
                     songs.add(song);
@@ -223,12 +238,14 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 String yName = cursor.getString(4);
                 long lastScan = cursor.getLong(5);
                 String zName = cursor.getString(6);
+                String wName = cursor.getString(7);
                 cursor.close();
 
                 SenseComponent xComp = getComponent(db, xName);
                 SenseComponent yComp = getComponent(db, yName);
                 SenseComponent zComp = getComponent(db, zName);
-                config = new Config(user, root, xComp, yComp, zComp, null, lastScan);
+                SenseComponent wComp = getComponent(db, wName);
+                config = new Config(user, root, xComp, yComp, zComp, wComp, lastScan);
             }
 
             db.close();
@@ -321,6 +338,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 file = file.substring(sdDir_.length());
             String where = COL_FILE + " = \"" + file + "\"";
             values.put(COL_SENSE, sense);
+            values.put(COL_SENSETIME, System.currentTimeMillis());
             try {
                 db.update(TABLE_SONGS, values, where, null);
             } catch (SQLiteConstraintException ce) {
@@ -373,21 +391,22 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
             addComponent(db, zComponent);
             SenseComponent component = new SenseComponent("feelings", "love / hate", 0x0000f000, 4, 4);
             addComponent(db, component);
-            SenseComponent wComponent
-                = new SenseComponent("taste", "sweeter / sourer",   0x000f0000, 5, 4);
-            addComponent(db, component);
+            SenseComponent wComponent = new SenseComponent("taste", "sweeter / bitterer",   0x000f0000, 5, 4);
+            addComponent(db, wComponent);
             component = new SenseComponent("mood", "sadder / happier",    0x00f00000, 6, 4);
             addComponent(db, component);
             component = new SenseComponent("depth", "shallower / deeper", 0x0f000000, 7, 4);
             addComponent(db, component);
 
             Config config = new Config(Config.DEFAULT_USER, root, xComponent, yComponent,
-                    zComponent, wComponent, 0);
+                    zComponent, wComponent, System.currentTimeMillis());
             addConfig(db, config);
 
             db.close(); // Close database connection
         }
 
+        //TODO  Next db version (6): song.uuid, config.cloud_synctime, senseupdate table,
+        //      Normalized album and artist, genremap and other auto maps loaded from cloud
         @Override
         public void onCreate(SQLiteDatabase db) {
             String sql = "CREATE TABLE " + TABLE_SONGS + " ("
@@ -395,7 +414,13 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                        + COL_TITLE + " TEXT,"
                        + COL_FILE + " TEXT NOT NULL UNIQUE,"
                        + COL_SENSE + " INTEGER,"
-                       + COL_ARTIST + " TEXT)";
+                       + COL_ARTIST + " TEXT,"
+                       + COL_ALBUM + " TEXT,"
+                       + COL_SENSETIME + " DATETIME,"
+                       + COL_AUTOSENSE + " INTEGER,"
+                       + COL_AUTOTIME + " DATETIME,"
+                       + COL_CLOUDSENSE + " INTEGER,"
+                       + COL_CLOUDTIME + " DATETIME)";
 //                       + "UNIQUE (" + COL_FILE + ") ON CONFLICT REPLACE)";
 
             db.execSQL(sql);
@@ -424,14 +449,12 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                         + COL_ROOT + " TEXT,"
                         + COL_X_COMP + " TEXT,"
                         + COL_Y_COMP + " TEXT,"
-                        + COL_LASTSCAN + " DATETIME)";
+                        + COL_LASTSCAN + " DATETIME,"
+                        + COL_Z_COMP + " TEXT,"
+                        + COL_W_COMP + " TEXT)";
                 db.execSQL(sql);
             } else if (oldVersion == 2 && newVersion == 3) {
-                String sql = "ALTER TABLE " + TABLE_CONFIG + " ADD "
-                        + COL_Z_COMP + " TEXT";
-                db.execSQL(sql);
-
-                sql = "UPDATE " + TABLE_CONFIG + " SET " + COL_Z_COMP + "='humor'";
+                String sql = "UPDATE " + TABLE_CONFIG + " SET " + COL_Z_COMP + "='humor'";
                 db.execSQL(sql);
 
                 sql = "UPDATE " + TABLE_SONGS + " SET " + COL_TITLE + "=SUBSTR(" + COL_TITLE + ",1,length(" + COL_TITLE + ")-7) "
@@ -442,7 +465,29 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 String sql = "ALTER TABLE " + TABLE_SONGS + " ADD "
                         + COL_ARTIST + " TEXT";
                 db.execSQL(sql);
+            } else if (oldVersion == 4 && newVersion == 5) {
+                String sql = "ALTER TABLE " + TABLE_CONFIG + " ADD "
+                        + COL_W_COMP + " TEXT";
+                db.execSQL(sql);
+                sql = "UPDATE " + TABLE_CONFIG + " SET " + COL_W_COMP + "='taste'";
+                db.execSQL(sql);
 
+                SenseComponent wComponent
+                        = new SenseComponent("taste", "sweeter / bitterer",   0x000f0000, 5, 4);
+                addComponent(db, wComponent);
+
+                sql = "ALTER TABLE " + TABLE_SONGS + " ADD " + COL_ALBUM + " TEXT";
+                db.execSQL(sql);
+                sql = "ALTER TABLE " + TABLE_SONGS + " ADD " + COL_SENSETIME + " DATETIME";
+                db.execSQL(sql);
+                sql = "ALTER TABLE " + TABLE_SONGS + " ADD " + COL_AUTOSENSE + " INTEGER";
+                db.execSQL(sql);
+                sql = "ALTER TABLE " + TABLE_SONGS + " ADD " + COL_AUTOTIME + " DATETIME";
+                db.execSQL(sql);
+                sql = "ALTER TABLE " + TABLE_SONGS + " ADD " + COL_CLOUDSENSE + " INTEGER";
+                db.execSQL(sql);
+                sql = "ALTER TABLE " + TABLE_SONGS + " ADD " + COL_CLOUDTIME + " DATETIME";
+                db.execSQL(sql);
             } else
                 Log.e(TAG, "Unexpected database upgrade from " + oldVersion + " to " + newVersion);
         }
@@ -613,7 +658,7 @@ public class MediaLibraryDb extends MediaLibraryBaseImpl {
                 artist = artistFromFileName(str);
             }
 
-            SongInfo song = new SongInfo(title, file1.getAbsolutePath(), sense, artist);
+            SongInfo song = new SongInfo(title, file1.getAbsolutePath(), sense, artist, sense);
 //            songs_.add(song);
             boolean added = handler_.addSong(song);
 //            Log.d(TAG, "scanForMedia: " + file1.getAbsolutePath() + (added ? " added, " : " exists, ")

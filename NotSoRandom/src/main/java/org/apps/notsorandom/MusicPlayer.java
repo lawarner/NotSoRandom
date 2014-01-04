@@ -17,6 +17,8 @@ import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.io.IOException;
+
 /**
  * Implements the main player controls, as well as the MusicMapWidget.
  *
@@ -385,7 +387,7 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         }
 
         if (currSong_ != null)
-            currSong_.setLongForm(false);
+            currSong_.setLongForm(true);
 
         boolean ret = true;
         try {
@@ -408,16 +410,15 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 musicMapView_.redrawMap();     // make the map redraw
             }
         } catch (IllegalStateException ise) {
-            Log.e(TAG, "Illegal state in queueSong: " + ise);
+            Log.e(TAG, "Illegal state in queueSong: ", ise);
             ret = false;
         } catch (IllegalArgumentException iae) {
-            Log.e(TAG, "Illegal arg in queueSong: " + iae);
+            Log.e(TAG, "Illegal arg in queueSong: ", iae);
             ret = false;
-        } catch (Exception ex) {
-            Log.e(TAG, "Exception in queueSong: " + ex);
+        } catch (IOException ioe) {
+            Log.e(TAG, "I/O exception in queueSong: ", ioe);
             ret = false;
         }
-//        throws IOException, IllegalArgumentException, SecurityException, IllegalStateException {
 
         return ret;
     }

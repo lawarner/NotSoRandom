@@ -174,6 +174,7 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
                     SenseComponent xc;
                     SenseComponent yc;
                     SenseComponent zc;
+                    SenseComponent wc;
                     Config config = MusicPlayerApp.getConfig();
 
                     TextView tvxc = (TextView) findViewById(R.id.column_label);
@@ -183,6 +184,7 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
                         xc = config.getZcomponent();
                         yc = config.getYcomponent();
                         zc = config.getXcomponent();
+                        wc = config.getWcomponent();
                         tvxc.setText(xc.getLabel());
                     } else
                     if (tvyc == view) {
@@ -190,11 +192,12 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
                         xc = config.getXcomponent();
                         yc = config.getZcomponent();
                         zc = config.getYcomponent();
+                        wc = config.getWcomponent();
                         tvyc.setText(yc.getLabel());
                     } else
                         return false;
 
-                    config.setXYZcomponents(xc, yc, zc);
+                    config.setXYZWcomponents(xc, yc, zc, wc);
                     break;
                 case R.id.selectMode:
                     MusicPlayerApp.log(TAG, "Select Mode pressed");

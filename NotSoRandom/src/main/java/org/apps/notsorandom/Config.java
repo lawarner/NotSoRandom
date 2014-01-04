@@ -56,7 +56,8 @@ public class Config {
         lastScan_ = lastScan;
         MusicPlayerApp.log(TAG, "Config created. X mask=" + Integer.toHexString(xComponent.getMask())
                 + " Y mask=" + Integer.toHexString(yComponent.getMask())
-                + " Z mask=" + Integer.toHexString(zComponent.getMask()));
+                + " Z mask=" + Integer.toHexString(zComponent.getMask())
+                + " W mask=" + Integer.toHexString(wComponent.getMask()));
     }
 
     public long getLastScan() {
@@ -90,6 +91,13 @@ public class Config {
         return xComponent_.getMask()
              | yComponent_.getMask()
              | zComponent_.getMask();
+    }
+
+    public int getXYZWMask() {
+        return xComponent_.getMask()
+                | yComponent_.getMask()
+                | zComponent_.getMask()
+                | wComponent_.getMask();
     }
 
     public void setXYZWcomponents(SenseComponent xComponent, SenseComponent yComponent,

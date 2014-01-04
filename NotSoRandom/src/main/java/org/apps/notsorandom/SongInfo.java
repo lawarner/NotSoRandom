@@ -17,16 +17,23 @@ public class SongInfo {
     private String artist_;
     private String album_;
     private boolean longForm_;
+    private int autoSenseValue_;
 
     private String lazyToString_;
 
 
     public SongInfo(String title, String fileName, int senseValue, String artist) {
+        this(title, fileName, senseValue, artist, 0);
+    }
+
+    public SongInfo(String title, String fileName, int senseValue, String artist,
+                    int autoSenseValue) {
         title_ = title;
         fileName_ = fileName;
         senseValue_ = senseValue;
         artist_ = artist;
         longForm_ = false;
+        autoSenseValue_ = autoSenseValue;
     }
 
     public String getAlbum() {
@@ -65,6 +72,8 @@ public class SongInfo {
         return artist_;
     }
 */
+
+    public int getAutoSenseValue() { return autoSenseValue_; }
 
     public String getFileName() {
         return fileName_;
@@ -134,6 +143,10 @@ public class SongInfo {
         album_ = album;
     }
 
+    public void setAutoSenseValue(int sense) {
+        autoSenseValue_ = sense;
+    }
+
     public void setLongForm(boolean longForm) {
         if (longForm == longForm_)
             return;
@@ -186,12 +199,14 @@ public class SongInfo {
         int ix =  idx & 0x0007;
         int iy = (idx & 0x0038) >> 3;
         int iz = (idx & 0x01c0) >> 6;
-        int i1 = (idx & 0xfffffe00);
+        int iw = (idx & 0x0e00) >> 9;
+        int i1 = (idx & 0xfffff000);
 //        int i4 = (idx & 0xe000) << 1;
         int ret = config.getXcomponent().getMaskedValue(ix)
                 | config.getYcomponent().getMaskedValue(iy)
                 | config.getZcomponent().getMaskedValue(iz)
-                | (~config.getXYZMask() & i1);
+                | config.getWcomponent().getMaskedValue(iw)
+                | (~config.getXYZWMask() & i1);
         return ret;
     }
 
