@@ -451,6 +451,11 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
     }
 
     @Override
+    public int getAudioSessionId() {
+        return 0;
+    }
+
+    @Override
     public int getBufferPercentage() {
         return 0;
     }

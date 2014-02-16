@@ -12,6 +12,7 @@
 # generated files
 bin/
 gen/
+out/
 build/
 build.log
 build-log.xml
