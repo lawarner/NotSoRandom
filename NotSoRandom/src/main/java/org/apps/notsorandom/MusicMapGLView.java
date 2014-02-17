@@ -724,6 +724,15 @@ public class MusicMapGLView extends MusicMapView implements MusicPlayerApp.Playe
     }
 
     @Override
+    public void setListener(MusicPlayer.OnPlayerListener listener) {
+        super.setListener(listener);
+        if (listener != null) {
+            SongInfo song = listener.getCurrSong();
+            songChanged(song);
+        }
+    }
+
+    @Override
     public void redrawMap() {
         Log.d(TAG, " redrawMap called");
         super.redrawMap();

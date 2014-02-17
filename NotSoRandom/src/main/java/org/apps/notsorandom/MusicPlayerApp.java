@@ -90,7 +90,8 @@ public class MusicPlayerApp extends FragmentActivity
             TabWidget tw = mTabHost.getTabWidget();
             View vw = tw.getChildTabViewAt(3);  // settings, I hope
             if (vw != null) {
-                vw.setMinimumWidth(vw.getWidth() + 8);
+                vw.setPaddingRelative(-4,-4,0,0);
+                vw.setMinimumWidth(vw.getWidth() + 10);
             }
         }
 

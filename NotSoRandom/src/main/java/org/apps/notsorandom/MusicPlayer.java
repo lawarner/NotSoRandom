@@ -368,8 +368,6 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         if (!queueSong(song))
             return false;
 
-        callback_.onNewSong(song);
-
         start();
 
         return true;
@@ -399,6 +397,8 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
                 Log.d(TAG, "queueSong 2");
                 player_.setDataSource(song.getFileName());
                 player_.prepare();
+                if (callback_ != null) callback_.onNewSong(song);
+
                 if (isVisible()) {   // only show the controller from the player fragment
                     controller_.setEnabled(true);
                     MusicPlayerApp.log(TAG, "controller enabled isVisible");
