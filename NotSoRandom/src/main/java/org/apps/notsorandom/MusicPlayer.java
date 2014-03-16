@@ -184,6 +184,11 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         player_ = null;
     }
 
+    public static void pauseSong() {
+        if (player_ != null) {
+            player_.pause();
+        }
+    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -423,10 +428,6 @@ public class MusicPlayer extends Fragment implements MediaController.MediaPlayer
         return ret;
     }
 
-    public void stopSong() {
-        pause();
-        title_.setText("Stopped.");
-    }
 /*
     public void showPlaylist() {
         int songs[] = musicMapView_.getShuffleList();

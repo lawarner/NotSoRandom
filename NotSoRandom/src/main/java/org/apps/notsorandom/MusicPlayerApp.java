@@ -1,5 +1,9 @@
 package org.apps.notsorandom;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -26,6 +30,8 @@ public class MusicPlayerApp extends FragmentActivity
     private FragmentTabHost mTabHost;
 
     private MusicPlayer playerFrag_ = null;
+
+    private BroadcastReceiver mBroadcastListener;
 
     public enum LibraryCategory {
         CATEGORIZED,
@@ -119,6 +125,27 @@ public class MusicPlayerApp extends FragmentActivity
         if (savedInstanceState != null)
             log("-restored from saved state.");
 
+        mBroadcastListener = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG)) {
+                    int state = intent.getIntExtra("state", -1);
+                    log("Got a HEADSET PLUG intent state: " + state);
+                    switch (state) {
+                        case 0: // unplugged
+                            MusicPlayer.pauseSong();
+                            break;
+                        case 1: // plugged
+                            break;
+                        default:
+                            Log.e(TAG, "Error: broadcast receiver got headset state=" + state);
+                    }
+                }
+
+            }
+        };
+
         log("Player has initialized.");
     }
 
@@ -149,6 +176,7 @@ public class MusicPlayerApp extends FragmentActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(mBroadcastListener);
         MusicPlayer.shutdown();
     }
 
@@ -156,6 +184,9 @@ public class MusicPlayerApp extends FragmentActivity
     protected void onResume() {
         super.onResume();
         log("MusicPlayerApp.onResume called.");
+
+        IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+        registerReceiver(mBroadcastListener, filter);
     }
 
     @Override
