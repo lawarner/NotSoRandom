@@ -59,7 +59,7 @@ public class MusicMapWidget extends RelativeLayout implements View.OnTouchListen
         TextView tvrl = (TextView) view.findViewById(R.id.column_label);
         tvrl.setText(xLabel);
         tvrl.setOnTouchListener(this);
-        tvrl.setTranslationX(44);
+        tvrl.setTranslationX(50);
         tvrl = (TextView) view.findViewById(R.id.row_label);
         tvrl.setRotation(-90);
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);

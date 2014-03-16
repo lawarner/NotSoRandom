@@ -261,9 +261,13 @@ public class GlShapes {
                 {  one, -one,  one }, // 6 right,bottom,back
                 {  one,  one,  one }  // 7 right,top,back
         };
+        //Min. traversal: 15
+        //(6,7),(5,6),(0,5),(1,0),(2,1),(3,2),(4,3),(7,4),(2,7),(2,1),(6,1),(5,6),(4,5),(4,3),(0,3),.
+        private static final int mLineOrder[]   = { 7,6,5,0,1,2,3,4,7,2,1,6,5,4,3,0 };
+        private static final int mLineNormals[] = {-3,-3,-3,-1, 3, 2, 1,-2, 1, 2, 3, 3,-1,-1,-1,-1 };
         //(0,3) (3,2) (2,1) (1,0) (0,5) (5,4) (4,7) (7,6) (6,1) (1,2) (2,7) (7,6) (6,5) (5,4) (4,3)
-        private static final int mLineOrder[]   = { 0, 2, 1, 0, 5, 4, 7, 6, 1, 2, 7, 6, 5, 4, 3 };
-        private static final int mLineNormals[] = {-3,-3,-3,-1, 3, 2, 1,-2, 1, 2, 3, 3,-1,-1,-1 };
+        //private static final int mLineOrder[]   = { 0, 2, 1, 0, 5, 4, 7, 6, 1, 2, 7, 6, 5, 4, 3 };
+        //private static final int mLineNormals[] = {-3,-3,-3,-1, 3, 2, 1,-2, 1, 2, 3, 3,-1,-1,-1 };
         //private static final int mLineOrder[] = { 0, 1, 2, 3, 0, 5, 6, 7, 4, 5 };
         //private static final int mLineNormals[] = {-3,-3,-3,-3,-1, 3, 3, 3, 3, 3 };
         //private static final int mLineOrder[]   = { 0, 1, 2, 7, 8, 5, 3, 0, 5, 6, 7, 4, 5 };
